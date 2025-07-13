@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'dart:math' as math;
+
+/// 타로 카드용 부드러운 물결 애니메이션 위젯
+/// 
+/// 배경 이미지에 약한 물결 효과를 추가하여 신비로운 느낌 연출
+/// - 부드러운 sine wave 애니메이션
+/// - 메모리 효율적인 CustomPainter 사용
+/// - 투명도와 속도 조절 가능
+class WaveAnimation extends StatefulWidget {
+  const WaveAnimation({
+    super.key,
+    required this.imagePath,
+    required this.child,
+    this.backgroundColor = Colors.white,
+    this.waveColor = const Color(0x1A6B73FF), // 매우 연한 파란색
+    this.waveHeight = 8.0, // 물결 높이 (약하게)
+    this.waveSpeed = 0.8, // 물결 속도 (느리게)
+    this.waveCount = 2, // 물결 개수
+  });
+
+  /// 배경 이미지 경로
+  final String imagePath;
+  
+  /// 오버레이할 자식 위젯
+  final Widget child;
+  
+  /// 배경색
+  final Color backgroundColor;
+  
+  /// 물결 색상
+  final Color waveColor;
+  
+  /// 물결 높이 (픽셀)
+  final double waveHeight;
+  
+  /// 물결 속도 (낮을수록 느림)
+  final double waveSpeed;
+  
+  /// 물결 개수
+  final int waveCount;
+
+  @override
+  State<WaveAnimation> createState() => _WaveAnimationState();
+}
+
+class _WaveAnimationState extends State<WaveAnimation>
+    with TickerProviderStateMixin {
+  
+  late AnimationController _waveController;
+  late Animation<double> _waveAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeWaveAnimation();
+    _startWaveAnimation();
+  }
+
+  /// 물결 애니메이션 초기화
+  void _initializeWaveAnimation() {
+    _waveController = AnimationController(
+      duration: Duration(milliseconds: (3000 / widget.waveSpeed).round()), // 속도에 따른 지속시간
+      vsync: this,
+    );
+
+    _waveAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi, // 한 바퀴 회전
+    ).animate(CurvedAnimation(
+      parent: _waveController,
+      curve: Curves.linear, // 일정한 속도
+    ));
+  }
+
+  /// 물결 애니메이션 시작 (무한 반복)
+  void _startWaveAnimation() {
+    _waveController.repeat();
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // 배경 이미지
+            Positioned.fill(
+              child: Image.asset(
+                widget.imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: widget.backgroundColor,
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // 물결 애니메이션 오버레이
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _waveAnimation,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: WavePainter(
+                      animationValue: _waveAnimation.value,
+                      waveColor: widget.waveColor,
+                      waveHeight: widget.waveHeight,
+                      waveCount: widget.waveCount,
+                    ),
+                    size: Size.infinite,
+                  );
+                },
+              ),
+            ),
+            // 자식 위젯 (컨텐츠)
+            widget.child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 물결 효과를 그리는 CustomPainter
+class WavePainter extends CustomPainter {
+  const WavePainter({
+    required this.animationValue,
+    required this.waveColor,
+    required this.waveHeight,
+    required this.waveCount,
+  });
+
+  final double animationValue;
+  final Color waveColor;
+  final double waveHeight;
+  final int waveCount;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = waveColor
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final width = size.width;
+    final height = size.height;
+    
+    // 여러 개의 물결 그리기
+    for (int i = 0; i < waveCount; i++) {
+      final yOffset = height * 0.7 + (i * 20); // 각 물결의 Y 위치
+      final phaseShift = (i * math.pi / waveCount) + animationValue; // 위상 차이
+      
+      path.reset();
+      path.moveTo(0, yOffset);
+      
+      // Sine wave 그리기
+      for (double x = 0; x <= width; x += 2) {
+        final y = yOffset + math.sin((x / width * 4 * math.pi) + phaseShift) * waveHeight;
+        path.lineTo(x, y);
+      }
+      
+      // 물결 아래 부분 채우기
+      path.lineTo(width, height);
+      path.lineTo(0, height);
+      path.close();
+      
+      // 투명도 조절 (여러 물결일 때)
+      paint.color = waveColor.withOpacity(waveColor.opacity / (i + 1));
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(WavePainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
+  }
+}

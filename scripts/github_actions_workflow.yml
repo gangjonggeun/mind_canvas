@@ -1,0 +1,375 @@
+# GitHub Actions Workflow for Mind Canvas
+# .github/workflows/test.yml
+
+name: 🧪 Mind Canvas Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # 매일 오전 2시에 실행 (UTC)
+    - cron: '0 2 * * *'
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  MIN_COVERAGE: '80'
+
+jobs:
+  # =====================================
+  # 정적 분석 및 코드 품질 검사
+  # =====================================
+  code-quality:
+    name: 🔍 코드 품질 검사
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🔧 코드 생성
+      run: |
+        if grep -q "build_runner" pubspec.yaml; then
+          flutter packages pub run build_runner build --delete-conflicting-outputs
+        fi
+        
+    - name: 🔍 정적 분석
+      run: flutter analyze --fatal-infos
+      
+    - name: 🎨 코드 포맷팅 검사
+      run: flutter format --dry-run --set-exit-if-changed .
+      
+    - name: 🛡️  보안 검사
+      run: |
+        # 민감한 정보가 하드코딩되어 있는지 확인
+        if grep -r -i -E "(password|api[_-]?key|secret|token).*=.*['\"][^'\"]+['\"]" lib/ test/ || true; then
+          echo "⚠️ 민감한 정보가 하드코딩되어 있을 수 있습니다."
+        fi
+
+  # =====================================
+  # 유닛 및 위젯 테스트
+  # =====================================
+  unit-tests:
+    name: 🧪 유닛 & 위젯 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: code-quality
+    
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🔧 코드 생성
+      run: |
+        if grep -q "build_runner" pubspec.yaml; then
+          flutter packages pub run build_runner build --delete-conflicting-outputs
+        fi
+        
+    - name: 🧪 유닛 테스트 실행
+      run: |
+        if [ -d "test/unit" ]; then
+          flutter test test/unit/ --coverage --reporter=github
+        else
+          echo "유닛 테스트 디렉토리가 없습니다."
+        fi
+        
+    - name: 🖼️ 위젯 테스트 실행
+      run: |
+        if [ -d "test/widget" ]; then
+          flutter test test/widget/ --coverage --reporter=github
+        else
+          echo "위젯 테스트 디렉토리가 없습니다."
+        fi
+        
+    - name: 📊 커버리지 확인
+      run: |
+        if [ -f "coverage/lcov.info" ]; then
+          echo "커버리지 파일이 생성되었습니다."
+          # 간단한 커버리지 체크 (lcov 없이)
+          lines=$(grep -c "^LF:" coverage/lcov.info || echo "0")
+          hit_lines=$(grep -c "^LH:" coverage/lcov.info || echo "0")
+          if [ "$lines" -gt 0 ]; then
+            coverage=$(( hit_lines * 100 / lines ))
+            echo "현재 커버리지: ${coverage}%"
+            if [ "$coverage" -lt "$MIN_COVERAGE" ]; then
+              echo "❌ 커버리지가 최소 요구사항(${MIN_COVERAGE}%)보다 낮습니다."
+              exit 1
+            fi
+          fi
+        fi
+        
+    - name: 📤 커버리지 업로드
+      uses: codecov/codecov-action@v3
+      if: always()
+      with:
+        file: coverage/lcov.info
+        fail_ci_if_error: false
+
+  # =====================================
+  # 통합 테스트 (Android)
+  # =====================================
+  integration-tests-android:
+    name: 🔗 통합 테스트 (Android)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: unit-tests
+    
+    strategy:
+      matrix:
+        api-level: [29, 33]
+        
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: ☕ Java 설정
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🤖 Android 에뮬레이터 실행
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        target: google_apis
+        arch: x86_64
+        profile: Nexus 6
+        script: |
+          if [ -d "test/integration" ]; then
+            flutter test test/integration/ --reporter=github
+          else
+            echo "통합 테스트 디렉토리가 없습니다."
+          fi
+
+  # =====================================
+  # 통합 테스트 (iOS)
+  # =====================================
+  integration-tests-ios:
+    name: 🔗 통합 테스트 (iOS)
+    runs-on: macos-latest
+    timeout-minutes: 25
+    needs: unit-tests
+    
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🍎 iOS 시뮬레이터 실행
+      run: |
+        # iOS 시뮬레이터 시작
+        xcrun simctl boot "iPhone 14" || true
+        
+        if [ -d "test/integration" ]; then
+          flutter test test/integration/ -d "iPhone 14" --reporter=github
+        else
+          echo "통합 테스트 디렉토리가 없습니다."
+        fi
+
+  # =====================================
+  # 빌드 테스트
+  # =====================================
+  build-tests:
+    name: 🏗️ 빌드 테스트
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    needs: code-quality
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            platform: android,web
+          - os: macos-latest
+            platform: ios,macos
+          - os: windows-latest
+            platform: windows
+            
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: ☕ Java 설정 (Android용)
+      if: contains(matrix.platform, 'android')
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🔧 플랫폼 활성화
+      run: |
+        if [[ "${{ matrix.platform }}" == *"web"* ]]; then
+          flutter config --enable-web
+        fi
+        if [[ "${{ matrix.platform }}" == *"macos"* ]]; then
+          flutter config --enable-macos-desktop
+        fi
+        if [[ "${{ matrix.platform }}" == *"windows"* ]]; then
+          flutter config --enable-windows-desktop
+        fi
+        
+    - name: 🤖 Android 빌드
+      if: contains(matrix.platform, 'android')
+      run: flutter build apk --debug
+      
+    - name: 🍎 iOS 빌드
+      if: contains(matrix.platform, 'ios')
+      run: flutter build ios --debug --simulator
+      
+    - name: 🌐 Web 빌드
+      if: contains(matrix.platform, 'web')
+      run: flutter build web --debug
+      
+    - name: 🖥️ macOS 빌드
+      if: contains(matrix.platform, 'macos')
+      run: flutter build macos --debug
+      
+    - name: 🪟 Windows 빌드
+      if: contains(matrix.platform, 'windows')
+      run: flutter build windows --debug
+      
+    - name: 📊 빌드 크기 확인
+      run: |
+        if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+          size=$(du -h "build/app/outputs/flutter-apk/app-debug.apk" | cut -f1)
+          echo "APK 크기: $size"
+          
+          # 20MB 초과 시 경고
+          size_mb=$(du -m "build/app/outputs/flutter-apk/app-debug.apk" | cut -f1)
+          if [ "$size_mb" -gt 20 ]; then
+            echo "⚠️ APK 크기가 큽니다: ${size_mb}MB"
+          fi
+        fi
+
+  # =====================================
+  # 성능 및 보안 테스트
+  # =====================================
+  performance-security:
+    name: ⚡ 성능 & 보안 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [unit-tests, build-tests]
+    
+    steps:
+    - name: 📥 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 📱 Flutter 설정
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 의존성 설치
+      run: flutter pub get
+      
+    - name: 🔒 보안 스캔
+      run: |
+        echo "🔍 의존성 보안 검사..."
+        # pubspec.yaml의 알려진 취약한 패키지 확인
+        if grep -q "http: 0.12" pubspec.yaml; then
+          echo "⚠️ 오래된 http 패키지를 사용 중입니다."
+        fi
+        
+    - name: ⚡ 성능 분석
+      run: |
+        echo "📊 코드 복잡도 분석..."
+        # 간단한 메트릭스 수집
+        echo "Dart 파일 수: $(find lib -name "*.dart" | wc -l)"
+        echo "총 코드 라인 수: $(find lib -name "*.dart" -exec wc -l {} + | tail -1)"
+        
+        # TODO 및 FIXME 확인
+        todos=$(grep -r "TODO\|FIXME" lib/ || true)
+        if [ ! -z "$todos" ]; then
+          echo "⚠️ 해결되지 않은 TODO/FIXME가 있습니다:"
+          echo "$todos"
+        fi
+
+  # =====================================
+  # 결과 요약 및 알림
+  # =====================================
+  test-summary:
+    name: 📋 테스트 요약
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [code-quality, unit-tests, integration-tests-android, integration-tests-ios, build-tests, performance-security]
+    
+    steps:
+    - name: 📊 결과 요약
+      run: |
+        echo "🎯 Mind Canvas 테스트 결과 요약"
+        echo "================================"
+        
+        # 각 job의 결과 확인
+        echo "코드 품질: ${{ needs.code-quality.result }}"
+        echo "유닛 테스트: ${{ needs.unit-tests.result }}"
+        echo "Android 통합 테스트: ${{ needs.integration-tests-android.result }}"
+        echo "iOS 통합 테스트: ${{ needs.integration-tests-ios.result }}"
+        echo "빌드 테스트: ${{ needs.build-tests.result }}"
+        echo "성능/보안: ${{ needs.performance-security.result }}"
+        
+        # 전체 결과 판단
+        if [[ "${{ needs.code-quality.result }}" == "success" && \
+              "${{ needs.unit-tests.result }}" == "success" && \
+              ("${{ needs.integration-tests-android.result }}" == "success" || "${{ needs.integration-tests-android.result }}" == "skipped") && \
+              ("${{ needs.integration-tests-ios.result }}" == "success" || "${{ needs.integration-tests-ios.result }}" == "skipped") && \
+              "${{ needs.build-tests.result }}" == "success" && \
+              "${{ needs.performance-security.result }}" == "success" ]]; then
+          echo "🎉 모든 테스트가 성공했습니다!"
+        else
+          echo "❌ 일부 테스트가 실패했습니다."
+        fi
