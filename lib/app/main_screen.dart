@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/analysis/presentation/analysis_screen.dart';
 import '../core/home/home_screen.dart';
-import '../analysis/presentation/analysis_screen.dart';
 
 /// Mind Canvas 메인 화면
 /// 

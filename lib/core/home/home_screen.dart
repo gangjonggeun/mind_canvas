@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../features/info/info_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_theme.dart';
 import 'widgets/home_viewpager.dart';
-import '../info/info_screen.dart';
+
+
+/// 컨텐츠 타입 열거형
+enum ContentType { movie, drama, music }
+
+/// 컨텐츠 모드 열거형 (개인 추천 vs 함께 보기)
+enum ContentMode { personal, together }
 /// Mind Canvas 심리테스트 홈 화면
 /// 
 /// 심리테스트 메인 대시보드
@@ -26,6 +33,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // ===== 📱 컨텐츠 추천 상태 관리 =====
+  ContentType _selectedContentType = ContentType.movie;
+  ContentMode _selectedContentMode = ContentMode.personal;
+  String _userMbti = 'ENFP'; // 예시 데이터
+  String _partnerMbti = 'ISFJ'; // 예시 데이터
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +410,8 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         const Text('✨ 당신을 위한 추천', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 16),
+        
+        // ===== 🎯 추천 테스트 섹션 =====
         Container(
           padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),
           decoration: BoxDecoration(
@@ -411,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Column(
             children: [
-              // ===== 🎯 추천 헤더 =====
+              // ===== 🎯 추천 테스트 헤더 =====
               Row(
                 children: [
                   Container(
@@ -427,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('오늘의 추천 검사', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                        const Text('당신을 위한 테스트', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                         const SizedBox(height: 4),
                         const Text('당신의 성향에 맞는 심리검사를 추천해드려요', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                       ],
@@ -489,6 +503,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+        
+        const SizedBox(height: 24),
+        
+        // ===== 🎬 추천 컨텐츠 섹션 =====
+        _buildRecommendedContent(),
       ],
     );
   }
@@ -1196,6 +1215,634 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 🎬 추천 컨텐츠 섹션 (영화, 드라마, 노래 등)
+  Widget _buildRecommendedContent() {
+    return Container(
+      padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.withOpacity20(AppColors.secondaryTeal)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ===== 🎬 컨텐츠 추천 헤더 =====
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.withOpacity10(AppColors.secondaryTeal),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _selectedContentMode == ContentMode.personal ? '🎬' : '👥',
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedContentMode == ContentMode.personal
+                          ? '당신을 위한 컨텐츠'
+                          : '함께 보기 추천',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedContentMode == ContentMode.personal
+                          ? '성격에 맞는 영화, 드라마, 노래를 추천해드려요'
+                          : '두 사람이 함께 즐길 수 있는 컨텐츠를 추천해드려요',
+                      style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              // 모드 전환 버튼
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedContentMode = _selectedContentMode == ContentMode.personal
+                        ? ContentMode.together
+                        : ContentMode.personal;
+                  });
+                },
+                icon: Icon(
+                  _selectedContentMode == ContentMode.personal
+                      ? Icons.group_add_outlined
+                      : Icons.person_outline,
+                  color: AppColors.secondaryTeal,
+                ),
+                tooltip: _selectedContentMode == ContentMode.personal ? '함께 보기' : '개인 추천',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // ===== 👥 함께 보기 모드일 때 MBTI 입력 영역 =====
+          if (_selectedContentMode == ContentMode.together)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.withOpacity10(AppColors.primaryBlue),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.withOpacity20(AppColors.primaryBlue)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 5, // 비율 조정: 나의 MBTI 영역
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('나의 MBTI', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity, // 전체 너비 사용
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // 패딩 증가
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundCard,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.borderLight),
+                              ),
+                              child: Text(
+                                _userMbti,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                textAlign: TextAlign.center, // 가운데 정렬
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12), // 간격 종소
+                      const Icon(Icons.favorite, color: AppColors.primaryBlue, size: 20),
+                      const SizedBox(width: 12), // 간격 종소
+                      Expanded(
+                        flex: 5, // 비율 조정: 상대방 MBTI 영역
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('상대방 MBTI', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () => _showMbtiSelector(),
+                              child: Container(
+                                width: double.infinity, // 전체 너비 사용
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // 패딩 증가
+                                decoration: BoxDecoration(
+                                  color: AppColors.backgroundCard,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.borderLight),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded( // 텍스트 오버플로우 방지
+                                      child: Text(
+                                        _partnerMbti,
+                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                        textAlign: TextAlign.center, // 가운데 정렬
+                                      ),
+                                    ),
+                                    const Icon(Icons.edit, size: 16, color: AppColors.textTertiary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          if (_selectedContentMode == ContentMode.together)
+            const SizedBox(height: 16),
+
+          // ===== 📱 컨텐츠 카테고리 탭 =====
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildContentTab('🎬 영화', ContentType.movie),
+                const SizedBox(width: 12),
+                _buildContentTab('📺 드라마', ContentType.drama),
+                const SizedBox(width: 12),
+                _buildContentTab('🎵 음악', ContentType.music),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ===== 🎯 추천 컨텐츠 리스트 =====
+          SizedBox(
+            height: 180, // 높이 증가 (카드 높이에 맞춤)
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              itemCount: _getContentList().length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final content = _getContentList()[index];
+                return _buildContentCard(
+                  title: content['title']!,
+                  subtitle: content['subtitle']!,
+                  imageUrl: content['imageUrl']!,
+                  category: content['category']!,
+                  rating: content['rating']!,
+                  gradientColors: content['gradientColors']! as List<Color>,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 컨텐츠 카테고리 탭 빌더
+  Widget _buildContentTab(String title, ContentType type) {
+    final bool isSelected = _selectedContentType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedContentType = type;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.secondaryTeal : AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.secondaryTeal : AppColors.borderLight,
+          ),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 추천 컨텐츠 카드 빌더 (오버플로우 방지 버전)
+  Widget _buildContentCard({
+    required String title,
+    required String subtitle,
+    required String imageUrl,
+    required String category,
+    required String rating,
+    required List<Color> gradientColors,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        print('컨텐츠 카드 클릭: $title');
+      },
+      child: Container(
+        width: 180, // 너비 제한
+        constraints: const BoxConstraints(
+          maxHeight: 180, // 최대 높이 증가 (텍스트 공간 확보)
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderLight),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // 최소 크기
+          children: [
+            // 상단 이미지 영역
+            Expanded(
+              flex: 3, // 비율 조정: 이미지 영역
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
+                        placeholder: (context, url) => Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: gradientColors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: gradientColors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.movie_outlined,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 평점 배지
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: Colors.yellow,
+                            size: 10,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            rating,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 하단 텍스트 정보
+            Container(
+              height: 70, // 고정 높이로 텍스트 공간 보장
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start, // 상단 정렬로 변경
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4), // 간격 축소
+                  Expanded( // 남은 공간을 모두 사용
+                    child: Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        height: 1.2, // 줄 간격 축소로 공간 효율성 향상
+                      ),
+                      maxLines: 2, // 최대 2줄로 제한
+                      overflow: TextOverflow.ellipsis, // 2줄 넘으면 ... 표시
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 📊 컨텐츠 데이터 가져오기 (카테고리별 + 모드별)
+  List<Map<String, dynamic>> _getContentList() {
+    // 개인 추천 vs 함께 보기에 따른 데이터 변경
+    if (_selectedContentMode == ContentMode.together) {
+      return _getTogetherContentList();
+    }
+    
+    switch (_selectedContentType) {
+      case ContentType.movie:
+        return _getMovieList();
+      case ContentType.drama:
+        return _getDramaList();
+      case ContentType.music:
+        return _getMusicList();
+    }
+  }
+
+  /// 🎬 영화 데이터 리스트
+  List<Map<String, dynamic>> _getMovieList() {
+    return [
+      {
+        'title': '인터스텔라',
+        'subtitle': '깊이 있는 사고를 좋아하는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&h=200&fit=crop&auto=format',
+        'category': '영화',
+        'rating': '9.2',
+        'gradientColors': [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+      },
+      {
+        'title': '라라랜드',
+        'subtitle': '감성적인 당신의 마음을 울릴',
+        'imageUrl': 'https://images.unsplash.com/photo-1489599833288-b62ca85c4383?w=300&h=200&fit=crop&auto=format',
+        'category': '영화',
+        'rating': '8.8',
+        'gradientColors': [const Color(0xFFFF8A65), const Color(0xFFFFB74D)],
+      },
+      {
+        'title': '기생충',
+        'subtitle': '사회적 통찰력이 있는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=300&h=200&fit=crop&auto=format',
+        'category': '영화',
+        'rating': '9.5',
+        'gradientColors': [const Color(0xFF26C6DA), const Color(0xFF00BCD4)],
+      },
+      {
+        'title': '어벤져스',
+        'subtitle': '모험을 즐기는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&h=200&fit=crop&auto=format',
+        'category': '영화',
+        'rating': '8.4',
+        'gradientColors': [const Color(0xFFE53E3E), const Color(0xFFDD6B20)],
+      },
+    ];
+  }
+
+  /// 📺 드라마 데이터 리스트
+  List<Map<String, dynamic>> _getDramaList() {
+    return [
+      {
+        'title': '오징어 게임',
+        'subtitle': '스릴을 즐기는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop&auto=format',
+        'category': '드라마',
+        'rating': '8.7',
+        'gradientColors': [const Color(0xFFE53E3E), const Color(0xFFC53030)],
+      },
+      {
+        'title': '사랑의 불시착',
+        'subtitle': '로맨틱한 감성의 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop&auto=format',
+        'category': '드라마',
+        'rating': '9.0',
+        'gradientColors': [const Color(0xFFD53F8C), const Color(0xFFB83280)],
+      },
+      {
+        'title': '킹덤',
+        'subtitle': '역사와 스릴러를 좋아하는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop&auto=format',
+        'category': '드라마',
+        'rating': '8.3',
+        'gradientColors': [const Color(0xFF553C9A), const Color(0xFF44337A)],
+      },
+    ];
+  }
+
+  /// 🎵 음악 데이터 리스트
+  List<Map<String, dynamic>> _getMusicList() {
+    return [
+      {
+        'title': 'Dynamite - BTS',
+        'subtitle': '에너지 넘치는 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=200&fit=crop&auto=format',
+        'category': '음악',
+        'rating': '9.1',
+        'gradientColors': [const Color(0xFFED8936), const Color(0xFFDD6B20)],
+      },
+      {
+        'title': 'Through the Night - IU',
+        'subtitle': '잔잔한 감성의 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=300&h=200&fit=crop&auto=format',
+        'category': '음악',
+        'rating': '8.9',
+        'gradientColors': [const Color(0xFF38B2AC), const Color(0xFF319795)],
+      },
+      {
+        'title': 'Bohemian Rhapsody - Queen',
+        'subtitle': '클래식한 감성의 당신에게',
+        'imageUrl': 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=300&h=200&fit=crop&auto=format',
+        'category': '음악',
+        'rating': '9.7',
+        'gradientColors': [const Color(0xFF9F7AEA), const Color(0xFF805AD5)],
+      },
+    ];
+  }
+
+  /// 👥 함께 보기 컨텐츠 데이터 (MBTI 조합 기반)
+  List<Map<String, dynamic>> _getTogetherContentList() {
+    // 실제로는 _userMbti + _partnerMbti 조합을 분석해서 추천
+    // 현재는 예시 데이터
+    switch (_selectedContentType) {
+      case ContentType.movie:
+        return [
+          {
+            'title': '어바웃 타임',
+            'subtitle': '$_userMbti와 $_partnerMbti가 함께 즐길',
+            'imageUrl': 'https://images.unsplash.com/photo-1489599833288-b62ca85c4383?w=300&h=200&fit=crop&auto=format',
+            'category': '영화',
+            'rating': '8.9',
+            'gradientColors': [const Color(0xFFFF8A65), const Color(0xFFFFB74D)],
+          },
+          {
+            'title': '인사이드 아웃',
+            'subtitle': '두 사람 모두 공감할 수 있는',
+            'imageUrl': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop&auto=format',
+            'category': '영화',
+            'rating': '8.6',
+            'gradientColors': [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+          },
+        ];
+      case ContentType.drama:
+        return [
+          {
+            'title': '스타트업',
+            'subtitle': '$_userMbti와 $_partnerMbti의 조합에 맞는',
+            'imageUrl': 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop&auto=format',
+            'category': '드라마',
+            'rating': '8.2',
+            'gradientColors': [const Color(0xFF26C6DA), const Color(0xFF00BCD4)],
+          },
+        ];
+      case ContentType.music:
+        return [
+          {
+            'title': 'Perfect - Ed Sheeran',
+            'subtitle': '커플이 함께 들으면 좋은',
+            'imageUrl': 'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=300&h=200&fit=crop&auto=format',
+            'category': '음악',
+            'rating': '9.3',
+            'gradientColors': [const Color(0xFFD53F8C), const Color(0xFFB83280)],
+          },
+        ];
+    }
+  }
+
+  /// 📱 MBTI 선택 모달
+  void _showMbtiSelector() {
+    final List<String> mbtiTypes = [
+      'ENFP', 'ENFJ', 'ENTP', 'ENTJ',
+      'ESFP', 'ESFJ', 'ESTP', 'ESTJ',
+      'INFP', 'INFJ', 'INTP', 'INTJ',
+      'ISFP', 'ISFJ', 'ISTP', 'ISTJ',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.backgroundCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        height: 300,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '상대방 MBTI 선택',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2,
+                ),
+                itemCount: mbtiTypes.length,
+                itemBuilder: (context, index) {
+                  final mbti = mbtiTypes[index];
+                  final isSelected = mbti == _partnerMbti;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _partnerMbti = mbti;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primaryBlue : AppColors.backgroundSecondary,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected ? AppColors.primaryBlue : AppColors.borderLight,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          mbti,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

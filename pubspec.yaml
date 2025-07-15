@@ -92,6 +92,9 @@ flutter:
     - assets/fonts/
     - assets/animations/  # Lottie 애니메이션 파일들
     - assets/illustrations/
+    - assets/illustrations/item/  # 아이템 이미지들 (WebP 포함)
+    - assets/illustrations/taro/  # 타로 이미지들 (WebP 포함)
+
   
   # 🔤 Custom Fonts (예시)
   # fonts:

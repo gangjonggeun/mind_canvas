@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app/main_screen.dart';
 
 void main() {
@@ -8,7 +10,11 @@ void main() {
   
   print('🚷 메모리 최적화 비활성화 - 디버깅 모드');
   
-  runApp(const MindCanvasApp());
+  runApp(
+    const ProviderScope(
+      child: MindCanvasApp(),
+    ),
+  );
 }
 
 /// Mind Canvas 메인 애플리케이션
@@ -17,23 +23,31 @@ void main() {
 /// - const 생성자 사용
 /// - 정적 테마 설정
 /// - 불필요한 상태 관리 제거
+/// - Riverpod으로 효율적인 상태 관리
 class MindCanvasApp extends StatelessWidget {
   const MindCanvasApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '마음색 캔버스',
-      debugShowCheckedModeBanner: false, // 디버그 배너 제거
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF667EEA),
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'Pretendard', // 한글 폰트 (없으면 시스템 기본)
-      ),
-      home: const MainScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(375, 812), // iPhone 13 mini 기준
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: '마음색 캔버스',
+          debugShowCheckedModeBanner: false, // 디버그 배너 제거
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF667EEA),
+              brightness: Brightness.light,
+            ),
+            fontFamily: 'Pretendard', // 한글 폰트 (없으면 시스템 기본)
+          ),
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }

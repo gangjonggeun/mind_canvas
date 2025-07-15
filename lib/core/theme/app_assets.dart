@@ -164,24 +164,28 @@ class AppAssets {
   static const String _fontsPath = 'assets/fonts';
   static const String _illustrationsPath = 'assets/illustrations';
 
-  // ===== 🖼️ Images =====
-  static const String htpPageViewHigh = '$_imagesPath/htp_pageview/htp_view_pager_high.png';
-  static const String htpPageViewMid = '$_imagesPath/htp_pageview/htp_view_pager_mid.png';
-  static const String htpPageViewLow = '$_imagesPath/htp_pageview/htp_view_pager_low.png';
+  // ===== 🖼️ Images (WebP 변환 완료) =====
+  // HTP 페이지 뷰 이미지 - WebP 버전
+  static const String htpPageViewHigh = '$_imagesPath/htp_pageview/htp_view_pager_high.webp';
+  static const String htpPageViewMid = '$_imagesPath/htp_pageview/htp_view_pager_mid.webp';
+  static const String htpPageViewLow = '$_imagesPath/htp_pageview/htp_view_pager_low.webp';
   
-  // 타로 카드 이미지
-  static const String taroHigh = '$_imagesPath/taro_pageview/taro_high.png';
-  static const String taro2High = '$_imagesPath/taro_pageview/taro2_high.png';
+  // 타로 카드 이미지 - WebP 버전
+  static const String taroHigh = '$_imagesPath/taro_pageview/taro_high.webp';
+  static const String taro2High = '$_imagesPath/taro_pageview/taro2_high.webp';
   
-  // 페르소나 테스트 이미지
-  static const String personaPageViewHigh = '$_imagesPath/persona_pageview/persona_pageview_high.png';
+  // 페르소나 테스트 이미지 - WebP 버전
+  static const String personaPageViewHigh = '$_imagesPath/persona_pageview/persona_pageview_high.webp';
+  
+  // 기타 이미지 - WebP 버전
+  static const String treeHizzi = '$_imagesPath/tree_hizzi.webp';
 
-  // ===== 🎨 Illustrations =====
-  static const String mbtiItemHigh = '$_illustrationsPath/mbti_item_high.png';
-  static const String personaItemHigh = '$_illustrationsPath/persona_item_high.png';
-  static const String headspaceItemHigh = '$_illustrationsPath/headspace_item_high.png';
+  // ===== 🎨 Illustrations (WebP 변환 완료) =====
+  static const String mbtiItemHigh = '$_illustrationsPath/item/mbti_item_high.webp';
+  static const String personaItemHigh = '$_illustrationsPath/item/persona_item_high.webp';
+  static const String headspaceItemHigh = '$_illustrationsPath/item/headspace_item_high.webp';
 
-  // ===== 🎯 Icons =====
+  // ===== 🎯 Icons (PNG 유지 - 작은 파일) =====
   static const String htpTreeIcon = '$_iconsPath/htp_tree_128_icon.png';
   static const String taroIcon = '$_iconsPath/taro_icon.png'; // 타로 아이콘 (추후 추가)
   
@@ -205,11 +209,35 @@ class AppAssets {
   static const String fallbackImageAnalysis = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&auto=format';
   static const String fallbackImagePromo = 'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&h=200&fit=crop&auto=format';
 
+  // ===== 🔄 Fallback 지원 (이전 버전 호환성) =====
+  // WebP 지원 안될 때 PNG 대체
+  static const String htpPageViewHighPng = '$_imagesPath/htp_pageview/htp_view_pager_high.png';
+  static const String htpPageViewMidPng = '$_imagesPath/htp_pageview/htp_view_pager_mid.png';
+  static const String htpPageViewLowPng = '$_imagesPath/htp_pageview/htp_view_pager_low.png';
+  static const String taroHighPng = '$_imagesPath/taro_pageview/taro_high.png';
+  static const String taro2HighPng = '$_imagesPath/taro_pageview/taro2_high.png';
+  static const String personaPageViewHighPng = '$_imagesPath/persona_pageview/persona_pageview_high.png';
+  static const String mbtiItemHighPng = '$_illustrationsPath/mbti_item_high.png';
+  static const String personaItemHighPng = '$_illustrationsPath/persona_item_high.png';
+  static const String headspaceItemHighPng = '$_illustrationsPath/headspace_item_high.png';
+
   /// 에셋 존재 여부 검증 (디버그 모드에서만)
   static bool isAssetExists(String assetPath) {
     // TODO: 개발 환경에서 에셋 존재 여부 확인 로직 추가
     // assert 모드에서만 동작하도록 구현
     return true;
+  }
+
+  /// 🛟 WebP 지원 여부에 따른 이미지 경로 반환
+  static String getImagePath(String webpPath, String pngPath) {
+    // 일단 WebP 우선 반환 (Flutter 3.0+ 에서 기본 지원)
+    return webpPath;
+    
+    // TODO: 나중에 실제 WebP 지원 여부 검사 로직 추가
+    // if (Platform.isIOS && iosVersionLessThan14) {
+    //   return pngPath; // iOS 14 미만에서는 PNG 사용
+    // }
+    // return webpPath;
   }
 }
 

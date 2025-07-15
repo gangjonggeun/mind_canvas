@@ -116,3 +116,110 @@ class PsychTestColors {
   static const Color emotionPrimary = Color(0xFF38B2AC);
   static const Color emotionBackground = Color(0xFFE6FFFA);
 }
+
+/// 타로 전용 색상 시스템
+/// 
+/// 신비로운 분위기의 타로 카드 인터페이스를 위한 특화 색상
+class TaroColors {
+  TaroColors._();
+  
+  // ===== 🔮 Primary Taro Colors =====
+  static const Color mysticalPurple = Color(0xFF6B46C1);     // 신비로운 보라
+  static const Color deepIndigo = Color(0xFF4C1D95);         // 깊은 남보라
+  static const Color cosmicBlue = Color(0xFF3730A3);         // 우주적 블루
+  static const Color enchantedTeal = Color(0xFF0F766E);      // 마법의 틸
+  static const Color goldenAmber = Color(0xFFD97706);        // 황금 앰버
+  static const Color mysticSilver = Color(0xFF64748B);       // 신비로운 은색
+  
+  // ===== 🌙 Background Colors =====
+  static const Color backgroundDark = Color(0xFF111827);      // 어두운 배경
+  static const Color backgroundMystic = Color(0xFF1F2937);    // 신비로운 배경
+  static const Color backgroundCard = Color(0xFF374151);      // 카드 배경
+  static const Color backgroundOverlay = Color(0x80000000);   // 오버레이 (50% 검은색)
+  static const Color backgroundGradientStart = Color(0xFF1E293B); // 그라데이션 시작
+  static const Color backgroundGradientEnd = Color(0xFF0F172A);   // 그라데이션 끝
+  
+  // ===== ✨ Accent Colors =====
+  static const Color accentGold = Color(0xFFFBBF24);         // 액센트 골드
+  static const Color accentSilver = Color(0xFFE5E7EB);       // 액센트 실버
+  static const Color accentCrystal = Color(0xFFDDD6FE);      // 크리스탈 색상
+  static const Color accentAura = Color(0xFFFEF3C7);         // 오라 색상
+  
+  // ===== 🃏 Card States =====
+  static const Color cardSelected = Color(0xFFFBBF24);       // 선택된 카드
+  static const Color cardHover = Color(0xFFDDD6FE);          // 호버 상태
+  static const Color cardDisabled = Color(0xFF6B7280);       // 비활성 상태
+  static const Color cardBorder = Color(0xFF9CA3AF);         // 카드 테두리
+  static const Color cardShadow = Color(0x40000000);         // 카드 그림자 (25% 검은색)
+  
+  // ===== 📝 Text Colors for Taro =====
+  static const Color textMystic = Color(0xFFF9FAFB);         // 신비로운 텍스트
+  static const Color textSecondary = Color(0xFFD1D5DB);      // 보조 텍스트
+  static const Color textMuted = Color(0xFF9CA3AF);          // 흐린 텍스트
+  static const Color textAccent = Color(0xFFFBBF24);         // 강조 텍스트
+  static const Color textWarning = Color(0xFFF59E0B);        // 경고 텍스트
+  
+  // ===== 🌈 Gradient Collections =====
+  static const List<Color> gradientMystic = [
+    Color(0xFF6B46C1),
+    Color(0xFF3730A3),
+  ];
+  
+  static const List<Color> gradientCosmic = [
+    Color(0xFF1E293B),
+    Color(0xFF0F172A),
+  ];
+  
+  static const List<Color> gradientGolden = [
+    Color(0xFFFBBF24),
+    Color(0xFFD97706),
+  ];
+  
+  static const List<Color> gradientEnchanted = [
+    Color(0xFF8B5CF6),
+    Color(0xFF06B6D4),
+  ];
+  
+  // ===== 🎭 Spread Type Colors =====
+  static const Color spread3Card = Color(0xFF10B981);        // 3장 스프레드
+  static const Color spread5Card = Color(0xFF3B82F6);        // 5장 스프레드
+  static const Color spread7Card = Color(0xFF8B5CF6);        // 7장 스프레드
+  static const Color spread10Card = Color(0xFFEF4444);       // 10장 스프레드
+  
+  // ===== 🔮 Status Colors =====
+  static const Color statusReading = Color(0xFF8B5CF6);      // 리딩 중
+  static const Color statusComplete = Color(0xFF10B981);     // 완료
+  static const Color statusError = Color(0xFFEF4444);        // 오류
+  static const Color statusLoading = Color(0xFFF59E0B);      // 로딩
+  
+  // ===== 🌟 Helper Methods =====
+  
+  /// 투명도 적용된 색상 반환
+  static Color withMysticOpacity(Color color, double opacity) {
+    return color.withOpacity(opacity);
+  }
+  
+  /// 스프레드 타입별 색상 반환
+  static Color getSpreadColor(int cardCount) {
+    switch (cardCount) {
+      case 3:
+        return spread3Card;
+      case 5:
+        return spread5Card;
+      case 7:
+        return spread7Card;
+      case 10:
+        return spread10Card;
+      default:
+        return mysticalPurple;
+    }
+  }
+  
+  /// 카드 상태별 색상 반환
+  static Color getCardStateColor(bool isSelected, bool isHovered, bool isDisabled) {
+    if (isDisabled) return cardDisabled;
+    if (isSelected) return cardSelected;
+    if (isHovered) return cardHover;
+    return cardBorder;
+  }
+}
