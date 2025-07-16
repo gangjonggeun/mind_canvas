@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// 타로 상담 배경 위젯
-/// card_back_1.webp를 사용한 신비로운 느낌의 배경
 class TaroBackground extends StatelessWidget {
   final Widget child;
   final double opacity;
@@ -34,8 +33,8 @@ class TaroBackground extends StatelessWidget {
           Positioned.fill(
             child: Opacity(
               opacity: opacity,
-              child: Image.asset(
-                'assets/illustrations/taro/card_back_1.webp',
+              child: Image.asset( //'assets/illustrations/taro/card_back_2_high.webp'
+                'assets/illustrations/taro/card_back_2_high.webp',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   // 이미지 로드 실패시 기본 패턴

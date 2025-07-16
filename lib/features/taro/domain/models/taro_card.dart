@@ -293,8 +293,9 @@ class TaroCards {
   ];
 
   /// 메이저 아르카나만 가져오기 (간단한 상담용)
-  static List<TaroCard> get majorArcanaOnly =>
-      fullDeck.where((card) => card.type == TaroCardType.majorArcana).toList();
+  // static List<TaroCard> get majorArcanaOnly =>
+  //     fullDeck.where((card) => card.type == TaroCardType.majorArcana).toList();
+
 
   /// 카드 ID로 카드 찾기
   static TaroCard? findById(String id) {
@@ -306,10 +307,9 @@ class TaroCards {
   }
 
   /// 랜덤 카드 섞기
-  static List<TaroCard> getShuffledDeck({bool majorArcanaOnly = true}) {
-    final deck = majorArcanaOnly ? TaroCards.majorArcanaOnly : fullDeck;
-    final shuffled = List<TaroCard>.from(deck);
-    shuffled.shuffle();
-    return shuffled;
+  static List<TaroCard> getShuffledDeck() {
+    final List<TaroCard> deck = List.from(fullDeck); // 원본 덱을 복사하여 사용
+    deck.shuffle();
+    return deck;
   }
 }

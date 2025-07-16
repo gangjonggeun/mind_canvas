@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
+
+
   # 🔥 State Management
   flutter_riverpod: ^2.6.1          #  상태관리
   riverpod_annotation: ^2.3.5       # 코드 생성용

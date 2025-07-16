@@ -3,11 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import '../../domain/models/taro_card.dart';
 import '../../domain/models/taro_spread_type.dart';
-// DraggableTaroCard 위젯이 있는 파일을 import 해야 할 수 있습니다.
-// import 'widgets/taro_card_widgets.dart';
+import 'card_back.dart';
+import 'dart:math' as math;
 
-/// 타로 스프레드 레이아웃 위젯
-/// 다양한 스프레드 타입에 따라 카드들을 배치하고, 드래그 앤 드롭을 처리합니다.
 class SpreadLayout extends StatelessWidget {
   const SpreadLayout({
     super.key,
@@ -24,110 +22,229 @@ class SpreadLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // SpreadLayout의 크기가 내용에 맞게 조절되도록 합니다.
-    return _buildSpreadLayout();
-  }
-
-  Widget _buildSpreadLayout() {
-    switch (spreadType.cardCount) {
-      case 1:
-        return _buildSingleCard();
-      case 3:
-        return _buildThreeCards();
-      case 5:
-        return _buildCrossSpread();
-      case 7:
-        return _buildHorseshoeSpread();
-      case 10:
-        return _buildCelticCross();
-      default:
-        return _buildGridLayout();
-    }
-  }
-
-  /// 단일 카드 레이아웃
-  Widget _buildSingleCard() {
-    return Center(
-      child: _buildCardSlot(0, '현재 상황'),
-    );
-  }
-
-  /// 3카드 레이아웃 (과거-현재-미래)
-  Widget _buildThreeCards() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildCardSlot(0, '과거'),
-        _buildCardSlot(1, '현재'),
-        _buildCardSlot(2, '미래'),
-      ],
-    );
-  }
-
-  /// 십자가 스프레드 (5카드)
-  Widget _buildCrossSpread() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // 중앙
-        _buildCardSlot(0, '현재'),
-        // 위
-        Positioned(
-          top: 0,
-          child: _buildCardSlot(1, '도전'),
-        ),
-        // 왼쪽
-        Positioned(
-          left: 0,
-          child: _buildCardSlot(2, '과거'),
-        ),
-        // 오른쪽
-        Positioned(
-          right: 0,
-          child: _buildCardSlot(3, '미래'),
-        ),
-        // 아래
-        Positioned(
-          bottom: 0,
-          child: _buildCardSlot(4, '기반'),
-        ),
-      ],
-    );
-  }
-
-  /// 호스슈 스프레드 (7카드)
-  Widget _buildHorseshoeSpread() {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8.w,
-      runSpacing: 8.h,
-      children: [
-        for (int i = 0; i < 7; i++)
-          _buildCardSlot(i, _getHorseshoePositionName(i)),
-      ],
-    );
-  }
-
-  /// 켈틱 크로스 (10카드)
-  Widget _buildCelticCross() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        childAspectRatio: 0.7,
-        crossAxisSpacing: 8.w,
-        mainAxisSpacing: 8.h,
-      ),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return _buildCardSlot(index, _getCelticPositionName(index));
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return _buildSpreadLayout(constraints);
       },
     );
   }
 
-  /// 기본 그리드 레이아웃
-  Widget _buildGridLayout() {
+  /// 카드 개수에 따라 적절한 레이아웃을 반환합니다.
+  Widget _buildSpreadLayout(BoxConstraints constraints) {
+    switch (spreadType.cardCount) {
+      case 3:
+        return _buildThreeCardVerticalLayout(constraints);
+      case 5:
+        return _buildFiveCardCrossLayout(constraints);
+      case 7:
+        return _buildMagicSevenLayout(constraints);
+      case 10:
+        return _buildTenCardCelticCrossLayout(constraints);
+      default:
+        // 기본값은 그리드 레이아웃
+        return _buildGridLayout(constraints);
+    }
+  }
+
+  // --- 각 스프레드에 맞는 커스텀 레이아웃 빌더 ---
+  final double cardWidth = 75;
+  final double cardHeight = 120;
+  final double gap = 8;
+  /// 3카드: 세로 배치
+  Widget _buildThreeCardVerticalLayout(BoxConstraints constraints) {
+    final cardWidth = constraints.maxWidth * 0.28; // 크기 약간 줄임
+    final cardHeight = cardWidth * 1.6;
+    final gap = 16.h; // 간격 늘림
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildCardSlot(0, '과거', width: cardWidth, height: cardHeight),
+        SizedBox(height: gap),
+        _buildCardSlot(1, '현재', width: cardWidth, height: cardHeight),
+        SizedBox(height: gap),
+        _buildCardSlot(2, '미래', width: cardWidth, height: cardHeight),
+      ],
+    );
+  }
+
+  /// 5카드: 십자가 모양 배치
+  Widget _buildFiveCardCrossLayout(BoxConstraints constraints) {
+    final cardWidth = constraints.maxWidth / 5; // 크기 약간 줄임
+    final cardHeight = cardWidth * 1.6;
+    final gap = 12.w; // 간격 늘림
+
+    return Center(
+      child: SizedBox(
+        width: cardWidth * 3 + gap * 2,
+        height: cardHeight * 3 + gap * 2,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(child: _buildCardSlot(0, '현재', width: cardWidth, height: cardHeight)),
+            Positioned(top: 0, child: _buildCardSlot(1, '도전', width: cardWidth, height: cardHeight)),
+            Positioned(left: 0, child: _buildCardSlot(2, '과거', width: cardWidth, height: cardHeight)),
+            Positioned(right: 0, child: _buildCardSlot(3, '미래', width: cardWidth, height: cardHeight)),
+            Positioned(bottom: 0, child: _buildCardSlot(4, '기반', width: cardWidth, height: cardHeight)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 7카드: 매직세븐  배치
+  Widget _buildMagicSevenLayout(BoxConstraints constraints) {
+    // 카드 크기와 간격을 일관되게 정의합니다.
+    final cardWidth = 80.w;
+    final cardHeight = 128.h;
+    final gap = 12.w;
+
+    // 각 자리의 의미를 이미지에 맞게 정확히 정의합니다.
+    const List<String> positionNames = [
+      '과거의 사건', // 1
+      '현재 상태',    // 2
+      '가까운 미래',  // 3
+      '문제해결 방법', // 4
+      '주변환경',     // 5
+      '장애물',       // 6
+      '결과'        // 7
+    ];
+
+    // 전체 레이아웃을 큰 Row로 감싸서 좌, 중, 우 3개의 열로 나눕니다.
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // --- 1. 왼쪽 열 (2장) ---
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 5번 카드
+              _buildCardSlot(4, positionNames[4], width: cardWidth, height: cardHeight),
+              SizedBox(height: gap),
+              // 3번 카드
+              _buildCardSlot(2, positionNames[2], width: cardWidth, height: cardHeight),
+            ],
+          ),
+          SizedBox(width: gap),
+
+          // --- 2. 중앙 열 (3장) ---
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 1번 카드
+              _buildCardSlot(0, positionNames[0], width: cardWidth, height: cardHeight),
+              SizedBox(height: gap),
+              // 7번 카드
+              _buildCardSlot(6, positionNames[6], width: cardWidth, height: cardHeight),
+              SizedBox(height: gap),
+              // 4번 카드
+              _buildCardSlot(3, positionNames[3], width: cardWidth, height: cardHeight),
+            ],
+          ),
+          SizedBox(width: gap),
+
+          // --- 3. 오른쪽 열 (2장) ---
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 6번 카드
+              _buildCardSlot(5, positionNames[5], width: cardWidth, height: cardHeight),
+              SizedBox(height: gap),
+              // 2번 카드
+              _buildCardSlot(1, positionNames[1], width: cardWidth, height: cardHeight),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  //10장 캘틱크로스
+  Widget _buildTenCardCelticCrossLayout(BoxConstraints constraints) {
+    // 화면 크기에 따라 카드 크기와 간격을 유연하게 계산합니다.
+    final cardWidth = constraints.maxWidth / 5; // 카드 너비를 약간 줄여 간격 확보
+    final cardHeight = cardWidth * 1.6;
+    final gap = 10.w;
+
+    return Center(
+      child: SizedBox(
+        // 간격이 넓어졌으므로 전체 너비를 조금 더 넉넉하게 잡습니다.
+        width: cardWidth * 3 + gap * 4,
+        height: cardHeight * 5 + gap * 4,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // --- 중앙 십자가 (이미지 기준) ---
+            // 1. 세로 카드 (중앙)
+            Positioned(
+              top: cardHeight + gap,
+              child: _buildCardSlot(0, '현재', width: cardWidth, height: cardHeight),
+            ),
+            // 2. 가로 카드 (중앙)
+            Positioned(
+              top: cardHeight + gap + (cardHeight / 4),
+              child: Transform.rotate(
+                angle: math.pi / 2,
+                child: _buildCardSlot(1, '도전', width: cardWidth, height: cardHeight),
+              ),
+            ),
+
+            // --- 주변 카드들 (이미지 기준) ---
+            // 3. 맨 위 카드
+            Positioned(
+              top: 0,
+              child: _buildCardSlot(2, '의식', width: cardWidth, height: cardHeight),
+            ),
+            // 4. 맨 아래 카드
+            Positioned(
+              top: cardHeight * 2 + gap * 2,
+              child: _buildCardSlot(3, '무의식', width: cardWidth, height: cardHeight),
+            ),
+            // ★★★★★ 5. 왼쪽 카드 ('과거') - 간격 조정 ★★★★★
+            Positioned(
+              top: cardHeight + gap,
+              left: 0, // 왼쪽 끝에 배치
+              child: _buildCardSlot(4, '과거', width: cardWidth, height: cardHeight),
+            ),
+            // ★★★★★ 6. 오른쪽 카드 ('미래') - 간격 조정 ★★★★★
+            Positioned(
+              top: cardHeight + gap,
+              right: 0, // 오른쪽 끝에 배치
+              child: _buildCardSlot(5, '미래', width: cardWidth, height: cardHeight),
+            ),
+
+            // --- 하단 2x2 카드 (이미지 기준) ---
+            // ... (하단 4개 카드 배치는 이전과 동일) ...
+            Positioned(
+              bottom: cardHeight + gap,
+              left: (cardWidth / 2) + (gap / 2),
+              child: _buildCardSlot(6, '나의 모습', width: cardWidth, height: cardHeight),
+            ),
+            Positioned(
+              bottom: cardHeight + gap,
+              right: (cardWidth / 2) + (gap / 2),
+              child: _buildCardSlot(7, '주변 환경', width: cardWidth, height: cardHeight),
+            ),
+            Positioned(
+              bottom: 0,
+              left: (cardWidth / 2) + (gap / 2),
+              child: _buildCardSlot(8, '희망/두려움', width: cardWidth, height: cardHeight),
+            ),
+            Positioned(
+              bottom: 0,
+              right: (cardWidth / 2) + (gap / 2),
+              child: _buildCardSlot(9, '최종 결과', width: cardWidth, height: cardHeight),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 기본 그리드 레이아웃 (Fallback)
+  Widget _buildGridLayout(BoxConstraints constraints) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -144,127 +261,62 @@ class SpreadLayout extends StatelessWidget {
     );
   }
 
-
-  /// ★★★★★ 수정된 카드 슬롯 빌더 ★★★★★
-  Widget _buildCardSlot(int position, String positionName) {
+  /// 카드 슬롯 빌더
+  Widget _buildCardSlot(
+    int position,
+    String positionName, {
+    double? width,
+    double? height,
+  }) {
     final card = (position < selectedCards.length)
         ? selectedCards[position]
         : null;
 
-    // DragTarget으로 전체 슬롯을 감싸 카드를 받을 수 있게 합니다.
     return DragTarget<TaroCard>(
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
-
-        // 기존의 카드 표시 로직을 재사용합니다.
+        final isHighlighted = card != null || isHovering;
         return Container(
-          width: 80.w,
-          height: 120.h,
+          width: width,
+          height: height,
           decoration: BoxDecoration(
-            color: card != null
-                ? Colors.indigo.shade800 // 카드가 있을 때
-                : (isHovering ? Colors.amber.withOpacity(0.2) : Colors.grey
-                .shade800.withOpacity(0.5)), // 비어있을 때 (호버링 효과)
-            borderRadius: BorderRadius.circular(8.r),
+              color: Colors.black.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: isHovering || card != null
-                  ? Colors.amber.shade300
-                  : Colors.white.withOpacity(0.3),
-              width: isHovering || card != null ? 2 : 1.5,
+              color: isHighlighted
+                  ? Colors.amber.shade400
+                  : Colors.blueGrey.shade600,
+              width: isHighlighted ? 2 : 1,
             ),
           ),
-          // 카드가 있으면 선택된 카드 위젯, 없으면 빈 슬롯 위젯 표시
           child: card != null
-              ? _buildSelectedCard(card, position) // 제거를 위해 position 전달
-              : _buildEmptySlot(positionName, isHovering), // 호버링 상태 전달
+              ? GestureDetector(
+                  onTap: () => onCardRemoved?.call(position),
+                  child: const CardBack(),
+                )
+              : _buildEmptySlot(positionName),
         );
       },
-      // 슬롯이 비어있을 때만 카드를 받도록 합니다.
       onWillAccept: (draggedCard) => card == null,
-      // 카드가 성공적으로 드롭되면 콜백 함수를 호출합니다.
       onAccept: (draggedCard) {
         onCardPlaced?.call(draggedCard, position);
       },
     );
   }
 
-  /// 선택된 카드 표시 위젯 (수정: onTap 추가)
-  Widget _buildSelectedCard(TaroCard card, int position) {
-    return GestureDetector(
-      onTap: () => onCardRemoved?.call(position),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.auto_awesome, color: Colors.amber.shade300, size: 24.sp),
-          Gap(8.h),
-          Text(
-            card.name,
-            style: TextStyle(fontSize: 10.sp,
-                color: Colors.white,
-                fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 빈 슬롯 표시 위젯 (수정: isHovering 파라미터 추가)
-  Widget _buildEmptySlot(String positionName, bool isHovering) {
+  /// 빈 슬롯 UI
+  Widget _buildEmptySlot(String positionName) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          isHovering ? Icons.add_circle : Icons.add_circle_outline,
-          // 호버링 시 아이콘 변경
-          color: isHovering ? Colors.amber.shade300 : Colors.white.withOpacity(
-              0.5),
-          size: 32.sp,
-        ),
-        Gap(8.h),
+        Icon(Icons.add, color: Colors.blueGrey.shade400, size: 32.sp),
+        SizedBox(height: 8.h),
         Text(
           positionName,
-          style: TextStyle(
-              fontSize: 9.sp, color: Colors.white.withOpacity(0.7)),
+          style: TextStyle(color: Colors.blueGrey.shade400, fontSize: 10.sp),
           textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
-  }
-
-
-  /// 호스슈 스프레드 위치 이름
-  String _getHorseshoePositionName(int index) {
-    const names = [
-      '과거',
-      '현재 상황',
-      '숨겨진 영향',
-      '조언',
-      '외부 영향',
-      '내면의 감정',
-      '최종 결과'
-    ];
-    return index < names.length ? names[index] : '카드 ${index + 1}';
-  }
-
-  /// 켈틱 크로스 위치 이름
-  String _getCelticPositionName(int index) {
-    const names = [
-      '현재 상황',
-      '도전과 갈등',
-      '과거의 영향',
-      '가능한 미래',
-      '의식적 목표',
-      '무의식적 영향',
-      '당신의 접근법',
-      '외부 영향',
-      '희망과 두려움',
-      '최종 결과'
-    ];
-    return index < names.length ? names[index] : '카드 ${index + 1}';
   }
 }
