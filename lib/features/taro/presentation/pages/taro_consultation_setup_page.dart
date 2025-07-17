@@ -85,28 +85,29 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
                   // 상단 타이틀
                   _buildHeader(),
                   
+                  // 나머지 전체를 스크롤 가능한 영역으로
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(horizontal: 24.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Gap(32.h),
+                          Gap(24.h),
                           
                           // 테마 입력 섹션
                           _buildThemeSection(state, notifier),
                           
-                          Gap(40.h),
+                          Gap(32.h),
                           
-                          // 스프레드 선택 섹션
+                          // 스프레드 선택 섹션 - 고정 높이로 단순하게
                           _buildSpreadSelectionSection(state, notifier),
                           
-                          Gap(40.h),
+                          Gap(32.h),
                           
                           // 시작 버튼
                           _buildStartButton(state, notifier),
                           
-                          Gap(32.h),
+                          Gap(40.h), // 하단 여유 공간 더 많이
                         ],
                       ),
                     ),
@@ -254,6 +255,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -283,29 +285,28 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
           ),
           Gap(20.h),
           
-          // 스프레드 타입 그리드
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          // 스프레드 타입 그리드 - 고정 높이로 단순하게
+          SizedBox(
+            height: 400.h, // 고정 높이 400.h로 충분히 크게
+            child: GridView.count(
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              childAspectRatio: 1.2,
+              childAspectRatio: 0.7, // 비율 더 줄여서 카드를 더더더 세로로 길게
               crossAxisSpacing: 12.w,
               mainAxisSpacing: 12.h,
+              children: TaroSpreadTypes.all.map((spreadType) {
+                final isSelected = state.selectedSpreadType?.cardCount == spreadType.cardCount;
+                
+                return SpreadTypeCard(
+                  spreadType: spreadType,
+                  isSelected: isSelected,
+                  onTap: () {
+                    notifier.selectSpreadType(spreadType);
+                  },
+                );
+              }).toList(),
             ),
-            itemCount: TaroSpreadTypes.all.length,
-            itemBuilder: (context, index) {
-              final spreadType = TaroSpreadTypes.all[index];
-              final isSelected = state.selectedSpreadType?.cardCount == spreadType.cardCount;
-              
-              return SpreadTypeCard(
-                spreadType: spreadType,
-                isSelected: isSelected,
-                onTap: () {
-                  notifier.selectSpreadType(spreadType);
-                },
-              );
-            },
           ),
         ],
       ),

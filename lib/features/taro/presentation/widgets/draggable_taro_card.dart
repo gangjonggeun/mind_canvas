@@ -1,88 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../domain/models/taro_card.dart';
-import 'card_back.dart';
+import '../../domain/models/taro_card.dart'; // 경로는 본인 프로젝트에 맞게 확인해주세요.
+import 'card_back.dart';                     // CardBack 위젯을 import 합니다.
 
+/// 드래그 가능한 타로 카드 위젯 (단순화된 최종 버전)
 class DraggableTaroCard extends StatelessWidget {
   final TaroCard card;
-  final bool isSelected;
+  // isSelected, onTap, width, height 등 다른 속성들은
+  // 현재 FanCardDeck에서는 사용하지 않으므로, 잠시 남겨두거나 제거해도 됩니다.
   final bool showBack;
-  final VoidCallback? onTap;
-  final double? width;
-  final double? height;
 
   const DraggableTaroCard({
     super.key,
     required this.card,
-    this.isSelected = false,
     this.showBack = true,
-    this.onTap,
-    this.width,
-    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cardWidth = width ?? 85.w;
-    final cardHeight = height ?? 130.h;
+    // FanCardDeck에서 크기를 지정해주므로, 여기서는 고정된 값을 사용해도 무방합니다.
+    final cardWidth = 85.w;
+    final cardHeight = 130.h;
 
+    // ★★★★★ 1. Draggable 위젯의 UI를 모두 CardBack으로 통일 ★★★★★
     return Draggable<TaroCard>(
+      // data: 이 카드가 어떤 카드인지 알려주는 정보
       data: card,
+
+      // feedback: 드래그하는 동안 손가락을 따라다니는 위젯
       feedback: Material(
         color: Colors.transparent,
-        child: SizedBox( // ★★★ 2. 드래그 피드백 위젯의 크기를 명확히 지정합니다.
-          width: cardWidth * 1.1,
-          height: cardHeight * 1.1,
-          child: const CardBack(), // ★★★ 3. 안전한 CardBack 위젯 사용
+        child: SizedBox(
+          width: cardWidth * 1.5, // 살짝 크게 보여줌
+          height: cardHeight * 1.5,
+          child: const CardBack(), // 안전한 CardBack 위젯 사용
         ),
       ),
+
+      // childWhenDragging: 원래 카드가 있던 자리에 남는 위젯
       childWhenDragging: Opacity(opacity: 0.5, child: const CardBack()),
+
+      // child: 드래그하기 전, 평소에 보이는 위젯
       child: const CardBack(),
-    );
-  }
-
-  // ★★★★★ 오버플로우 해결을 위해 _buildCard 구조 변경 ★★★★★
-  Widget _buildCard({bool isDragging = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDragging ? 0.3 : 0.2),
-            blurRadius: isDragging ? 12 : 6,
-            offset: Offset(0, isDragging ? 6 : 3),
-          ),
-        ],
-      ),
-      // ClipRRect로 먼저 테두리를 둥글게 자릅니다.
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.r),
-        // ★★★★★ FittedBox로 이미지 크기를 강제로 맞춥니다 ★★★★★
-        child: FittedBox(
-          fit: BoxFit.cover, // 공간을 꽉 채우도록 설정 (비율 유지, 잘릴 수 있음)
-          child: showBack ? _buildCardBack() : _buildCardFront(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardFront() {
-    // 앞면 이미지
-    return SizedBox(
-      // 이미지의 원래 비율을 알려주면 더 안정적입니다. (선택사항)
-      // width: 400,
-      // height: 680,
-      child: Image.asset(card.imagePath),
-    );
-  }
-
-  Widget _buildCardBack() {
-    // 뒷면 이미지
-    return SizedBox(
-      // 이미지의 원래 비율을 알려주면 더 안정적입니다. (선택사항)
-      // width: 400,
-      // height: 680,
-      child: Image.asset('assets/illustrations/taro/taro_back_1_high.webp'),
     );
   }
 }

@@ -25,25 +25,25 @@ class TaroSpreadTypes {
       cardCount: 3,
       name: '과거-현재-미래',
       nameEn: 'Past-Present-Future',
-      description: '시간의 흐름에 따른 상황 파악',
+      description: '시간의 흐름에 따른 상황 분석',
     ),
     TaroSpreadType(
       cardCount: 5,
       name: '십자가 스프레드',
       nameEn: 'Cross Spread',
-      description: '현재 상황과 영향 요인들',
+      description: '원인, 과정, 결과에대한 분석',
     ),
     TaroSpreadType(
       cardCount: 7,
-      name: '호스슈 스프레드',
-      nameEn: 'Horseshoe Spread',
-      description: '종합적인 상황 분석',
+      name: '매직넘버 스프레드',
+      nameEn: 'MagicNumber Spread',
+      description: '소원 성취를 위한 매직넘버 분석', // 한 줄로 단순화
     ),
     TaroSpreadType(
       cardCount: 10,
       name: '켈틱 크로스',
       nameEn: 'Celtic Cross',
-      description: '가장 전문적이고 상세한 리딩',
+      description: '가장 심층적이고 깊은 분석 및 통찰 상세한 리딩', // 한 줄로 단순화
     ),
   ];
 

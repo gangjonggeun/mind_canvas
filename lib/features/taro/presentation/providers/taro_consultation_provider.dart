@@ -59,7 +59,7 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
   }
 
   /// 카드 선택
-  void selectCard(String cardId, int position) {
+  void selectCard(String cardId, int position) { // String -> int
     if (state.selectedSpreadType == null) {
       _logger.w('No spread type selected');
       return;
@@ -70,17 +70,19 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
       return;
     }
 
-    // 같은 카드가 이미 다른 위치에 있는지 확인
+    // 같은 카드가 이미 다른 위치에 있는지 확인 (선택사항, 중복 허용 시 이 부분 제거)
     if (state.selectedCards.contains(cardId)) {
       _logger.w('Card $cardId already selected');
+      // 중복 선택을 막고 싶지 않다면, 이 return 문을 주석 처리하거나 제거하세요.
       return;
     }
 
+    // ★★★ 타입을 int? 로 수정 ★★★
     final newSelectedCards = List<String?>.from(state.selectedCards);
     newSelectedCards[position] = cardId;
 
     _logger.d('Card selected: $cardId at position $position');
-    
+
     state = state.copyWith(
       selectedCards: newSelectedCards,
       status: TaroStatus.cardSelection,

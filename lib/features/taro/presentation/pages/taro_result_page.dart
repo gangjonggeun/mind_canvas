@@ -354,32 +354,33 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
     );
   }
 
-  Widget _buildCardSpread(state) {
-    final selectedCards = state.selectedCards;
-    final spreadType = state.selectedSpreadType!;
+
+  Widget _buildCardSpread(TaroConsultationState state) {
+    // 1. state.selectedCards(List<String?>)를 List<TaroCard>로 안전하게 변환합니다.
+    final List<TaroCard> cards = state.selectedCards
+        .where((id) => id != null) // null이 아닌 ID만 필터링
+        .map((id) => TaroCards.findById(id!)) // String ID로 TaroCard 객체를 찾음
+        .where((card) => card != null) // 혹시 못 찾은 경우(null)를 다시 필터링
+        .cast<TaroCard>() // 타입을 TaroCard로 명확히 함
+        .toList();
 
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(12.w),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          return _buildSpreadLayout(
-            selectedCards,
-            spreadType,
-            constraints,
-            state, // state 전달
-          );
+          // 2. 변환된 `cards` 리스트와 다른 정보들을 _buildSpreadLayout으로 전달합니다.
+          return _buildSpreadLayout(cards, state.selectedSpreadType!, constraints, state);
         },
       ),
     );
   }
 
   Widget _buildSpreadLayout(
-      List<TaroCard?> cards,
+      List<TaroCard> cards, // ★★★ 타입을 List<TaroCard?>에서 List<TaroCard>로 변경 ★★★
       TaroSpreadType spreadType,
       BoxConstraints constraints,
-      TaroConsultationState state, // state 파라미터 추가
+      TaroConsultationState state,
       ) {
-    // TaroSpreadType에 layout 필드가 없으므로 cardCount로 구분
     switch (spreadType.cardCount) {
       case 3:
         return _buildThreeLineLayout(cards, constraints, state);
@@ -393,14 +394,14 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
     }
   }
 
-  Widget _buildSingleLayout(List<TaroCard?> cards, BoxConstraints constraints) {
-    if (cards.isEmpty || cards[0] == null) return Container();
+  Widget _buildSingleLayout(List<TaroCard> cards, BoxConstraints constraints) { // ★★★ 타입 변경 ★★★
+    if (cards.isEmpty) return Container(); // 비어있는지 체크
 
     return Center(
       child: GestureDetector(
         onTap: () => _onCardTapped(0),
         child: AnimatedTaroCard(
-          card: cards[0]!,
+          card: cards[0], // 이제 null이 아님
           isRevealed: _revealedCards.isNotEmpty ? _revealedCards[0] : false,
           animation: _revealAnimation,
           width: constraints.maxWidth * 0.4,
@@ -410,38 +411,37 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
     );
   }
 
-  Widget _buildThreeLineLayout(List<TaroCard?> cards, BoxConstraints constraints, TaroConsultationState state) {
+  Widget _buildThreeLineLayout(List<TaroCard> cards, BoxConstraints constraints, TaroConsultationState state) { // ★★★ 타입 변경 ★★★
     final cardWidth = constraints.maxWidth * 0.25;
     final cardHeight = constraints.maxHeight * 0.8;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        for (int i = 0; i < math.min(3, cards.length);)
-          if (cards[i] != null)
-            GestureDetector(
-              onTap: () => _onCardTapped(i),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedTaroCard(
-                    card: cards[i]!,
-                    isRevealed: i < _revealedCards.length ? _revealedCards[i] : false,
-                    animation: _revealAnimation,
-                    width: cardWidth,
-                    height: cardHeight,
+        for (int i = 0; i < cards.length; i++) // ★★★ 3. for 루프 조건 단순화 ★★★
+          GestureDetector(
+            onTap: () => _onCardTapped(i),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedTaroCard(
+                  card: cards[i],
+                  isRevealed: i < _revealedCards.length ? _revealedCards[i] : false,
+                  animation: _revealAnimation,
+                  width: cardWidth,
+                  height: cardHeight,
+                ),
+                Gap(8.h),
+                Text(
+                  _getPositionName(i, state.selectedSpreadType!.cardCount),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.white.withOpacity(0.8),
                   ),
-                  Gap(8.h),
-                  Text(
-                    _getPositionName(i, state.selectedSpreadType!.cardCount),
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
       ],
     );
   }
@@ -589,7 +589,8 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
     }
   }
 
-  Widget _buildInterpretation(state) {
+
+  Widget _buildInterpretation(TaroConsultationState state) {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
@@ -598,10 +599,7 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.7),
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: Colors.amber.shade300.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.amber.shade300.withOpacity(0.3), width: 1),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -609,60 +607,31 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    color: Colors.amber.shade300,
-                    size: 20.sp,
-                  ),
+                  Icon(Icons.auto_awesome, color: Colors.amber.shade300, size: 20.sp),
                   Gap(8.w),
-                  Text(
-                    'AI 타로 해석',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  Text('AI 타로 해석', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: Colors.white)),
                 ],
               ),
-
               Gap(16.h),
-
-              Text(
-                '전체적인 해석',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.amber.shade300,
-                ),
-              ),
+              Text('전체적인 해석', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.amber.shade300)),
               Gap(8.h),
               Text(
                 state.interpretation ?? '해석을 생성하고 있습니다...',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: Colors.white.withOpacity(0.9),
-                  height: 1.5,
-                ),
+                style: TextStyle(fontSize: 13.sp, color: Colors.white.withOpacity(0.9), height: 1.5),
               ),
-
               Gap(16.h),
-
-              Text(
-                '각 카드의 의미',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.amber.shade300,
-                ),
-              ),
+              Text('각 카드의 의미', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.amber.shade300)),
               Gap(8.h),
-
+              // ★★★★★ 이 부분의 로직을 String ID에 맞게 수정합니다 ★★★★★
               ...state.selectedCards.asMap().entries.where((entry) => entry.value != null).map((entry) {
                 final index = entry.key;
-                final card = entry.value!;
-                final position = _getPositionName(index, state.selectedSpreadType!.cardCount);
+                final cardId = entry.value!; // cardId는 이제 String입니다.
+                final card = TaroCards.findById(cardId); // String ID로 카드를 찾습니다.
 
+                // 혹시 모를 에러 방지
+                if (card == null) return const SizedBox.shrink();
+
+                final position = _getPositionName(index, state.selectedSpreadType!.cardCount);
                 return Container(
                   margin: EdgeInsets.only(bottom: 12.h),
                   padding: EdgeInsets.all(12.w),
@@ -675,20 +644,12 @@ class _TaroResultPageState extends ConsumerState<TaroResultPage>
                     children: [
                       Text(
                         '$position: ${card.name}',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.amber.shade200,
-                        ),
+                        style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.amber.shade200),
                       ),
                       Gap(4.h),
                       Text(
-                        card.description, // TaroCard 모델의 description 필드 사용
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: Colors.white.withOpacity(0.8),
-                          height: 1.4,
-                        ),
+                        card.description,
+                        style: TextStyle(fontSize: 11.sp, color: Colors.white.withOpacity(0.8), height: 1.4),
                       ),
                     ],
                   ),

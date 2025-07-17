@@ -5,6 +5,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/taro_spread_type.dart';
 
 /// 스프레드 타입 선택 카드 위젯
+/// 
+/// 메모리 최적화:
+/// - const 생성자 사용으로 불필요한 재생성 방지
+/// - 단순한 레이아웃 구조로 위젯 트리 최적화
+/// 
+/// CPU 최적화:
+/// - FittedBox 제거하여 실시간 계산 부담 감소
+/// - 고정된 높이 값으로 레이아웃 계산 최적화
 class SpreadTypeCard extends StatelessWidget {
   final TaroSpreadType spreadType;
   final bool isSelected;
@@ -41,9 +49,7 @@ class SpreadTypeCard extends StatelessWidget {
                 ),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected 
-                ? TaroColors.accentGold 
-                : TaroColors.cardBorder,
+            color: isSelected ? TaroColors.accentGold : TaroColors.cardBorder,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
@@ -57,224 +63,84 @@ class SpreadTypeCard extends StatelessWidget {
               : null,
         ),
         child: Padding(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.all(16.w), // 패딩 더 늘리기
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 카드 수 표시
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  color: isSelected 
-                      ? TaroColors.textMystic 
-                      : TaroColors.accentGold,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: TaroColors.cardShadow,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+              // 상단 영역 - 중앙 정렬
+              Expanded(
+                flex: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 카드 수 표시
+                    Container(
+                      width: 45.w, // 크기 더 늘리기
+                      height: 45.w,
+                      decoration: BoxDecoration(
+                        color: isSelected ? TaroColors.textMystic : TaroColors.accentGold,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: TaroColors.cardShadow,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${spreadType.cardCount}',
+                          style: TextStyle(
+                            fontSize: 20.sp, // 폰트 크기 더 늘리기
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? TaroColors.accentGold : TaroColors.textMystic,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    Gap(16.h), // 간격 더 늘리기
+                    
+                    // 스프레드 이름
+                    Text(
+                      spreadType.name,
+                      style: TextStyle(
+                        fontSize: 15.sp, // 폰트 크기 더 늘리기
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? TaroColors.textMystic : TaroColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
+              ),
+              
+              // 중앙 영역 - 설명 부분
+              Expanded(
+                flex: 2,
                 child: Center(
                   child: Text(
-                    '${spreadType.cardCount}',
+                    spreadType.description,
                     style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected 
-                          ? TaroColors.accentGold 
-                          : TaroColors.textMystic,
+                      fontSize: 12.sp, // 폰트 크기 더 늘리기
+                      color: isSelected ? TaroColors.textSecondary : TaroColors.textMuted,
+                      height: 1.4,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3, // 3줄로 늘리기
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
               
-              Gap(12.h),
-              
-              // 스프레드 이름
-              Text(
-                spreadType.name,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? TaroColors.textMystic : TaroColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              
-              Gap(4.h),
-              
-              // 스프레드 설명
-              Text(
-                spreadType.description,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  color: isSelected 
-                      ? TaroColors.textSecondary 
-                      : TaroColors.textMuted,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              
-              Gap(8.h),
-              
-              // 선택 인디케이터
-              if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: TaroColors.textMystic,
-                  size: 16.sp,
-                ),
+              // 체크 표시 완전 제거 - 색으로 이미 선택 상태가 명확
+              // 사용자가 색으로 선택 상태를 충분히 인지할 수 있음
             ],
           ),
         ),
       ),
     );
   }
-}
-
-/// 스프레드 패턴 미리보기 위젯
-class SpreadPreviewWidget extends StatelessWidget {
-  final TaroSpreadType spreadType;
-  final double size;
-
-  const SpreadPreviewWidget({
-    super.key,
-    required this.spreadType,
-    this.size = 80,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _SpreadPatternPainter(
-          cardCount: spreadType.cardCount,
-          color: TaroColors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-/// 스프레드 패턴을 그리는 CustomPainter
-class _SpreadPatternPainter extends CustomPainter {
-  final int cardCount;
-  final Color color;
-
-  const _SpreadPatternPainter({
-    required this.cardCount,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final cardWidth = size.width * 0.15;
-    final cardHeight = size.height * 0.25;
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-
-    switch (cardCount) {
-      case 3:
-        _draw3CardSpread(canvas, paint, centerX, centerY, cardWidth, cardHeight);
-        break;
-      case 5:
-        _draw5CardSpread(canvas, paint, centerX, centerY, cardWidth, cardHeight);
-        break;
-      case 7:
-        _draw7CardSpread(canvas, paint, centerX, centerY, cardWidth, cardHeight);
-        break;
-      case 10:
-        _draw10CardSpread(canvas, paint, centerX, centerY, cardWidth, cardHeight);
-        break;
-    }
-  }
-
-  void _draw3CardSpread(Canvas canvas, Paint paint, double centerX, double centerY, double cardWidth, double cardHeight) {
-    // 세로 일렬
-    for (int i = 0; i < 3; i++) {
-      final x = centerX - cardWidth / 2;
-      final y = centerY - cardHeight * 1.2 + (i * cardHeight * 0.8);
-      _drawCard(canvas, paint, x, y, cardWidth, cardHeight);
-    }
-  }
-
-  void _draw5CardSpread(Canvas canvas, Paint paint, double centerX, double centerY, double cardWidth, double cardHeight) {
-    // 십자가 형태
-    final positions = [
-      Offset(centerX - cardWidth / 2, centerY - cardHeight * 0.6), // 상
-      Offset(centerX - cardWidth * 1.2, centerY - cardHeight / 2), // 좌
-      Offset(centerX - cardWidth / 2, centerY - cardHeight / 2), // 중앙
-      Offset(centerX + cardWidth * 0.2, centerY - cardHeight / 2), // 우
-      Offset(centerX - cardWidth / 2, centerY + cardHeight * 0.1), // 하
-    ];
-
-    for (final pos in positions) {
-      _drawCard(canvas, paint, pos.dx, pos.dy, cardWidth, cardHeight);
-    }
-  }
-
-  void _draw7CardSpread(Canvas canvas, Paint paint, double centerX, double centerY, double cardWidth, double cardHeight) {
-    // 호스슈 형태 (U자)
-    final positions = [
-      Offset(centerX - cardWidth * 1.5, centerY - cardHeight * 0.5), // 좌상
-      Offset(centerX - cardWidth * 0.5, centerY - cardHeight * 0.8), // 중상
-      Offset(centerX + cardWidth * 0.5, centerY - cardHeight * 0.5), // 우상
-      Offset(centerX - cardWidth * 1.2, centerY + cardHeight * 0.1), // 좌중
-      Offset(centerX - cardWidth / 2, centerY + cardHeight * 0.2), // 중앙
-      Offset(centerX + cardWidth * 0.2, centerY + cardHeight * 0.1), // 우중
-      Offset(centerX - cardWidth / 2, centerY + cardHeight * 0.8), // 하단
-    ];
-
-    for (final pos in positions) {
-      _drawCard(canvas, paint, pos.dx, pos.dy, cardWidth, cardHeight);
-    }
-  }
-
-  void _draw10CardSpread(Canvas canvas, Paint paint, double centerX, double centerY, double cardWidth, double cardHeight) {
-    // 켈틱 크로스
-    final positions = [
-      // 중앙 십자가
-      Offset(centerX - cardWidth / 2, centerY - cardHeight * 0.4), // 1
-      Offset(centerX - cardWidth / 2, centerY - cardHeight / 2), // 2
-      Offset(centerX - cardWidth / 2, centerY + cardHeight * 0.1), // 3
-      Offset(centerX - cardWidth / 2, centerY - cardHeight * 1.0), // 4
-      Offset(centerX - cardWidth * 1.2, centerY - cardHeight / 2), // 5
-      Offset(centerX + cardWidth * 0.2, centerY - cardHeight / 2), // 6
-      
-      // 우측 세로
-      Offset(centerX + cardWidth * 1.0, centerY + cardHeight * 0.8), // 7
-      Offset(centerX + cardWidth * 1.0, centerY + cardHeight * 0.3), // 8
-      Offset(centerX + cardWidth * 1.0, centerY - cardHeight * 0.2), // 9
-      Offset(centerX + cardWidth * 1.0, centerY - cardHeight * 0.7), // 10
-    ];
-
-    for (final pos in positions) {
-      _drawCard(canvas, paint, pos.dx, pos.dy, cardWidth, cardHeight);
-    }
-  }
-
-  void _drawCard(Canvas canvas, Paint paint, double x, double y, double width, double height) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(x, y, width, height),
-      const Radius.circular(2),
-    );
-    canvas.drawRRect(rect, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -82,10 +82,10 @@ class SpreadLayout extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Positioned(child: _buildCardSlot(0, '현재', width: cardWidth, height: cardHeight)),
-            Positioned(top: 0, child: _buildCardSlot(1, '도전', width: cardWidth, height: cardHeight)),
+            Positioned(top: 0, child: _buildCardSlot(1, '목표', width: cardWidth, height: cardHeight)),
             Positioned(left: 0, child: _buildCardSlot(2, '과거', width: cardWidth, height: cardHeight)),
             Positioned(right: 0, child: _buildCardSlot(3, '미래', width: cardWidth, height: cardHeight)),
-            Positioned(bottom: 0, child: _buildCardSlot(4, '기반', width: cardWidth, height: cardHeight)),
+            Positioned(bottom: 0, child: _buildCardSlot(4, '결과', width: cardWidth, height: cardHeight)),
           ],
         ),
       ),
@@ -187,7 +187,7 @@ class SpreadLayout extends StatelessWidget {
               top: cardHeight + gap + (cardHeight / 4),
               child: Transform.rotate(
                 angle: math.pi / 2,
-                child: _buildCardSlot(1, '도전', width: cardWidth, height: cardHeight),
+                child: _buildCardSlot(1, '장애물', width: cardWidth, height: cardHeight),
               ),
             ),
 
@@ -195,24 +195,24 @@ class SpreadLayout extends StatelessWidget {
             // 3. 맨 위 카드
             Positioned(
               top: 0,
-              child: _buildCardSlot(2, '의식', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(2, '문제의 이유', width: cardWidth, height: cardHeight),
             ),
             // 4. 맨 아래 카드
             Positioned(
               top: cardHeight * 2 + gap * 2,
-              child: _buildCardSlot(3, '무의식', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(3, '과거의 사건', width: cardWidth, height: cardHeight),
             ),
             // ★★★★★ 5. 왼쪽 카드 ('과거') - 간격 조정 ★★★★★
             Positioned(
               top: cardHeight + gap,
               left: 0, // 왼쪽 끝에 배치
-              child: _buildCardSlot(4, '과거', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(4, '목표', width: cardWidth, height: cardHeight),
             ),
             // ★★★★★ 6. 오른쪽 카드 ('미래') - 간격 조정 ★★★★★
             Positioned(
               top: cardHeight + gap,
               right: 0, // 오른쪽 끝에 배치
-              child: _buildCardSlot(5, '미래', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(5, '가까운미래', width: cardWidth, height: cardHeight),
             ),
 
             // --- 하단 2x2 카드 (이미지 기준) ---
@@ -225,7 +225,7 @@ class SpreadLayout extends StatelessWidget {
             Positioned(
               bottom: cardHeight + gap,
               right: (cardWidth / 2) + (gap / 2),
-              child: _buildCardSlot(7, '주변 환경', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(7, '남이 보는\n나의 모습', width: cardWidth, height: cardHeight),
             ),
             Positioned(
               bottom: 0,

@@ -49,22 +49,44 @@ class TaroCardSelectionPage extends ConsumerWidget {
     );
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: TaroBackground(
         child: SafeArea(
-          // ★★★★★ 1. Column을 Stack으로 변경 ★★★★★
           child: Stack(
             children: [
-              // ★★★★★ 2. 카드 덱을 맨 아래에 배치 (더 위로 이동) ★★★★★
-              // Positioned를 사용하여 위치를 정밀하게 조정합니다.
+              // ★★★★★ 1. 카드 덱을 맨 아래에 배치 ★★★★★
               Positioned(
-                top: 10.h, // 상단으로부터의 거리 (수치를 줄이면 더 위로 올라갑니다)
+                top: 10.h,
                 left: 0,
                 right: 0,
                 child: FanCardDeck(availableCards: displayCards),
               ),
 
-              // ★★★★★ 3. 나머지 UI 요소들을 카드 덱 '위'에 배치 ★★★★★
-              // Stack은 나중에 추가된 자식이 더 위에 그려집니다.
+              // ★★★★★ 2. 제목 부근 그라데이션 오버레이 ★★★★★
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 100.h, // 그라데이션이 적용될 높이 (필요에 따라 조정)
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors:  [
+                        const Color(0xFF1a1a2e),
+                        const Color(0xFF1a1a2e).withOpacity(0.7),  // 진한 네이비
+                        const Color(0xFF16213e).withOpacity(0.5),  // 미드나이트 블루
+                        const Color(0xFF16213e).withOpacity(0.2),  // 딥 블루
+                        Colors.transparent,
+                    ],
+                      stops: const [0.0, 0.3, 0.5, 0.7, 1.0], // 그라데이션 비율 조정
+                    ),
+                  ),
+                ),
+              ),
+
+              // ★★★★★ 3. UI 요소들을 그라데이션 '위'에 배치 ★★★★★
               Column(
                 children: [
                   // 상단 헤더
@@ -72,18 +94,16 @@ class TaroCardSelectionPage extends ConsumerWidget {
 
                   // 안내 문구
                   Padding(
-                    padding: EdgeInsets.only(top: 180.h), // 카드 덱과의 간격 조절
+                    padding: EdgeInsets.only(top: 100.h),
                     child: Text(
                       '카드를 드래그하여 배치하세요',
                       style: TextStyle(color: TaroColors.textSecondary, fontSize: 14.sp),
                     ),
                   ),
 
-                  // 스프레드 영역 (남는 공간을 모두 차지)
+                  // 스프레드 영역
                   Expanded(
-                    // SingleChildScrollView를 추가하여 이 영역만 스크롤 가능하게 만듭니다.
                     child: SingleChildScrollView(
-                      // 자식 위젯이 스크롤 영역의 중앙에 오도록 정렬합니다.
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 20.h),
                         child: _buildSpreadArea(state, notifier),
@@ -150,17 +170,51 @@ class TaroCardSelectionPage extends ConsumerWidget {
     );
   }
 
+
   Widget _buildSpreadArea(TaroConsultationState state, TaroConsultationNotifier notifier) {
     final spread = state.selectedSpreadType;
     if (spread == null) return const SizedBox.shrink();
 
-    final selectedCards = state.selectedCards.map((id) => id != null ? TaroCards.findById(id) : null).toList();
+    // 이 부분은 state.selectedCards (int? 리스트)를
+    // TaroCard? 객체 리스트로 변환하는 역할을 합니다.
+    final List<TaroCard?> selectedCardObjects = state.selectedCards.map((cardId) {
+      return cardId != null ? TaroCards.findById(cardId) : null;
+    }).toList();
 
     return SpreadLayout(
       spreadType: spread,
-      selectedCards: selectedCards,
-      onCardPlaced: (card, position) => notifier.selectCard(card.id, position),
-      onCardRemoved: (position) => notifier.removeCard(position),
+      selectedCards: selectedCardObjects,
+
+      // ★★★★★ 바로 이 부분을 수정합니다! ★★★★★
+      onCardPlaced: (draggedCard, position) {
+        // draggedCard는 UI용 '더미' 카드이므로 사용하지 않습니다.
+
+        // 1. 실제 전체 덱(78장)을 가져옵니다.
+        final fullDeck = TaroCards.fullDeck;
+
+        // 2. 이미 선택된 카드들의 ID 목록을 가져옵니다.
+        final Set<String?> alreadySelectedIds = state.selectedCards.toSet();
+
+        // 3. 아직 선택되지 않은 카드들만 필터링합니다.
+        final List<TaroCard> availableRealCards = fullDeck
+            .where((card) => !alreadySelectedIds.contains(card.id))
+            .toList();
+
+        // 4. 선택 가능한 실제 카드들을 다시 섞어서 랜덤성을 부여합니다.
+        availableRealCards.shuffle();
+
+        // 5. 만약 선택할 수 있는 실제 카드가 남아있다면,
+        if (availableRealCards.isNotEmpty) {
+          // 6. 그중 첫 번째 카드를 '이번에 선택된 진짜 카드'로 결정합니다.
+          final selectedCard = availableRealCards.first;
+
+          // 7. 이 '진짜' 카드의 ID를 Notifier에게 전달합니다.
+          notifier.selectCard(selectedCard.id, position);
+        }
+      },
+      onCardRemoved: (position) {
+        notifier.removeCard(position);
+      },
     );
   }
 

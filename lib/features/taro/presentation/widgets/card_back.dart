@@ -23,7 +23,7 @@ class CardBack extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.r),
         child: Image.asset(
-          'assets/illustrations/taro/card_back_1_high.webp',
+          'assets/illustrations/taro/card_back_2_high.webp',
           fit: BoxFit.cover, // 공간을 꽉 채우도록 설정
         ),
       ),
