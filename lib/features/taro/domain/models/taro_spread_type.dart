@@ -29,13 +29,13 @@ class TaroSpreadTypes {
     ),
     TaroSpreadType(
       cardCount: 5,
-      name: '십자가 스프레드',
+      name: '십자가',
       nameEn: 'Cross Spread',
       description: '원인, 과정, 결과에대한 분석',
     ),
     TaroSpreadType(
       cardCount: 7,
-      name: '매직넘버 스프레드',
+      name: '매직넘버',
       nameEn: 'MagicNumber Spread',
       description: '소원 성취를 위한 매직넘버 분석', // 한 줄로 단순화
     ),

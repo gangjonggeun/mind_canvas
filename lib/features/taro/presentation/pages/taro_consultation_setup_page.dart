@@ -136,25 +136,70 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
           ],
         ),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Text(
-            'Mind Canvas',
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: TaroColors.textMystic,
-              letterSpacing: 1.2,
-            ),
+          // 뒤로가기 버튼
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: Icon(Icons.arrow_back_ios, color: TaroColors.textMystic),
           ),
-          Gap(8.h),
-          Text(
-            '타로 상담',
-            style: TextStyle(
-              fontSize: 32.sp,
-              fontWeight: FontWeight.w300,
-              color: TaroColors.textMystic,
-              letterSpacing: 0.5,
+          
+          // 타이틀 영역 (우측 정렬)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      '타로 심리 상담',
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                        color: TaroColors.textMystic,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Gap(8.w),
+                    Text(
+                      '🔮',
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                      ),
+                    ),
+                  ],
+                ),
+                Gap(6.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      '✨',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                    Gap(4.w),
+                    Text(
+                      '자신의 운명을 점쳐보세요',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w300,
+                        color: TaroColors.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Gap(4.w),
+                    Text(
+                      '✨',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
