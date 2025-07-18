@@ -59,7 +59,7 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
   }
 
   /// 카드 선택
-  void selectCard(String cardId, int position) { // String -> int
+  void selectCard(String cardId, int position) {
     if (state.selectedSpreadType == null) {
       _logger.w('No spread type selected');
       return;
@@ -77,12 +77,13 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
       return;
     }
 
-    // ★★★ 타입을 int? 로 수정 ★★★
+    // ★★★ 상태 업데이트 최적화 ★★★
     final newSelectedCards = List<String?>.from(state.selectedCards);
     newSelectedCards[position] = cardId;
 
     _logger.d('Card selected: $cardId at position $position');
 
+    // 깜빡임 방지를 위해 상태 업데이트를 한 번에 처리
     state = state.copyWith(
       selectedCards: newSelectedCards,
       status: TaroStatus.cardSelection,
@@ -103,6 +104,7 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
 
     _logger.d('Card removed: $removedCard from position $position');
     
+    // 깜빡임 방지를 위해 상태 업데이트를 한 번에 처리
     state = state.copyWith(
       selectedCards: newSelectedCards,
       status: TaroStatus.cardSelection,
@@ -205,10 +207,11 @@ class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
 }
 
 /// 메인 Provider
-final taroConsultationNotifierProvider = 
-    StateNotifierProvider<TaroConsultationNotifier, TaroConsultationState>(
-  (ref) => TaroConsultationNotifier(),
-);
+// StateNotifierProvider 뒤에 .autoDispose를 추가합니다.
+final taroConsultationNotifierProvider = StateNotifierProvider.autoDispose<
+    TaroConsultationNotifier, TaroConsultationState>((ref) {
+  return TaroConsultationNotifier();
+});
 
 /// 편의 Provider들
 

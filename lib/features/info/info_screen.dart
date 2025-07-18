@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
-import '../info/factories/test_factory.dart';
-import '../info/navigation/test_router.dart';
+import 'factories/test_factory.dart';
+import 'navigation/test_router.dart';
 
 /// 🔍 테스트 정보 화면
-/// 
+///
 /// 테스트 시작 전 사용자에게 제공되는 정보:
 /// - 테스트 제목 및 부제목
 /// - 테스트 진행 방법 안내
 /// - 시작하기 버튼
-/// 
+///
 /// 메모리 최적화:
 /// - const 생성자 사용
 /// - 위젯 재사용 최대화
@@ -17,7 +17,7 @@ import '../info/navigation/test_router.dart';
 class InfoScreen extends StatefulWidget {
   final String testId;
   final String? heroTag; // Hero 애니메이션용
-  
+
   const InfoScreen({
     Key? key,
     required this.testId,
@@ -28,13 +28,13 @@ class InfoScreen extends StatefulWidget {
   State<InfoScreen> createState() => _InfoScreenState();
 }
 
-class _InfoScreenState extends State<InfoScreen> 
+class _InfoScreenState extends State<InfoScreen>
     with SingleTickerProviderStateMixin {
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   // TODO: 서버에서 받아올 데이터 (현재는 Mock 데이터)
   TestInfoData? _testInfo;
   bool _isLoading = true;
@@ -60,7 +60,7 @@ class _InfoScreenState extends State<InfoScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -68,7 +68,7 @@ class _InfoScreenState extends State<InfoScreen>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -81,16 +81,16 @@ class _InfoScreenState extends State<InfoScreen>
   Future<void> _loadTestInfo() async {
     // TODO: 실제 API 호출로 교체
     // final testInfo = await TestApiService.getTestInfo(widget.testId);
-    
+
     // Mock 데이터 로딩 시뮬레이션
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     if (mounted) {
       setState(() {
         _testInfo = _getMockTestInfo(widget.testId);
         _isLoading = false;
       });
-      
+
       _animationController.forward();
     }
   }
@@ -105,7 +105,7 @@ class _InfoScreenState extends State<InfoScreen>
         description: '집(House), 나무(Tree), 사람(Person)을 그려서 무의식 속 심리를 분석하는 검사입니다.',
         instructions: [
           '🏠 먼저 집을 자유롭게 그려주세요',
-          '🌳 다음으로 나무를 원하는 모양으로 그려주세요', 
+          '🌳 다음으로 나무를 원하는 모양으로 그려주세요',
           '👤 마지막으로 사람을 그려주세요',
           '⏱️  각 그림당 제한시간은 없으니 편안하게 그리시면 됩니다',
           '🎨 그림 실력은 중요하지 않습니다. 마음대로 표현해주세요',
@@ -149,8 +149,25 @@ class _InfoScreenState extends State<InfoScreen>
         category: '자아 탐색',
         imageUrl: 'assets/images/persona_pageview/persona_intro.png',
       ),
+      'taro': TestInfoData(
+        id: 'taro',
+        title: '타로 상담',
+        subtitle: '카드로 알아보는 나의 운명',
+        description: '78장의 타로카드를 통해 과거, 현재, 미래를 읽고 인생의 방향을 찾아보세요.',
+        instructions: [
+          '🔮 질문을 마음속으로 생각해주세요',
+          '🃏 스프레드를 선택하고 카드를 뽑아주세요',
+          '✨ AI가 카드의 의미를 해석해드립니다',
+          '💫 결과를 통해 새로운 통찰을 얻어보세요',
+          '📱 결과는 저장하여 나중에 다시 볼 수 있습니다',
+        ],
+        estimatedTime: '5-10분',
+        difficulty: '쉬움',
+        category: '점술',
+        imageUrl: 'assets/images/taro_pageview/taro_high.webp',
+      ),
     };
-    
+
     return mockData[testId] ?? TestInfoData(
       id: testId,
       title: '알 수 없는 테스트',
@@ -168,9 +185,9 @@ class _InfoScreenState extends State<InfoScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      body: _isLoading 
-        ? _buildLoadingState()
-        : _buildContent(context),
+      body: _isLoading
+          ? _buildLoadingState()
+          : _buildContent(context),
     );
   }
 
@@ -197,7 +214,7 @@ class _InfoScreenState extends State<InfoScreen>
 
   Widget _buildContent(BuildContext context) {
     if (_testInfo == null) return const SizedBox.shrink();
-    
+
     return CustomScrollView(
       slivers: [
         _buildAppBar(context),
@@ -283,7 +300,7 @@ class _InfoScreenState extends State<InfoScreen>
                 },
               ),
             ),
-          
+
           // 그라데이션 오버레이
           Container(
             decoration: BoxDecoration(
@@ -297,7 +314,7 @@ class _InfoScreenState extends State<InfoScreen>
               ),
             ),
           ),
-          
+
           // 테스트 기본 정보
           Positioned(
             bottom: 60,
@@ -325,9 +342,9 @@ class _InfoScreenState extends State<InfoScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // 제목
                 Text(
                   _testInfo!.title,
@@ -338,9 +355,9 @@ class _InfoScreenState extends State<InfoScreen>
                     height: 1.2,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // 부제목
                 Text(
                   _testInfo!.subtitle,
@@ -365,19 +382,19 @@ class _InfoScreenState extends State<InfoScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildQuickInfo(),
-          
+
           const SizedBox(height: 32),
-          
+
           _buildDescription(),
-          
+
           const SizedBox(height: 32),
-          
+
           _buildInstructions(),
-          
+
           const SizedBox(height: 40),
-          
+
           _buildStartButton(context),
-          
+
           const SizedBox(height: 24),
         ],
       ),
@@ -403,13 +420,13 @@ class _InfoScreenState extends State<InfoScreen>
                 color: AppColors.primaryBlue,
               ),
             ),
-            
+
             Container(
               width: 1,
               height: 40,
               color: AppColors.borderLight,
             ),
-            
+
             Expanded(
               child: _buildInfoItem(
                 icon: Icons.trending_up,
@@ -494,9 +511,9 @@ class _InfoScreenState extends State<InfoScreen>
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -543,9 +560,9 @@ class _InfoScreenState extends State<InfoScreen>
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // 구분선
         Container(
           height: 2,
@@ -559,9 +576,9 @@ class _InfoScreenState extends State<InfoScreen>
             borderRadius: BorderRadius.circular(1),
           ),
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         ...List.generate(_testInfo!.instructions.length, (index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -608,9 +625,9 @@ class _InfoScreenState extends State<InfoScreen>
             ),
           ),
         ),
-        
+
         const SizedBox(width: 16),
-        
+
         // 설명 텍스트
         Expanded(
           child: Container(
@@ -683,41 +700,52 @@ class _InfoScreenState extends State<InfoScreen>
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-
     );
 
+    // 🏭 Factory + Router 패턴 사용 - 수정된 부분
+    final testId = _testInfo!.id.toLowerCase();
 
+    if (testId == 'taro') {
+      // 타로는 별도 네비게이션
+      _navigateToTaro(context);
+    } else {
+      // 일반 테스트는 기존 Router 사용
+      TestRouter.navigateToTest(
+        context,
+        _getTestTypeFromInfo(_testInfo!),
+      );
+    }
+  }
 
-
-    // TODO: 여기 TestInfo 형태로 바꾸기 기존 TestType은
-    // 🏭 Factory + Router 패턴 사용
-    // TestRouter.navigateToTest(
-    //   context,
-    //   _getTestTypeFromInfo(_testInfo!), // TestInfo에서 TestType으로 변환
-    // );
-
-
-
+  // 타로 전용 네비게이션
+  void _navigateToTaro(BuildContext context) {
+    // 타로 상담 설정 페이지로 이동
+    Navigator.pushNamed(context, '/taro/setup');
   }
 }
-//팩토리 테스트 헬퍼
-// TestType _getTestTypeFromInfo(dynamic testInfo) {
-//   // 실제로는 testInfo의 id나 type 필드로 판단
-//   final testId = testInfo.id ?? testInfo.title ?? '';
-//
-//   if (testId.contains('htp') || testId.contains('그림')) {
-//     return TestType.htp;
-//   } else if (testId.contains('mbti')) {
-//     return TestType.mbti;
-//   } else if (testId.contains('persona')) {
-//     return TestType.persona;
-//   } else {
-//     return TestType.cognitive;
-//   }
-// }
+
+// 팩토리 테스트 헬퍼 - 수정된 부분
+TestType _getTestTypeFromInfo(TestInfoData testInfo) {
+  // 실제로는 testInfo의 id나 type 필드로 판단
+  final testId = testInfo.id.toLowerCase();
+
+  switch (testId) {
+    case 'htp':
+      return TestType.htp;
+    case 'mbti':
+      return TestType.mbti;
+    case 'persona':
+      return TestType.persona;
+    case 'taro':
+    // 타로는 별도 네비게이션 처리
+      return TestType.cognitive; // 임시로 cognitive 사용
+    default:
+      return TestType.cognitive;
+  }
+}
 
 /// 📊 테스트 정보 데이터 모델
-/// 
+///
 /// 서버에서 받아올 테스트 정보 구조
 class TestInfoData {
   final String id;

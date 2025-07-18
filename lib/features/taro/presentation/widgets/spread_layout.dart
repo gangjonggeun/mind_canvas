@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../domain/models/taro_card.dart';
 import '../../domain/models/taro_spread_type.dart';
 import 'card_back.dart';
 import 'dart:math' as math;
 
-class SpreadLayout extends StatelessWidget {
+class SpreadLayout extends StatefulWidget {
   const SpreadLayout({
     super.key,
     required this.spreadType,
@@ -21,6 +22,15 @@ class SpreadLayout extends StatelessWidget {
   final Function(int position)? onCardRemoved;
 
   @override
+  State<SpreadLayout> createState() => _SpreadLayoutState();
+}
+
+class _SpreadLayoutState extends State<SpreadLayout> {
+  // 드래그 상태 관리 (깜빡임 방지)
+  int? _hoveredSlot;
+  bool _isDragging = false;
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -31,7 +41,7 @@ class SpreadLayout extends StatelessWidget {
 
   /// 카드 개수에 따라 적절한 레이아웃을 반환합니다.
   Widget _buildSpreadLayout(BoxConstraints constraints) {
-    switch (spreadType.cardCount) {
+    switch (widget.spreadType.cardCount) {
       case 3:
         return _buildThreeCardVerticalLayout(constraints);
       case 5:
@@ -254,33 +264,34 @@ class SpreadLayout extends StatelessWidget {
         crossAxisSpacing: 8.w,
         mainAxisSpacing: 8.h,
       ),
-      itemCount: spreadType.cardCount,
+      itemCount: widget.spreadType.cardCount,
       itemBuilder: (context, index) {
         return _buildCardSlot(index, '카드 ${index + 1}');
       },
     );
   }
 
-  /// 카드 슬롯 빌더
+  /// 카드 슬롯 빌더 (깜빡임 방지 최적화)
   Widget _buildCardSlot(
     int position,
     String positionName, {
     double? width,
     double? height,
   }) {
-    final card = (position < selectedCards.length)
-        ? selectedCards[position]
+    final card = (position < widget.selectedCards.length)
+        ? widget.selectedCards[position]
         : null;
 
     return DragTarget<TaroCard>(
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
         final isHighlighted = card != null || isHovering;
+        
         return Container(
           width: width,
           height: height,
           decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
               color: isHighlighted
@@ -291,17 +302,55 @@ class SpreadLayout extends StatelessWidget {
           ),
           child: card != null
               ? GestureDetector(
-                  onTap: () => onCardRemoved?.call(position),
+                  onTap: () => widget.onCardRemoved?.call(position),
                   child: const CardBack(),
                 )
               : _buildEmptySlot(positionName),
         );
       },
-      onWillAccept: (draggedCard) => card == null,
-      onAccept: (draggedCard) {
-        onCardPlaced?.call(draggedCard, position);
+      onWillAcceptWithDetails: (details) {
+        // 드래그 상태 관리
+        if (_hoveredSlot != position) {
+          setState(() {
+            _hoveredSlot = position;
+          });
+        }
+        return card == null;
+      },
+      onLeave: (data) {
+        // 드래그가 슬롯을 벗어났을 때
+        if (_hoveredSlot == position) {
+          setState(() {
+            _hoveredSlot = null;
+          });
+        }
+      },
+      onAcceptWithDetails: (details) async {
+        // 드래그 상태 초기화
+        setState(() {
+          _hoveredSlot = null;
+          _isDragging = false;
+        });
+
+        // 카드 놓는 사운드 재생 (비동기로 처리하여 UI 블로킹 방지)
+        _playCardPlaceSound();
+        
+        // 카드 배치 처리
+        widget.onCardPlaced?.call(details.data, position);
       },
     );
+  }
+
+  /// 카드 놓는 사운드 재생 (비동기 처리)
+  void _playCardPlaceSound() async {
+    try {
+      final player = AudioPlayer();
+      // TODO: assets/sounds/card_place.mp3 파일을 추가하세요
+      await player.play(AssetSource('sounds/card_place.mp3'));
+    } catch (e) {
+      // 사운드 파일이 없을 경우 에러 무시
+      debugPrint('사운드 재생 실패: $e');
+    }
   }
 
   /// 빈 슬롯 UI

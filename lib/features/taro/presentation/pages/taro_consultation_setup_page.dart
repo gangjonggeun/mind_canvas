@@ -10,6 +10,7 @@ import '../widgets/taro_background.dart';
 import '../widgets/spread_type_card.dart';
 import 'taro_card_selection_page.dart';
 import 'taro_result_page.dart';
+import 'dart:async';
 
 /// 타로 상담 설정 페이지 (테마 입력 + 스프레드 선택)
 /// 
@@ -29,12 +30,54 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
   final _themeController = TextEditingController();
   final _themeFocusNode = FocusNode();
 
+
+  @override
+  void initState() {
+    super.initState();
+  }
   @override
   void dispose() {
     _themeController.dispose();
     _themeFocusNode.dispose();
     super.dispose();
   }
+
+  // /// 앱 생명주기 변화 감지
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   super.didChangeAppLifecycleState(state);
+  //
+  //   switch (state) {
+  //     case AppLifecycleState.paused:
+  //     case AppLifecycleState.inactive:
+  //       // 백그라운드 진입 시 메모리 정리
+  //       _performMemoryCleanup();
+  //       break;
+  //     case AppLifecycleState.resumed:
+  //       // 포그라운드 복귀 시 필요한 작업 (없음)
+  //       break;
+  //     case AppLifecycleState.detached:
+  //       // 앱 종료 시 완전 정리
+  //       _performMemoryCleanup();
+  //       break;
+  //     case AppLifecycleState.hidden:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //   }
+  // }
+
+  // /// 메모리 정리 작업
+  // void _performMemoryCleanup() {
+  //   if (_isDisposed) return;
+  //
+  //   try {
+  //     // 이미지 캐시 정리 (메모리 절약)
+  //     imageCache.clear();
+  //     imageCache.clearLiveImages();
+  //   } catch (e) {
+  //     // 정리 중 오류 발생 시 무시
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +183,10 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
         children: [
           // 뒤로가기 버튼
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              // 현재 내비게이션 스택의 맨 처음(홈)으로 돌아갑니다.
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
             icon: Icon(Icons.arrow_back_ios, color: TaroColors.textMystic),
           ),
           

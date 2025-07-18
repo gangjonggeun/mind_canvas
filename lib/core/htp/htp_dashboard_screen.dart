@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'htp_drawing_screen.dart';
-
+import 'model/HtpSessionData.dart';
 /// HTP 검사 중간단계 대시보드 화면
 /// 3개 그림(집, 나무, 사람)의 진행상태를 관리하고 표시
 class HtpDashboardScreen extends StatefulWidget {
@@ -22,6 +22,10 @@ class _HtpDashboardScreenState extends State<HtpDashboardScreen>
     'person': HtpDrawingStatus.notStarted,
   };
 
+  List<String> _drawingOrder = []; // 실제 그린 순서 추적
+  Map<String, HtpDrawing> _drawingData = {}; // 실제 그림 데이터 저장
+  late HtpSession _currentSession; // 현재 세션
+
   // 🎨 애니메이션 컨트롤러 (카드 애니메이션용)
   late AnimationController _cardAnimationController;
   late Animation<double> _cardAnimation;
@@ -30,6 +34,18 @@ class _HtpDashboardScreenState extends State<HtpDashboardScreen>
   void initState() {
     super.initState();
     _setupAnimations();
+
+    _initializeSession();
+  }
+
+  void _initializeSession() {
+    _currentSession = HtpSession(
+      sessionId: 'session_${DateTime.now().millisecondsSinceEpoch}',
+      userId: 'user_123', // 실제 사용자 ID
+      startTime: DateTime.now().millisecondsSinceEpoch,
+      drawings: [],
+      supportsPressure: false, // 기기 정보에 따라
+    );
   }
 
   /// 🎨 애니메이션 설정
@@ -583,14 +599,22 @@ class _HtpDashboardScreenState extends State<HtpDashboardScreen>
       ),
     );
 
-    // 그리기 완료 후 돌아왔을 때 상태 업데이트
-    if (result == true) {
+    // result가 HtpDrawing 데이터인지 확인
+    if (result is HtpDrawing) {
+      // 순서 추적
+      if (!_drawingOrder.contains(type)) {
+        _drawingOrder.add(type); // 실제 그린 순서 기록
+      }
+
+      // orderIndex 할당 (실제 순서에 따라)
+      final orderIndex = _drawingOrder.indexOf(type);
+      final updatedDrawing = result.copyWith(orderIndex: orderIndex);
+
+      // 데이터 저장
+      _drawingData[type] = updatedDrawing;
+
       setState(() {
         _drawingStatus[type] = HtpDrawingStatus.completed;
-      });
-    } else if (result == 'saved') {
-      setState(() {
-        _drawingStatus[type] = HtpDrawingStatus.inProgress;
       });
     }
   }

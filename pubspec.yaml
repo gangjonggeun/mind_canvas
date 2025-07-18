@@ -35,6 +35,7 @@ dependencies:
   cached_network_image: ^3.4.1      # 이미지 캐싱
   flutter_svg: ^2.0.10+1            # SVG 지원
   lottie: ^3.1.2                    # 화려한 애니메이션 (After Effects)
+  audioplayers: ^6.1.0              # 사운드 재생 (가벼운 라이브러리, ~200kb)
   
   # 🎨 그리기 라이브러리 (다양한 옵션)
   scribble: ^0.10.0+1               # 경량 그리기 ( HTP 검사용)
@@ -93,6 +94,7 @@ flutter:
     - assets/icons/
     - assets/fonts/
     - assets/animations/  # Lottie 애니메이션 파일들
+    - assets/sounds/      # 사운드 파일들 (mp3, wav 등)
     - assets/illustrations/
     - assets/illustrations/item/  # 아이템 이미지들 (WebP 포함)
     - assets/illustrations/taro/  # 타로 이미지들 (WebP 포함)
