@@ -10,6 +10,10 @@ class AppColors {
   // Private constructor to prevent instantiation
   AppColors._();
 
+  // ===== result 결과 창 컬러 =====
+  static const Color grey700 = Color(0xFF616161);
+  static const Color slateGrey = Color(0xFF4A5568);
+
   // ===== 🎨 Primary Brand Colors =====
   static const Color primaryBlue = Color(0xFF6B73FF);
   static const Color primaryBlueDark = Color(0xFF5A63E8);

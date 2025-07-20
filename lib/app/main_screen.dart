@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/analysis/presentation/analysis_screen.dart';
+import '../core/consulting/presentation/consulting_screen.dart';
 import '../core/home/home_screen.dart';
+import '../core/recommendation/presentation/recommendation_screen.dart';
 
 /// Mind Canvas 메인 화면
-/// 
+///
 /// 바텀 네비게이션을 담당하며 화면 분기 처리만 수행
 /// - 탭 상태 관리
 /// - 각 Screen으로 분기 처리
@@ -27,7 +29,8 @@ class _MainScreenState extends State<MainScreen> {
     _screens = [
       HomeScreen(onGoToAnalysis: goToAnalysis),  // 콜백 전달
       const AnalysisScreen(),  // 트렌디한 분석 화면
-      const _HistoryScreen(),
+      const RecommendationScreen(),
+      const ConsultingScreen(),  // 🔄 기록 → 상담으로 변경
       const _ProfileScreen(),
     ];
   }
@@ -69,8 +72,9 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           _buildNavItem(Icons.home_outlined, '홈', 0),
           _buildNavItem(Icons.bar_chart_outlined, '분석', 1),
-          _buildNavItem(Icons.history_outlined, '기록', 2),
-          _buildNavItem(Icons.person_outline, '프로필', 3),
+          _buildNavItem(Icons.star_border, '추천', 2),
+          _buildNavItem(Icons.psychology_outlined, '상담', 3),
+          _buildNavItem(Icons.person_outline, '프로필', 4),
         ],
       ),
     );
@@ -79,7 +83,7 @@ class _MainScreenState extends State<MainScreen> {
   /// 네비게이션 아이템 위젯
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isActive = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -108,49 +112,6 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 기록 화면 임시 플레이스홀더
-class _HistoryScreen extends StatelessWidget {
-  const _HistoryScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      body: const SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.history,
-                size: 64,
-                color: Color(0xFF4ECDC4),
-              ),
-              SizedBox(height: 16),
-              Text(
-                '📱 기록 화면',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                '심리검사 기록을 관리하는 화면입니다',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

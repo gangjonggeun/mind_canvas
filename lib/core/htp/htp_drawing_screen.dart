@@ -97,13 +97,28 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      // backgroundColor는 이제 배경 이미지에 가려지므로 그대로 두거나 제거해도 됩니다.
       backgroundColor:
       isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       extendBodyBehindAppBar: true,
       appBar: _buildModernAppBar(theme, isDarkMode),
       body: Stack(
         children: [
-          _buildGradientBackground(isDarkMode),
+          // ✅ 1. 여기에 배경 이미지 컨테이너를 추가합니다.
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                // ✅ 2. 이미지 경로를 정확하게 입력해주세요.
+                // 예: 'assets/images/backgrounds/your_background.png'
+                image: AssetImage('assets/images/background/htp_background_2_high.webp'),
+
+                // ✅ 3. BoxFit.cover를 사용하여 화면을 꽉 채웁니다.
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+
+          // --- 여기부터는 기존의 UI 위젯들입니다 (순서 변경 없음) ---
           _buildDrawingInstruction(isDarkMode),
           _buildDrawingArea(isDarkMode),
           _buildModernToolbar(theme, isDarkMode),

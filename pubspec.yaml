@@ -98,7 +98,7 @@ flutter:
     - assets/illustrations/
     - assets/illustrations/item/  # 아이템 이미지들 (WebP 포함)
     - assets/illustrations/taro/  # 타로 이미지들 (WebP 포함)
-
+    - assets/images/background/
   
   # 🔤 Custom Fonts (예시)
   # fonts:

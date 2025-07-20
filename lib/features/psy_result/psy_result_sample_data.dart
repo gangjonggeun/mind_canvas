@@ -1,12 +1,12 @@
-
 import 'domain/entities/psy_result.dart';
 
 /// 심리테스트 결과 샘플 데이터
-/// 여성 사용자 선호 감성적 컨텐츠
+/// 사용자 요구사항에 맞는 3가지 레이아웃과 개선된 mock 데이터
 class PsyResultSampleData {
-  /// 짧은 결과 샘플 (연애 성향 테스트)
-  static PsyResult get shortLoveResult => PsyResult(
-    id: 'love_001',
+
+  // ===== 1. 텍스트 중심 레이아웃 (layoutType: 0) =====
+  static PsyResult get textCentricResult => PsyResult(
+    id: 'text_001',
     title: '따뜻한 마음의 연인',
     subtitle: '사랑 앞에서 진심으로 다가가는 당신',
     description: '당신은 사랑에 있어서 진정성을 가장 중요하게 생각하는 사람이에요. '
@@ -14,7 +14,7 @@ class PsyResultSampleData {
         '누구라도 특별함을 느끼게 만들어요. 때로는 너무 깊이 생각해서 상처받기도 하지만, '
         '그런 섬세함이야말로 당신만의 가장 큰 매력이랍니다.',
     type: PsyResultType.love,
-    mainColor: 'FFFF8FA3', // 모던 핑크
+    mainColor: 'FFFF8FA3',
     bgGradientStart: 'FFFFE5EA',
     bgGradientEnd: 'FFFF8FA3',
     iconEmoji: '💕',
@@ -35,137 +35,133 @@ class PsyResultSampleData {
       ),
     ],
     createdAt: DateTime.now(),
+    layoutType: 0,
     tags: ['연애', '진심', '따뜻함', '배려'],
   );
 
-  /// 긴 결과 샘플 (성격 분석 테스트)
-  static PsyResult get longPersonalityResult => PsyResult(
-    id: 'personality_001',
-    title: '꽃처럼 아름다운 감성파',
-    subtitle: '세상의 아름다움을 느끼고 표현하는 예술가 기질',
-    description: '당신은 세상을 바라보는 독특한 시각을 가진 사람이에요. '
-        '일상 속에서도 특별한 아름다움을 발견하고, 그것을 자신만의 방식으로 표현하는 것을 좋아해요. '
-        '감정이 풍부하고 섬세해서 때로는 상처받기 쉽지만, 그런 깊은 감성이야말로 당신이 세상에 '
-        '전하는 가장 큰 선물이에요. 주변 사람들은 당신의 따뜻하고 진실한 마음에 감동받곤 해요.',
-    type: PsyResultType.personality,
-    mainColor: 'FFA78BFA', // 모던 퍼플
-    bgGradientStart: 'FFF4F0FF',
-    bgGradientEnd: 'FFE0D1FF',
-    iconEmoji: '🌸',
+  // ===== 2. 하이브리드 레이아웃 (layoutType: 2) =====
+  static PsyResult get hybridMbtiResult => PsyResult(
+    id: 'mbti_enfp_001',
+    title: 'ENFP - 활발한 꿈꾸는 사람',
+    subtitle: '열정적이고 창의적인 영감의 원천',
+    description: '당신은 넘치는 에너지와 창의성으로 주변을 밝게 만드는 사람이에요. '
+        '새로운 아이디어와 가능성을 탐구하는 것을 좋아하고, 사람들과의 진심어린 관계를 소중히 여겨요. '
+        '때로는 너무 많은 것을 한 번에 시도하려고 해서 집중이 어려울 수 있지만, '
+        '그런 다양성이야말로 당신의 가장 큰 강점이에요.',
+    type: PsyResultType.mbti,
+    mainColor: 'FFFF6B9D',
+    bgGradientStart: 'FFFFF0F5',
+    bgGradientEnd: 'FFFFE4E9',
+    iconEmoji: '🌟',
+    images: [
+      PsyResultImage(
+        id: 'mbti_main_character',
+        url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop',
+        type: PsyImageType.avatar,
+        caption: 'ENFP 메인 캐릭터',
+      ),
+    ],
     sections: [
       PsyResultSection(
-        title: '당신의 핵심 성격',
-        content: '당신은 감정이 풍부하고 직관적인 사람이에요. 논리보다는 감정과 직감을 '
-            '더 신뢰하는 편이고, 그래서 종종 놀라운 통찰력을 보여주기도 해요. '
-            '예술적 감각이 뛰어나고, 아름다운 것들에 대한 안목이 남다르죠. '
-            '하지만 때로는 너무 감정적으로 접근해서 객관적 판단이 어려울 때도 있어요. '
-            '그럴 때는 잠시 거리를 두고 생각해보는 시간을 갖는 것이 도움이 될 거예요.',
-        iconEmoji: '💖',
-        highlights: [
-          '풍부한 감성과 직관력',
-          '예술적 감각과 미적 안목',
-          '따뜻하고 진실한 마음',
-          '깊이 있는 사고와 통찰력'
+        title: '성격 특징',
+        content: '외향적이고 직관적인 성격으로 새로운 가능성을 끊임없이 탐구해요. '
+            '감정 기능이 발달해서 사람들의 마음을 잘 이해하고, 따뜻한 관계를 만들어가는 데 능숙해요.',
+        iconEmoji: '💫',
+        highlights: ['창의성', '열정', '공감능력'],
+        sectionImages: [
+          PsyResultImage(
+            id: 'enfp_trait_1',
+            url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+            type: PsyImageType.section,
+          ),
         ],
       ),
       PsyResultSection(
-        title: '대인관계에서의 모습',
-        content: '사람들과의 관계에서 진정성을 가장 중요하게 생각해요. '
-            '겉으로 드러나는 모습보다는 마음속 깊은 이야기를 나누는 것을 좋아하고, '
-            '상대방의 감정에 공감하는 능력이 뛰어나요. 때로는 다른 사람의 감정에 '
-            '너무 깊이 동조해서 본인이 힘들어지기도 하지만, 그런 따뜻함 때문에 '
-            '많은 사람들이 당신을 찾게 되는 거예요. 갈등 상황에서는 직접적인 '
-            '대립보다는 조화를 추구하는 편이에요.',
-        iconEmoji: '🤝',
-        highlights: [
-          '진정성 있는 관계 추구',
-          '뛰어난 공감 능력',
-          '조화롭고 평화로운 관계 선호',
-          '깊이 있는 소통 능력'
-        ],
-      ),
-      PsyResultSection(
-        title: '일과 성장에서의 특징',
-        content: '창의적이고 자유로운 환경에서 가장 큰 능력을 발휘해요. '
-            '규칙과 체계보다는 영감과 직감을 따르는 것을 선호하고, '
-            '자신만의 독특한 방식으로 문제를 해결하는 능력이 있어요. '
-            '반복적이고 기계적인 일보다는 매번 새로운 도전이 있는 일을 좋아하고, '
-            '특히 사람들의 마음을 움직이거나 감동을 줄 수 있는 일에서 큰 보람을 느껴요. '
-            '완벽주의적 성향이 있어서 때로는 스스로에게 너무 엄격할 수 있으니, '
-            '작은 성취도 인정하고 격려하는 마음가짐이 필요해요.',
-        iconEmoji: '🌱',
-        highlights: [
-          '창의적이고 독창적인 사고',
-          '영감을 따르는 직관적 접근',
-          '사람의 마음을 움직이는 능력',
-          '새로운 도전을 즐기는 성향'
-        ],
-      ),
-      PsyResultSection(
-        title: '감정과 스트레스 관리',
-        content: '감정의 기복이 있는 편이지만, 그만큼 삶을 풍성하게 느끼는 사람이에요. '
-            '기쁠 때는 온 세상이 밝게 보이고, 슬플 때는 깊이 빠져드는 경향이 있어요. '
-            '스트레스를 받을 때는 혼자만의 시간을 갖거나 자연 속에서 마음을 달래는 것을 좋아해요. '
-            '음악이나 예술 활동을 통해 감정을 표현하는 것도 큰 도움이 될 거예요. '
-            '때로는 감정에 휘둘리기보다는 한 발짝 뒤에서 바라보는 연습도 필요해요.',
-        iconEmoji: '🌙',
-        highlights: [
-          '풍부한 감정 표현력',
-          '자연과 예술을 통한 치유',
-          '깊이 있는 감정 경험',
-          '혼자만의 시간 중요시'
-        ],
-      ),
-      PsyResultSection(
-        title: '미래를 위한 조언',
-        content: '당신의 섬세한 감성과 따뜻한 마음은 이 세상을 더 아름답게 만드는 큰 힘이에요. '
-            '때로는 너무 깊이 느끼고 생각해서 힘들 수도 있지만, 그런 깊이가 있기에 '
-            '다른 사람들이 느끼지 못하는 것들을 발견할 수 있는 거예요. '
-            '자신만의 속도로 천천히 걸어가도 괜찮아요. 중요한 것은 당신다운 모습을 잃지 않는 것이에요. '
-            '앞으로도 계속해서 세상의 아름다움을 발견하고, 그것을 나누는 사람이 되어주세요.',
-        iconEmoji: '✨',
-        highlights: [
-          '자신만의 속도로 성장하기',
-          '감성을 잃지 않고 살아가기',
-          '세상에 아름다움 전하기',
-          '있는 그대로의 자신 인정하기'
-        ],
+        title: '직업 적성',
+        content: '창의적이고 사람 중심적인 일에서 최고의 능력을 발휘해요. 교육, 상담, 마케팅, 예술 분야에서 뛰어난 성과를 보이며, 팀워크를 중시하고 혁신적인 아이디어를 제안하는 것을 좋아해요.',
+        iconEmoji: '🎯',
+        highlights: ['창의적 업무', '팀워크', '혁신'],
       ),
     ],
     createdAt: DateTime.now(),
-    tags: ['감성', '예술가', '직관', '따뜻함', '창의성'],
+    layoutType: 2,
+    tags: ['MBTI', 'ENFP', '외향적', '창의적'],
   );
 
-  /// 컬러 테라피 결과 샘플
-  static PsyResult get colorTherapyResult => PsyResult(
-    id: 'color_001',
-    title: '라벤더 같은 당신',
-    subtitle: '평온함과 우아함을 동시에 지닌 특별한 존재',
-    description: '당신을 나타내는 색상은 부드러운 라벤더예요. '
-        '차분하면서도 신비로운 매력을 가진 당신은 주변 사람들에게 안정감을 주는 존재예요. '
-        '때로는 혼자만의 시간을 통해 에너지를 충전하고, 깊이 있는 생각을 즐기는 내향적인 면도 있어요.',
-    type: PsyResultType.color,
-    mainColor: 'FF8B9AFF', // 모던 라벤더
-    bgGradientStart: 'FFF0F2FF',
-    bgGradientEnd: 'FFD4DAFF',
-    iconEmoji: '🌿',
+  // ===== 3. 이미지 중심 레이아웃 (layoutType: 1) =====
+
+  /// ✅ [최종 수정] HTP 결과 - 카드 하나당 이미지 하나씩 전달하는 구조로 변경
+  static PsyResult get imageCentricHtpResult => PsyResult(
+    id: 'htp_real_sample_001',
+    title: 'HTP 심리 검사 상세 분석',
+    subtitle: '그림에 담긴 당신의 내면 이야기',
+    description: '세 그림을 종합적으로 볼 때, 내면에는 건강한 성장 욕구와 회복탄력성이 자리 잡고 있지만, 현재는 심리적인 소진과 방향성에 대한 불안감을 느끼고 있을 가능성이 큽니다. 외부 세계와의 교류를 원하면서도, 동시에 상처받을까 두려워하는 양가적인 감정이 엿보입니다.',
+    type: PsyResultType.drawing,
+    mainColor: 'FF6B73E6',
+    bgGradientStart: 'FFF8F9FF',
+    bgGradientEnd: 'FFE8EAFF',
+    iconEmoji: '🎨',
+    // ✅ 최상위 이미지는 이제 없습니다. 각 이미지는 자신의 섹션으로 이동했습니다.
+    images: const [],
     sections: [
       PsyResultSection(
-        title: '라벤더의 의미',
-        content: '라벤더는 평온, 우아함, 그리고 내면의 강함을 상징해요. '
-            '겉보기에는 부드럽지만 속으로는 확고한 자신만의 신념을 가지고 있는 당신의 모습과 닮아있어요.',
-        iconEmoji: '💜',
-        highlights: ['평온함', '우아함', '내면의 강함'],
+        title: '분석에 앞서',
+        iconEmoji: 'ℹ️',
+        content: '이 분석은 그림에 나타난 상징을 바탕으로 한 일반적인 해석이며, 전문적인 임상 진단이 아님을 먼저 말씀드립니다. 자신을 이해하는 데 도움이 되는 참고 자료로 활용해 주시길 바랍니다.',
+        highlights: const [],
+      ),
+      PsyResultSection(
+        title: '1. 집(House) 그림 분석',
+        iconEmoji: '🏠',
+        content: '집 그림은 본인이 인식하는 가정환경, 가족 관계, 그리고 자기 자신에 대한 인식을 상징합니다. 집의 내부가 보이는 구조는 소통 욕구와 불안감을, 작은 문은 관계의 어려움을, 여러 창문은 소통 욕구를 나타냅니다.',
+        highlights: ['가족관계', '자아인식', '소통욕구', '경계심'],
+        // ✅ '집' 섹션이 자신의 이미지를 가집니다.
+        sectionImages: [
+          PsyResultImage(id: 'htp_house', url: 'assets/illustrations/item/home_hizzi.png', type: PsyImageType.drawing),
+        ],
+      ),
+      PsyResultSection(
+        title: '2. 나무(Tree) 그림 분석',
+        iconEmoji: '🌳',
+        content: '나무 그림은 깊은 내면의 자아상, 생명력, 성장 잠재력을 상징합니다. 굵은 기둥과 상처 자국은 회복탄력성을, 위로 뻗은 가지는 미래지향적 에너지를 보여줍니다. 당신의 무의식적 자아는 매우 건강하고 강인합니다.',
+        highlights: ['성장에너지', '무의식', '회복탄력성', '잠재력'],
+        // ✅ '나무' 섹션이 자신의 이미지를 가집니다.
+        sectionImages: [
+          PsyResultImage(id: 'htp_tree', url: 'assets/illustrations/item/tree_hizzi.png', type: PsyImageType.drawing),
+        ],
+      ),
+      PsyResultSection(
+        title: '3. 사람(Person) 그림 분석',
+        iconEmoji: '👤',
+        content: '사람 그림은 현실 속 자신의 모습과 대인관계 태도를 나타냅니다. 피곤한 표정은 심리적 소진을, 감춘 손과 생략된 발은 자신감 부족과 현실의 불안정감을 강력하게 암시합니다.',
+        highlights: ['현실인식', '대인관계', '심리적소진', '불안정감'],
+        // ✅ '사람' 섹션이 자신의 이미지를 가집니다.
+        sectionImages: [
+          PsyResultImage(id: 'htp_person', url: 'assets/illustrations/item/human_hizzi.png', type: PsyImageType.drawing),
+        ],
+      ),
+      PsyResultSection(
+        title: '최종 종합 해석 및 조언',
+        iconEmoji: '💡',
+        content: '당신은 강한 잠재력을 지녔지만 현재 많이 지쳐있습니다. 자신의 잠재력을 믿고, 현실에 발 딛는 작은 연습을 하며, 자신을 돌보는 휴식 시간을 갖는 것이 중요합니다. 필요하다면 전문가와의 대화도 큰 도움이 될 수 있습니다.',
+        highlights: ['자기돌봄', '안정감찾기', '전문가상담'],
       ),
     ],
+    rawData: {
+      'totalDurationSeconds': 1245,
+      'drawingOrder': [0, 1, 2],
+      'totalModifications': 12,
+    },
     createdAt: DateTime.now(),
-    tags: ['라벤더', '평온', '우아함', '신비'],
+    layoutType: 1,
+    tags: ['HTP', '그림심리검사', '내면분석', '자아상태'],
   );
 
-  /// 모든 샘플 데이터 리스트
+  // 이하 나머지 코드는 동일합니다.
+
   static List<PsyResult> get allSamples => [
-    shortLoveResult,
-    longPersonalityResult,
-    colorTherapyResult,
+    textCentricResult,
+    hybridMbtiResult,
+    imageCentricHtpResult,
   ];
 }

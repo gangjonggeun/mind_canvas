@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/psy_result.dart';
 
 /// 감성적인 심리테스트 결과 헤더
-/// 여성 사용자 선호도가 높은 부드러운 디자인
+/// 배경 밝기에 따른 적응형 텍스트 색상 처리
 class PsyResultHeader extends StatelessWidget {
   final PsyResult result;
   final VoidCallback onClose;
@@ -15,6 +15,9 @@ class PsyResultHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = _getAdaptiveTextColor();
+    final overlayColor = _getAdaptiveOverlayColor();
+    
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -27,10 +30,10 @@ class PsyResultHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: overlayColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: overlayColor.withOpacity(0.25),
                   ),
                 ),
                 child: Row(
@@ -39,14 +42,14 @@ class PsyResultHeader extends StatelessWidget {
                     Icon(
                       Icons.access_time,
                       size: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: textColor.withOpacity(0.8),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${result.estimatedReadingTime}분 읽기',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.9),
+                        color: textColor.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -59,12 +62,15 @@ class PsyResultHeader extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: overlayColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: overlayColor.withOpacity(0.25),
+                    ),
                   ),
                   child: Icon(
                     Icons.close,
-                    color: Colors.white.withOpacity(0.8),
+                    color: textColor.withOpacity(0.8),
                     size: 20,
                   ),
                 ),
@@ -80,11 +86,15 @@ class PsyResultHeader extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: overlayColor.withOpacity(0.15),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: overlayColor.withOpacity(0.2),
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -106,17 +116,17 @@ class PsyResultHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+                color: overlayColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
+                  color: overlayColor.withOpacity(0.3),
                 ),
               ),
               child: Text(
                 result.type.displayName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white,
+                  color: textColor,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
                 ),
@@ -130,12 +140,19 @@ class PsyResultHeader extends StatelessWidget {
           Center(
             child: Text(
               result.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: textColor,
                 height: 1.2,
                 letterSpacing: -0.5,
+                shadows: _isLightBackground() ? [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.1),
+                    offset: const Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ] : null,
               ),
               textAlign: TextAlign.center,
             ),
@@ -149,7 +166,7 @@ class PsyResultHeader extends StatelessWidget {
               result.subtitle,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.9),
+                color: textColor.withOpacity(0.85),
                 height: 1.4,
                 letterSpacing: 0.2,
               ),
@@ -169,17 +186,17 @@ class PsyResultHeader extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: overlayColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: overlayColor.withOpacity(0.25),
                     ),
                   ),
                   child: Text(
                     '#$tag',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
+                      color: textColor.withOpacity(0.85),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -189,5 +206,40 @@ class PsyResultHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 🎨 배경 밝기에 따른 적응형 텍스트 색상
+  Color _getAdaptiveTextColor() {
+    if (_isLightBackground()) {
+      // 밝은 배경 → 어두운 텍스트
+      return const Color(0xFF2D3748);
+    } else {
+      // 어두운 배경 → 밝은 텍스트  
+      return Colors.white;
+    }
+  }
+
+  /// 🎨 배경 밝기에 따른 적응형 오버레이 색상
+  Color _getAdaptiveOverlayColor() {
+    if (_isLightBackground()) {
+      return Colors.black;
+    } else {
+      return Colors.white;
+    }
+  }
+
+  /// 🔍 배경이 밝은지 어두운지 판단
+  bool _isLightBackground() {
+    try {
+      // gradient 시작색을 기준으로 판단
+      final startColor = Color(int.parse(result.bgGradientStart, radix: 16));
+      final luminance = startColor.computeLuminance();
+      
+      // luminance가 0.5 이상이면 밝은 색으로 판단
+      return luminance > 0.5;
+    } catch (e) {
+      // 파싱 실패 시 기본값: 밝은 배경으로 가정
+      return true;
+    }
   }
 }
