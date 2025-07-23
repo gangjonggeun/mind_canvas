@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app/main_screen.dart';
-
+// import 'core/utils/app_logger.dart';
+import 'package:mind_canvas/core/home/domain/entities/recommended_content_entity.dart';
 void main() {
+  // 🚀 Logger 초기화 (최우선)
+  // AppLogger.initialize();
+  
   // 📊 임시로 메모리 최적화 비활성화 (디버깅용)
   // PaintingBinding.instance.imageCache.maximumSize = 50;
   // PaintingBinding.instance.imageCache.maximumSizeBytes = 50 << 20;
   
-  print('🚷 메모리 최적화 비활성화 - 디버깅 모드');
+  // logger.i('Mind Canvas 앱 시작! 🎨');
   
   runApp(
     const ProviderScope(

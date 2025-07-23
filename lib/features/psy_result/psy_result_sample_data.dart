@@ -15,7 +15,7 @@ class PsyResultSampleData {
         '그런 섬세함이야말로 당신만의 가장 큰 매력이랍니다.',
     type: PsyResultType.love,
     mainColor: 'FFFF8FA3',
-    bgGradientStart: 'FFFFE5EA',
+    bgGradientStart: 'FFFFE0E6', // 파스텔 핑크 (더 밝게)
     bgGradientEnd: 'FFFF8FA3',
     iconEmoji: '💕',
     sections: [
@@ -42,16 +42,19 @@ class PsyResultSampleData {
   // ===== 2. 하이브리드 레이아웃 (layoutType: 2) =====
   static PsyResult get hybridMbtiResult => PsyResult(
     id: 'mbti_enfp_001',
-    title: 'ENFP - 활발한 꿈꾸는 사람',
-    subtitle: '열정적이고 창의적인 영감의 원천',
-    description: '당신은 넘치는 에너지와 창의성으로 주변을 밝게 만드는 사람이에요. '
-        '새로운 아이디어와 가능성을 탐구하는 것을 좋아하고, 사람들과의 진심어린 관계를 소중히 여겨요. '
-        '때로는 너무 많은 것을 한 번에 시도하려고 해서 집중이 어려울 수 있지만, '
-        '그런 다양성이야말로 당신의 가장 큰 강점이에요.',
+    // Mind Canvas 전용 - 전문적이고 깊이 있는 MBTI 분석 결과
+    title: 'ENFP - 열정적인 영감가',
+    subtitle: '창의적 에너지로 세상을 변화시키는 혁신가',
+    description: '당신은 무한한 가능성을 보는 눈을 가진 진정한 영감가입니다. '
+        '타고난 창의성과 공감 능력을 바탕으로 다른 사람들에게 희망과 동기를 선사하며, '
+        '새로운 아이디어를 현실로 만드는 특별한 재능을 가지고 있습니다. '
+        '때로는 완벽주의적 성향으로 인해 스스로에게 높은 기준을 요구하기도 하지만, '
+        '이러한 특성이야말로 당신을 더욱 성장시키는 원동력이 됩니다.',
     type: PsyResultType.mbti,
-    mainColor: 'FFFF6B9D',
-    bgGradientStart: 'FFFFF0F5',
-    bgGradientEnd: 'FFFFE4E9',
+    // 전문적이고 고급스러운 배경 (심리학 전문 앱다운 품격)
+    mainColor: 'FF6366F1', // 인디고 퍼플 (신뢰성 + 전문성)
+    bgGradientStart: 'FFF8FAFF', // 매우 은은한 라벤더 화이트
+    bgGradientEnd: 'FFF3F4F6',   // 쿨 그레이 (차분하고 전문적)
     iconEmoji: '🌟',
     images: [
       PsyResultImage(
@@ -63,29 +66,42 @@ class PsyResultSampleData {
     ],
     sections: [
       PsyResultSection(
-        title: '성격 특징',
-        content: '외향적이고 직관적인 성격으로 새로운 가능성을 끊임없이 탐구해요. '
-            '감정 기능이 발달해서 사람들의 마음을 잘 이해하고, 따뜻한 관계를 만들어가는 데 능숙해요.',
-        iconEmoji: '💫',
-        highlights: ['창의성', '열정', '공감능력'],
+        title: '핵심 성격 특성',
+        content: '강력한 직관력과 외향적 에너지를 바탕으로 새로운 가능성을 탐구하며, '
+            '높은 공감 능력으로 타인의 감정을 깊이 이해합니다. 창의적 문제 해결과 '
+            '혁신적 아이디어 생성에 탁월한 능력을 보이며, 진정성 있는 인간관계를 '
+            '구축하는 데 뛰어난 재능을 가지고 있습니다.',
+        iconEmoji: '🧠',
+        highlights: ['직관적 통찰력', '창의적 사고', '높은 공감능력', '진정성'],
         sectionImages: [
           PsyResultImage(
-            id: 'enfp_trait_1',
-            url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+            id: 'enfp_psychology',
+            url: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop',
             type: PsyImageType.section,
           ),
         ],
       ),
       PsyResultSection(
-        title: '직업 적성',
-        content: '창의적이고 사람 중심적인 일에서 최고의 능력을 발휘해요. 교육, 상담, 마케팅, 예술 분야에서 뛰어난 성과를 보이며, 팀워크를 중시하고 혁신적인 아이디어를 제안하는 것을 좋아해요.',
+        title: '성장과 발전 방향',
+        content: '체계적인 계획 수립과 꾸준한 실행력 개발을 통해 아이디어를 구체적 '
+            '성과로 연결시킬 수 있습니다. 감정 조절 기술과 스트레스 관리법을 '
+            '익혀 지속가능한 성장을 도모하며, 깊이 있는 전문성 개발을 통해 '
+            '영향력을 확대할 수 있습니다.',
+        iconEmoji: '🌱',
+        highlights: ['체계적 계획', '감정조절', '전문성 개발', '지속가능성'],
+      ),
+      PsyResultSection(
+        title: '추천 성장 활동',
+        content: '마음챙김 명상과 감정 일기 작성을 통한 자기 인식 향상, '
+            '체계적인 목표 설정과 단계별 실행 계획 수립, '
+            '전문 분야 깊이 있는 학습과 멘토링 관계 구축을 추천합니다.',
         iconEmoji: '🎯',
-        highlights: ['창의적 업무', '팀워크', '혁신'],
+        highlights: ['마음챙김', '목표설정', '전문학습', '멘토링'],
       ),
     ],
     createdAt: DateTime.now(),
     layoutType: 2,
-    tags: ['MBTI', 'ENFP', '외향적', '창의적'],
+    tags: ['MBTI', 'ENFP', '심리성장', '자기이해', '창의성', '공감능력'], // 전문적 태그
   );
 
   // ===== 3. 이미지 중심 레이아웃 (layoutType: 1) =====
@@ -98,8 +114,8 @@ class PsyResultSampleData {
     description: '세 그림을 종합적으로 볼 때, 내면에는 건강한 성장 욕구와 회복탄력성이 자리 잡고 있지만, 현재는 심리적인 소진과 방향성에 대한 불안감을 느끼고 있을 가능성이 큽니다. 외부 세계와의 교류를 원하면서도, 동시에 상처받을까 두려워하는 양가적인 감정이 엿보입니다.',
     type: PsyResultType.drawing,
     mainColor: 'FF6B73E6',
-    bgGradientStart: 'FFF8F9FF',
-    bgGradientEnd: 'FFE8EAFF',
+    bgGradientStart: 'FFF5F7FA', // 파스텔 블루 (중성적)
+    bgGradientEnd: 'FFE3F2FD',
     iconEmoji: '🎨',
     // ✅ 최상위 이미지는 이제 없습니다. 각 이미지는 자신의 섹션으로 이동했습니다.
     images: const [],

@@ -20,8 +20,11 @@ dependencies:
   # 🌐 Network & API
   dio: ^5.7.0                       # HTTP 클라이언트
   retrofit: ^4.4.1                  # REST API 클라이언트 생성
-  json_annotation: ^4.9.0           # JSON 직렬화
   pretty_dio_logger: ^1.4.0         # 네트워크 로깅
+
+  # 📦 Serialization (최신 트렌드)
+#  dart_mappable: ^4.2.2             # 🔥 복잡한 JSON 직렬화 (가장 빠름!)
+  json_annotation: ^4.9.0           # JSON 직렬화 (하위 호환)
 
   # 💾 Local Storage
   shared_preferences: ^2.3.2        # 간단한 key-value 저장
@@ -72,7 +75,8 @@ dev_dependencies:
   # 🔧 Code Generation
   build_runner: ^2.4.13             # 코드 생성 러너
   freezed: ^2.5.7                   # 불변 클래스 생성기
-  json_serializable: ^6.8.0         # JSON 직렬화 생성기
+  dart_mappable_builder: ^4.2.2     # 🔥 dart_mappable 코드 생성기
+  json_serializable: ^6.8.0         # JSON 직렬화 생성기 (하위 호환)
   retrofit_generator: ^8.2.1        # API 클라이언트 생성기
   riverpod_generator: ^2.4.3        # Riverpod 코드 생성
   hive_generator: ^2.0.1            # Hive 어댑터 생성

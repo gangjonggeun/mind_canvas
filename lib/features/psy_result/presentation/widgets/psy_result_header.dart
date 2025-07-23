@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/psy_result.dart';
+import '../../../../core/utils/color_utils.dart';
 
 /// 감성적인 심리테스트 결과 헤더
 /// 배경 밝기에 따른 적응형 텍스트 색상 처리
@@ -15,8 +16,11 @@ class PsyResultHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = _getAdaptiveTextColor();
-    final overlayColor = _getAdaptiveOverlayColor();
+    // 🎨 파스텔 대응 스마트 색상 계산
+    final mainTag = result.tags.isNotEmpty ? result.tags.first : null;
+    final textColor = ColorUtils.getSmartTextColor(result.bgGradientStart, tag: mainTag);
+    final overlayColor = ColorUtils.getSmartOverlayColor(result.bgGradientStart);
+    final textShadows = ColorUtils.getReadableShadows(result.bgGradientStart);
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -146,13 +150,7 @@ class PsyResultHeader extends StatelessWidget {
                 color: textColor,
                 height: 1.2,
                 letterSpacing: -0.5,
-                shadows: _isLightBackground() ? [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.1),
-                    offset: const Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ] : null,
+                shadows: textShadows, // 🎨 파스텔 대응 그림자
               ),
               textAlign: TextAlign.center,
             ),
@@ -160,17 +158,29 @@ class PsyResultHeader extends StatelessWidget {
           
           const SizedBox(height: 8),
           
-          // 서브타이틀 (부드러운 느낌)
+          // 서브타이틀 (파스텔 배경 가독성 개선)
           Center(
-            child: Text(
-              result.subtitle,
-              style: TextStyle(
-                fontSize: 16,
-                color: textColor.withOpacity(0.85),
-                height: 1.4,
-                letterSpacing: 0.2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: ColorUtils.getReadableBackgroundPanel(result.bgGradientStart),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: overlayColor.withOpacity(0.15),
+                ),
               ),
-              textAlign: TextAlign.center,
+              child: Text(
+                result.subtitle,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: textColor,
+                  height: 1.4,
+                  letterSpacing: 0.2,
+                  fontWeight: FontWeight.w500,
+                  shadows: textShadows,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           
@@ -196,8 +206,9 @@ class PsyResultHeader extends StatelessWidget {
                     '#$tag',
                     style: TextStyle(
                       fontSize: 12,
-                      color: textColor.withOpacity(0.85),
-                      fontWeight: FontWeight.w500,
+                      color: ColorUtils.getSmartTextColor(result.bgGradientStart, tag: tag),
+                      fontWeight: FontWeight.w600,
+                      shadows: ColorUtils.getReadableShadows(result.bgGradientStart),
                     ),
                   ),
                 );
@@ -208,38 +219,5 @@ class PsyResultHeader extends StatelessWidget {
     );
   }
 
-  /// 🎨 배경 밝기에 따른 적응형 텍스트 색상
-  Color _getAdaptiveTextColor() {
-    if (_isLightBackground()) {
-      // 밝은 배경 → 어두운 텍스트
-      return const Color(0xFF2D3748);
-    } else {
-      // 어두운 배경 → 밝은 텍스트  
-      return Colors.white;
-    }
-  }
-
-  /// 🎨 배경 밝기에 따른 적응형 오버레이 색상
-  Color _getAdaptiveOverlayColor() {
-    if (_isLightBackground()) {
-      return Colors.black;
-    } else {
-      return Colors.white;
-    }
-  }
-
-  /// 🔍 배경이 밝은지 어두운지 판단
-  bool _isLightBackground() {
-    try {
-      // gradient 시작색을 기준으로 판단
-      final startColor = Color(int.parse(result.bgGradientStart, radix: 16));
-      final luminance = startColor.computeLuminance();
-      
-      // luminance가 0.5 이상이면 밝은 색으로 판단
-      return luminance > 0.5;
-    } catch (e) {
-      // 파싱 실패 시 기본값: 밝은 배경으로 가정
-      return true;
-    }
-  }
+  // 🎨 색상 로직은 ColorUtils로 이관됨 (중복 제거)
 }
