@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/home/widgets/recommended_content_section.dart';
+import 'package:mind_canvas/core/recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
 import '../../features/info/info_screen.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_theme.dart';
 import 'widgets/home_viewpager.dart';
-import '../home/domain/entities/recommended_content_entity.dart';
+
+
 
 
 /// Mind Canvas 심리테스트 홈 화면
@@ -32,6 +34,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final String _userMbti = 'INFP'; // 사용자 MBTI (실제로는 UserProvider에서 가져와야 함)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,6 +69,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
+      ),
+      );
+}
+
+  /// 네비게이션: 성격 기반 추천 화면으로 이동
+  void _navigateToPersonalityRecommendations() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RecommendationScreen(),
       ),
     );
   }
@@ -515,14 +527,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 24),
 
         // ===== 🎬 새로운 추천 컨텐츠 섹션 사용 =====
-        RecommendedContentSection(
-          onContentTap: (content) {
-            print('컨텐츠 탭: ${content.title}');
-            // 여기에 실제 탭 처리 로직 추가
-            // 예: 컨텐츠 상세 화면으로 이동
-          },
-          padding: const EdgeInsets.all(0), // 외부에서 패딩 제어
+        recommendation.PersonalizedContentSection(
+          userMbti: _userMbti,
+          initialPartnerMbti: 'ENTJ',
+          initialMode: recommendation.ContentMode.personal,
+          initialType: recommendation.ContentType.movie,
+          onContentTap: _navigateToPersonalityRecommendations,
+          showMbtiInput: true,
         ),
+        const SizedBox(height: 32),
       ],
     );
   }

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:mind_canvas/core/recommendation/presentation/widgets/personalized_content_section.dart';
 
 // 실제 프로젝트에서는 아래 import 경로를 활성화하고 사용하세요.
 import 'pages/ideal_type_worldcup_page.dart';
 import 'pages/personality_recommendations_page.dart';
 import 'pages/user_recommendation_page.dart';
 import '../data/mock_content_data.dart'; // 제공해주신 Mock 데이터 파일
-
+import '../domain/recommendation_enums.dart';
+import '../presentation/widgets/personalized_content_section.dart'; // 위젯 import
 // --- 코드 실행을 위한 임시 Enum 정의 ---
 // 실제 프로젝트에 이미 정의되어 있다면 이 부분은 삭제해도 됩니다.
-enum ContentMode { personal, together }
-enum ContentType { movie, drama, music }
+
 // --- 여기까지 임시 정의 ---
 
 
@@ -62,8 +63,15 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               _buildHeader(isDark),
               const SizedBox(height: 32),
 
-              // 2. 메인: 성격 기반 컨텐츠 추천 섹션
-              _buildPersonalizedContentSection(isDark),
+              // 2. 메인: 성격 기반 컨텐츠 추천 섹션 - ✨ 위젯으로 교체
+              PersonalizedContentSection(
+                userMbti: _userMbti,
+                initialPartnerMbti: 'ENTJ',
+                initialMode: ContentMode.personal,
+                initialType: ContentType.movie,
+                onContentTap: _navigateToPersonalityRecommendations,
+                showMbtiInput: true,
+              ),
               const SizedBox(height: 32),
 
               // 3. 서브1: 이상형 월드컵
@@ -179,7 +187,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _selectedContentMode == ContentMode.personal ? '성격에 맞는 컨텐츠를 추천해드려요' : '두 사람이 함께 즐길 컨텐츠를 찾아보세요',
+                      _selectedContentMode == ContentMode.personal ? '성격에 맞는 컨텐츠!' : '같이 즐기는 컨텐츠!',
                       style: TextStyle(fontSize: 14, color: subTextColor),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -226,19 +234,17 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ),
           const SizedBox(height: 16),
 
-          // 추천 컨텐츠 리스트
-          SizedBox(
-            height: 180,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: _getContentList().length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final content = _getContentList()[index];
-                return _buildContentCard(content);
-              },
-            ),
+          // PersonalizedContentSection 위젯으로 교체
+          PersonalizedContentSection(
+            userMbti: _userMbti, // 또는 실제 사용자 MBTI 변수
+            initialPartnerMbti: _partnerMbti, // 선택사항
+            initialMode: ContentMode.personal, // 선택사항
+            initialType: ContentType.movie, // 선택사항
+            onContentTap: () {
+              // 콘텐츠 탭했을 때 동작
+              print('콘텐츠를 탭했습니다!');
+            },
+            showMbtiInput: true, // 선택사항
           ),
         ],
       ),
@@ -306,12 +312,19 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final cat = categories[index];
-              return _buildTestCategoryCard(
-                isDark,
-                cat['emoji']!,
-                cat['title']!,
-                cat['category']!,
-                cat['subtitle']!,
+              // return _buildTestCategoryCard(
+              //   isDark,
+              //   cat['emoji']!,
+              //   cat['title']!,
+              //   cat['category']!,
+              //   cat['subtitle']!,
+              // );
+              PersonalizedContentSection(
+                userMbti: 'ENFP',
+                initialMode: ContentMode.together,
+                initialType: ContentType.drama,
+                onContentTap: () => print('다른 페이지로 이동!'),
+                showMbtiInput: false, // MBTI 입력 숨김
               );
             },
           ),
@@ -675,29 +688,29 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
 
   // --- 로직 및 데이터 처리 함수들 ---
-
-  /// 컨텐츠 리스트를 현재 선택된 모드와 카테고리에 맞게 가져오는 함수
-  List<Map<String, dynamic>> _getContentList() {
-    if (_selectedContentMode == ContentMode.together) {
-      switch (_selectedContentType) {
-        case ContentType.movie:
-          return MockContentData.getTogetherMovieList(_userMbti, _partnerMbti);
-        case ContentType.drama:
-          return MockContentData.getTogetherDramaList(_userMbti, _partnerMbti);
-        case ContentType.music:
-          return MockContentData.getTogetherMusicList(_userMbti, _partnerMbti);
-      }
-    } else {
-      switch (_selectedContentType) {
-        case ContentType.movie:
-          return MockContentData.getMovieList();
-        case ContentType.drama:
-          return MockContentData.getDramaList();
-        case ContentType.music:
-          return MockContentData.getMusicList();
-      }
-    }
-  }
+  //
+  // /// 컨텐츠 리스트를 현재 선택된 모드와 카테고리에 맞게 가져오는 함수
+  // List<Map<String, dynamic>> _getContentList() {
+  //   if (_selectedContentMode == ContentMode.together) {
+  //     switch (_selectedContentType) {
+  //       case ContentType.movie:
+  //         return MockContentData.getTogetherMovieList(_userMbti, _partnerMbti);
+  //       case ContentType.drama:
+  //         return MockContentData.getTogetherDramaList(_userMbti, _partnerMbti);
+  //       case ContentType.music:
+  //         return MockContentData.getTogetherMusicList(_userMbti, _partnerMbti);
+  //     }
+  //   } else {
+  //     switch (_selectedContentType) {
+  //       case ContentType.movie:
+  //         return MockContentData.getMovieList();
+  //       case ContentType.drama:
+  //         return MockContentData.getDramaList();
+  //       case ContentType.music:
+  //         return MockContentData.getMusicList();
+  //     }
+  //   }
+  // }
 
   /// 파트너 MBTI를 선택하는 BottomSheet를 보여주는 함수
   void _showMbtiSelector() {
