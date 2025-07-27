@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/analysis/presentation/analysis_screen.dart';
 import '../core/consulting/presentation/consulting_screen.dart';
 import '../core/home/home_screen.dart';
+import '../core/profile/screens/profile_screen.dart';
 import '../core/recommendation/presentation/recommendation_screen.dart';
 
 /// Mind Canvas 메인 화면
@@ -31,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
       const AnalysisScreen(),  // 트렌디한 분석 화면
       const RecommendationScreen(),
       const ConsultingScreen(),  // 🔄 기록 → 상담으로 변경
-      const _ProfileScreen(),
+      const ProfileScreen(),
     ];
   }
 

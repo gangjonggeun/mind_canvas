@@ -15,6 +15,7 @@ class AppColors {
   static const Color slateGrey = Color(0xFF4A5568);
 
   // ===== 🎨 Primary Brand Colors =====
+  static const Color primary = Color(0xFF6B73FF);           // 메인 프라이머리 색상
   static const Color primaryBlue = Color(0xFF6B73FF);
   static const Color primaryBlueDark = Color(0xFF5A63E8);
   static const Color primaryBlueLight = Color(0xFF8E8FFF);
