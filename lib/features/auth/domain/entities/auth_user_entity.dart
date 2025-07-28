@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'auth_user_entity.freezed.dart';
-// part 'auth_user_entity.g.dart';
+part 'auth_user_entity.g.dart';
 
 /// 🧑‍💼 사용자 엔티티 (불변 객체)
 /// 

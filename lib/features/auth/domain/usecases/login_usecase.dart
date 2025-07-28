@@ -22,7 +22,7 @@ class LoginUseCase {
   /// [rememberMe] 로그인 상태 유지 여부
   /// 
   /// Returns: [Result<UserEntity>] 로그인 결과
-  Future<Result<UserEntity>> loginWithEmail({
+  Future<Result<AuthUser>> loginWithEmail({
     required String email,
     required String password,
     bool rememberMe = false,
@@ -53,16 +53,16 @@ class LoginUseCase {
           );
 
           // 👤 사용자 엔티티 변환
-          final user = _convertDtoToEntity(authResponse.user);
+          final user = _convertDtoToAuthUser(authResponse.user);
           
           _logLoginSuccess('email', user.id);
           return Results.success(user);
         },
         failure: (message, code) {
           _logLoginFailure('email', message, code);
-          return Results.failure<UserEntity>(message, code);
+          return Results.failure<AuthUser>(message, code);
         },
-        loading: () => Results.loading<UserEntity>(),
+        loading: () => Results.loading<AuthUser>(),
       );
 
     } catch (e) {
@@ -72,7 +72,7 @@ class LoginUseCase {
   }
 
   /// 🌐 Google로 로그인
-  Future<Result<UserEntity>> loginWithGoogle() async {
+  Future<Result<AuthUser>> loginWithGoogle() async {
     try {
       _logLoginAttempt('google', null);
 
@@ -85,15 +85,15 @@ class LoginUseCase {
             refreshToken: authResponse.refreshToken,
           );
 
-          final user = _convertDtoToEntity(authResponse.user);
+          final user = _convertDtoToAuthUser(authResponse.user);
           _logLoginSuccess('google', user.id);
           return Results.success(user);
         },
         failure: (message, code) {
           _logLoginFailure('google', message, code);
-          return Results.failure<UserEntity>(message, code);
+          return Results.failure<AuthUser>(message, code);
         },
-        loading: () => Results.loading<UserEntity>(),
+        loading: () => Results.loading<AuthUser>(),
       );
 
     } catch (e) {
@@ -103,7 +103,7 @@ class LoginUseCase {
   }
 
   /// 🍎 Apple로 로그인
-  Future<Result<UserEntity>> loginWithApple() async {
+  Future<Result<AuthUser>> loginWithApple() async {
     try {
       _logLoginAttempt('apple', null);
 
@@ -116,15 +116,15 @@ class LoginUseCase {
             refreshToken: authResponse.refreshToken,
           );
 
-          final user = _convertDtoToEntity(authResponse.user);
+          final user = _convertDtoToAuthUser(authResponse.user);
           _logLoginSuccess('apple', user.id);
           return Results.success(user);
         },
         failure: (message, code) {
           _logLoginFailure('apple', message, code);
-          return Results.failure<UserEntity>(message, code);
+          return Results.failure<AuthUser>(message, code);
         },
-        loading: () => Results.loading<UserEntity>(),
+        loading: () => Results.loading<AuthUser>(),
       );
 
     } catch (e) {
@@ -134,7 +134,7 @@ class LoginUseCase {
   }
 
   /// 👥 게스트로 로그인
-  Future<Result<UserEntity>> loginAsGuest() async {
+  Future<Result<AuthUser>> loginAsGuest() async {
     try {
       _logLoginAttempt('guest', null);
 
@@ -147,15 +147,15 @@ class LoginUseCase {
             refreshToken: authResponse.refreshToken,
           );
 
-          final user = _convertDtoToEntity(authResponse.user);
+          final user = _convertDtoToAuthUser(authResponse.user);
           _logLoginSuccess('guest', user.id);
           return Results.success(user);
         },
         failure: (message, code) {
           _logLoginFailure('guest', message, code);
-          return Results.failure<UserEntity>(message, code);
+          return Results.failure<AuthUser>(message, code);
         },
-        loading: () => Results.loading<UserEntity>(),
+        loading: () => Results.loading<AuthUser>(),
       );
 
     } catch (e) {
@@ -165,7 +165,7 @@ class LoginUseCase {
   }
 
   /// 🔍 이메일 입력값 검증
-  Result<UserEntity>? _validateEmailInput(String email, String password) {
+  Result<AuthUser>? _validateEmailInput(String email, String password) {
     if (email.trim().isEmpty) {
       return Results.failure('이메일을 입력해주세요', 'VALIDATION_EMAIL_EMPTY');
     }
@@ -192,17 +192,17 @@ class LoginUseCase {
   }
 
   /// 🔄 DTO를 Entity로 변환
-  UserEntity _convertDtoToEntity(UserResponse dto) {
-    return UserEntity(
+  /// 🔄 DTO를 AuthUser로 변환
+  AuthUser _convertDtoToAuthUser(UserResponse dto) {
+    return AuthUser(
       id: dto.id,
       email: dto.email,
-      displayName: dto.displayName,
+      nickname: dto.displayName,              // displayName → nickname
       profileImageUrl: dto.profileImageUrl,
       authProvider: _parseAuthProvider(dto.authProvider),
-      lastLoginAt: dto.lastLoginAt != null ? DateTime.tryParse(dto.lastLoginAt!) : null,
-      createdAt: dto.createdAt != null ? DateTime.tryParse(dto.createdAt!) : null,
       isEmailVerified: dto.isEmailVerified,
       isProfileComplete: dto.isProfileComplete,
+      // lastLoginAt, createdAt 제거 (AuthUser에 없음)
     );
   }
 
