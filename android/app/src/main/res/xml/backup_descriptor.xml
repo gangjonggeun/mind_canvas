@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- 보안을 위해 민감한 데이터는 백업에서 제외 -->
+    <exclude domain="sharedpref" path="auth_tokens.xml"/>
+    <exclude domain="sharedpref" path="user_credentials.xml"/>
+    <exclude domain="database" path="secure.db"/>
+    <exclude domain="file" path="private/"/>
+</full-backup-content>

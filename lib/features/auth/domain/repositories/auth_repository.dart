@@ -12,12 +12,7 @@ import '../entities/auth_user_entity.dart';
 /// - 테스트 가능한 설계
 abstract class AuthRepository {
   
-  /// 📧 이메일 로그인
-  Future<Result<AuthResponse>> loginWithEmail({
-    required String email,
-    required String password,
-    bool rememberMe = false,
-  });
+
 
   /// 🌐 Google 로그인
   Future<Result<AuthResponse>> loginWithGoogle();

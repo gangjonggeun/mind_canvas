@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/services/google_oauth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/auth_user_entity.dart';
 import '../providers/auth_provider.dart';
@@ -337,20 +338,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _showSuccessSnackBar('언어가 $_currentLanguage로 변경되었습니다');
   }
 
-  /// 🌐 Google 로그인 핸들러
+  /// 🌐 Google 로그인 핸들러 (새로운 OAuth 서비스 사용)
   Future<void> _handleGoogleLogin() async {
     debugPrint('[$_logTag] Google 로그인 시도');
     HapticFeedback.selectionClick();
 
     try {
-      final result = await ref.read(authNotifierProvider.notifier).googleLogin(
-        idToken: 'mock_id_token',
-        accessToken: 'mock_access_token',
-      );
+      // 새로운 Google OAuth 서비스 사용
+      final result = await GoogleOAuthService.instance.signIn();
 
-      if (result.isFailure) {
-        _showErrorSnackBar(result.errorMessage ?? 'Google 로그인에 실패했습니다');
-      }
+      result.when(
+        success: (userInfo) {
+          // 성공 시 ID Token 확인
+          _showSuccessSnackBar('확인 완료! 닉네임을 설정해주세요.');
+          //TODO : 닉네임 설정 창 띄우늘 로직
+        },
+        failure: (error) {
+          _showErrorSnackBar(error.message);
+        },
+      );
     } catch (e) {
       debugPrint('[$_logTag] Google 로그인 오류: $e');
       _showErrorSnackBar('네트워크 오류가 발생했습니다');

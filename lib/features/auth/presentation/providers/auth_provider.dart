@@ -1,18 +1,26 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:mind_canvas/core/utils/result.dart';
 
 import '../../data/models/request/auth_request_dto.dart';
 import '../../domain/entities/auth_user_entity.dart';
-
+import '../../domain/usecases/auth_usecase.dart';
+import '../../domain/usecases/auth_usecase_provider.dart';
 part 'auth_provider.g.dart';
 
 /// 🔐 인증 상태 관리 Provider
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
+
+  late final AuthUseCase _authUseCase;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+
   @override
   Future<AuthUser?> build() async {
     // 초기 상태: 저장된 사용자 정보 확인
-    return await _checkStoredUser();
+    _authUseCase = ref.read(authUseCaseProvider);
+    return null;
   }
 
   /// 🍎 Apple 로그인
@@ -24,8 +32,7 @@ class AuthNotifier extends _$AuthNotifier {
 
     try {
       final loginRequest = AppleLoginRequest(
-        identityToken: identityToken,
-        authorizationCode: authorizationCode,
+        idToken: identityToken
       );
 
       // UseCase 호출 (향후 구현)
@@ -51,37 +58,61 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   /// 🌐 Google 로그인
-  Future<Result<AuthUser>> googleLogin({
-    required String idToken,
-    required String accessToken,
-  }) async {
+  Future<Result<AuthUser>> googleLogin() async { // ✨ 파라미터 제거
     state = const AsyncLoading();
 
     try {
-      final loginRequest = GoogleLoginRequest(
-        idToken: idToken,
-        accessToken: accessToken,
+      // 1. Google 로그인 실행 및 인증 정보 가져오기
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        state = AsyncData(state.valueOrNull); // 취소 시 이전 상태로 복귀
+        return Results.failure('Google 로그인이 취소되었습니다.');
+      }
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        state = AsyncData(state.valueOrNull);
+        return Results.failure('Google ID 토큰을 가져오지 못했습니다.');
+      }
+
+      // 2. [변경점] UseCase 호출!
+      // 이제 서버 통신을 포함한 모든 복잡한 로직은 UseCase가 담당합니다.
+      final result = await _authUseCase.loginWithGoogle(
+        // 실제 토큰 전달 (향후 UseCase에서 사용)
       );
 
-      // UseCase 호출 (향후 구현)
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockUser = AuthUser(
-        id: 'google_user_123',
-        email: 'user@gmail.com',
-        nickname: null,                    // 닉네임 설정 다이얼로그 필요
-        profileImageUrl: 'https://lh3.googleusercontent.com/example', // Google 프로필 이미지
-        authProvider: AuthProvider.google,
-        isEmailVerified: true,             // Google 인증됨
-        isProfileComplete: false,          // 닉네임 설정 필요
+      // 3. UseCase의 결과에 따라 상태 업데이트
+      result.when(
+        success: (user) {
+          state = AsyncData(user);
+          // 로컬에 사용자 정보 저장
+          _saveUserToLocal(user);
+        },
+        failure: (message, code) {
+          state = AsyncError(message, StackTrace.current);
+        },
+        loading: () {
+          // UseCase에서 로딩 상태를 처리하지 않으므로 이 부분은 거의 호출되지 않음
+        },
       );
 
-      state = AsyncData(mockUser);
-      return Results.success(mockUser);
+      return result;
 
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
       return Results.failure(error.toString());
+    }
+  }
+
+  Future<void> _saveUserToLocal(AuthUser user) async {
+    try {
+      // SharedPreferences나 Hive에 사용자 정보 저장
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.setString('auth_user', jsonEncode(user.toJson()));
+    } catch (e) {
+      print('Failed to save user to local storage: $e');
     }
   }
 

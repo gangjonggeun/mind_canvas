@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "963568583106",
+    "project_id": "mind-color-cnavas",
+    "storage_bucket": "mind-color-cnavas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963568583106:android:479790bcfa494c2b28565b",
+        "android_client_info": {
+          "package_name": "com.mcc.mind_canvas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "963568583106-nirn03b37ug2e0r7uqhcikt8dulor7hf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mcc.mind_canvas",
+            "certificate_hash": "8578488a2f08390f17aab7697f04f915dd759fb6"
+          }
+        },
+        {
+          "client_id": "963568583106-ofpmj3aeh6pqc0af35i7p2h427e5agi1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOcW8DaKdUxZAf1ChiG-dHHE5v-BbWFW4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "963568583106-ofpmj3aeh6pqc0af35i7p2h427e5agi1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

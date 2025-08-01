@@ -11,8 +11,8 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-
-
+  # 구글 로그인
+  google_sign_in: ^6.2.1
   # 🔥 State Management
   flutter_riverpod: ^2.6.1          #  상태관리
   riverpod_annotation: ^2.3.5       # 코드 생성용
@@ -44,14 +44,13 @@ dependencies:
   scribble: ^0.10.0+1               # 경량 그리기 ( HTP 검사용)
   value_notifier_tools: ^0.1.2       # Scribble 상태 관리 도구
 
-
   # 🔐 Security & Auth
   crypto: ^3.0.5                    # 암호화
   local_auth: ^2.3.0                # 생체인증
 
   # 📱 Device & Platform
   permission_handler: ^11.3.1       # 권한 관리
-  device_info_plus: ^10.1.2         # 기기 정보
+#  device_info_plus: ^8.2.2          # 기기 정보 (더 안정적인 버전으로 다운그레이드)  -> 이거때문에 환경 다꼬임 다른 라이브러리나 기본거 사용해야할듯
   package_info_plus: ^8.0.2         # 앱 정보
 
   # 🧭 Navigation
@@ -61,11 +60,12 @@ dependencies:
   freezed_annotation: ^2.4.4        # 불변 클래스 생성
   logger: ^2.4.0                    # 로깅
   intl: ^0.19.0                     # 국제화
+  flutter_dotenv: ^5.1.0            # 환경변수 관리 🔐
 
-  # 📊 Analytics & Monitoring (Firebase 제거)
-  # firebase_core: ^3.6.0             # Firebase 기본
-  # firebase_analytics: ^11.3.3       # 분석
-  # firebase_crashlytics: ^4.1.3      # 크래시 리포팅
+  # 📊 Analytics & Monitoring (Firebase)
+  firebase_core: ^3.6.0             # Firebase 기본
+  firebase_auth: ^5.3.1             # Firebase 인증
+  firebase_analytics: ^11.3.3       # 분석 (Google OAuth2 연동용)
 
 dev_dependencies:
   flutter_test:
@@ -81,10 +81,8 @@ dev_dependencies:
   riverpod_generator: ^2.4.3        # Riverpod 코드 생성
   hive_generator: ^2.0.1            # Hive 어댑터 생성
 
-  # 🧪 Testing
+  # 🧪 Testing (integration_test 제거)
   mockito: ^5.4.4                   # Mock 객체 생성
-  integration_test:                 # 통합 테스트
-    sdk: flutter
 
 flutter:
   uses-material-design: true
@@ -104,7 +102,9 @@ flutter:
     - assets/illustrations/taro/  # 타로 이미지들 (WebP 포함)
     - assets/images/background/
     - assets/images/logo/
-  
+    - .env
+
+
   # 🔤 Custom Fonts (예시)
   # fonts:
   #   - family: Pretendard

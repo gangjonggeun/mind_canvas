@@ -3,41 +3,30 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'auth_request_dto.freezed.dart';
 part 'auth_request_dto.g.dart';
 
+/// 🌐 Google 로그인 요청 DTO - 간소화
+@freezed
+class GoogleLoginRequest with _$GoogleLoginRequest {
+  const factory GoogleLoginRequest({
+    required String idToken,      // 🔑 핵심! 서버에서 검증할 토큰
+    String? deviceId,            // 📱 기기 식별 (선택)
+    String? fcmToken,            // 🔔 푸시 알림 (선택)
+  }) = _GoogleLoginRequest;
 
-
+  factory GoogleLoginRequest.fromJson(Map<String, dynamic> json) =>
+      _$GoogleLoginRequestFromJson(json);
+}
 
 /// 🍎 Apple 로그인 요청 DTO
 @freezed
 class AppleLoginRequest with _$AppleLoginRequest {
   const factory AppleLoginRequest({
-    required String identityToken,
-    required String authorizationCode,
-    String? userIdentifier,
-    String? email,
-    String? fullName,
-    String? deviceId,
+    required String idToken,      // 🔑 핵심! 서버에서 검증할 토큰
+    String? deviceId,            // 📱 기기 식별 (선택)
     String? fcmToken,
   }) = _AppleLoginRequest;
 
   factory AppleLoginRequest.fromJson(Map<String, dynamic> json) =>
       _$AppleLoginRequestFromJson(json);
-}
-
-/// 🌐 Google 로그인 요청 DTO
-@freezed
-class GoogleLoginRequest with _$GoogleLoginRequest {
-  const factory GoogleLoginRequest({
-    required String idToken,
-    required String accessToken,
-    String? email,
-    String? displayName,
-    String? photoUrl,
-    String? deviceId,
-    String? fcmToken,
-  }) = _GoogleLoginRequest;
-
-  factory GoogleLoginRequest.fromJson(Map<String, dynamic> json) =>
-      _$GoogleLoginRequestFromJson(json);
 }
 
 /// 🔄 토큰 갱신 요청 DTO
@@ -81,43 +70,36 @@ class DeviceInfoRequest with _$DeviceInfoRequest {
       _$DeviceInfoRequestFromJson(json);
 }
 
-
-extension AppleLoginRequestExtension on AppleLoginRequest {
-  /// Apple 로그인 유효성 검사
-  bool get isValid {
-    return identityToken.isNotEmpty && authorizationCode.isNotEmpty;
-  }
-
-  /// API 전송용 Map으로 변환
-  Map<String, dynamic> toApiJson() {
-    return {
-      'identity_token': identityToken,
-      'authorization_code': authorizationCode,
-      if (userIdentifier != null) 'user_identifier': userIdentifier,
-      if (email != null) 'email': email,
-      if (fullName != null) 'full_name': fullName,
-      if (deviceId != null) 'device_id': deviceId,
-      if (fcmToken != null) 'fcm_token': fcmToken,
-    };
-  }
-}
-
+// Extension 메서드들
 extension GoogleLoginRequestExtension on GoogleLoginRequest {
   /// Google 로그인 유효성 검사
   bool get isValid {
-    return idToken.isNotEmpty && accessToken.isNotEmpty;
+    return idToken.isNotEmpty;
   }
 
   /// API 전송용 Map으로 변환
   Map<String, dynamic> toApiJson() {
     return {
       'id_token': idToken,
-      'access_token': accessToken,
-      if (email != null) 'email': email,
-      if (displayName != null) 'display_name': displayName,
-      if (photoUrl != null) 'photo_url': photoUrl,
       if (deviceId != null) 'device_id': deviceId,
       if (fcmToken != null) 'fcm_token': fcmToken,
     };
   }
+}
+
+extension AppleLoginRequestExtension on AppleLoginRequest {
+  /// apple 로그인 유효성 검사
+  bool get isValid {
+    return idToken.isNotEmpty;
+  }
+
+  /// API 전송용 Map으로 변환
+  Map<String, dynamic> toApiJson() {
+    return {
+      'id_token': idToken,
+      if (deviceId != null) 'device_id': deviceId,
+      if (fcmToken != null) 'fcm_token': fcmToken,
+    };
+  }
+
 }

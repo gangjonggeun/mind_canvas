@@ -6,38 +6,10 @@ part of 'auth_request_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AppleLoginRequestImpl _$$AppleLoginRequestImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AppleLoginRequestImpl(
-      identityToken: json['identityToken'] as String,
-      authorizationCode: json['authorizationCode'] as String,
-      userIdentifier: json['userIdentifier'] as String?,
-      email: json['email'] as String?,
-      fullName: json['fullName'] as String?,
-      deviceId: json['deviceId'] as String?,
-      fcmToken: json['fcmToken'] as String?,
-    );
-
-Map<String, dynamic> _$$AppleLoginRequestImplToJson(
-        _$AppleLoginRequestImpl instance) =>
-    <String, dynamic>{
-      'identityToken': instance.identityToken,
-      'authorizationCode': instance.authorizationCode,
-      'userIdentifier': instance.userIdentifier,
-      'email': instance.email,
-      'fullName': instance.fullName,
-      'deviceId': instance.deviceId,
-      'fcmToken': instance.fcmToken,
-    };
-
 _$GoogleLoginRequestImpl _$$GoogleLoginRequestImplFromJson(
         Map<String, dynamic> json) =>
     _$GoogleLoginRequestImpl(
       idToken: json['idToken'] as String,
-      accessToken: json['accessToken'] as String,
-      email: json['email'] as String?,
-      displayName: json['displayName'] as String?,
-      photoUrl: json['photoUrl'] as String?,
       deviceId: json['deviceId'] as String?,
       fcmToken: json['fcmToken'] as String?,
     );
@@ -46,10 +18,22 @@ Map<String, dynamic> _$$GoogleLoginRequestImplToJson(
         _$GoogleLoginRequestImpl instance) =>
     <String, dynamic>{
       'idToken': instance.idToken,
-      'accessToken': instance.accessToken,
-      'email': instance.email,
-      'displayName': instance.displayName,
-      'photoUrl': instance.photoUrl,
+      'deviceId': instance.deviceId,
+      'fcmToken': instance.fcmToken,
+    };
+
+_$AppleLoginRequestImpl _$$AppleLoginRequestImplFromJson(
+        Map<String, dynamic> json) =>
+    _$AppleLoginRequestImpl(
+      idToken: json['idToken'] as String,
+      deviceId: json['deviceId'] as String?,
+      fcmToken: json['fcmToken'] as String?,
+    );
+
+Map<String, dynamic> _$$AppleLoginRequestImplToJson(
+        _$AppleLoginRequestImpl instance) =>
+    <String, dynamic>{
+      'idToken': instance.idToken,
       'deviceId': instance.deviceId,
       'fcmToken': instance.fcmToken,
     };

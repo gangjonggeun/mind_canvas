@@ -3,11 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app/main_screen.dart';
 // import 'core/utils/app_logger.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:mind_canvas/core/home/domain/entities/recommended_content_entity.dart';
-void main() {
+
+import 'features/auth/presentation/screens/login_screen.dart';
+void main()  async{
   // 🚀 Logger 초기화 (최우선)
   // AppLogger.initialize();
-  
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+  try {
+    // 안전하게 .env 로드
+    await dotenv.load(fileName: ".env");
+    print("✅ .env 파일 로드 성공");
+  } catch (e) {
+    print("❌ .env 파일 로드 실패: $e");
+    // .env 로드 실패해도 앱은 실행
+  }
+
   // 📊 임시로 메모리 최적화 비활성화 (디버깅용)
   // PaintingBinding.instance.imageCache.maximumSize = 50;
   // PaintingBinding.instance.imageCache.maximumSizeBytes = 50 << 20;
@@ -49,7 +64,8 @@ class MindCanvasApp extends StatelessWidget {
             ),
             fontFamily: 'Pretendard', // 한글 폰트 (없으면 시스템 기본)
           ),
-          home: const MainScreen(),
+          // home: const MainScreen(),
+          home: const LoginScreen(),
         );
       },
     );

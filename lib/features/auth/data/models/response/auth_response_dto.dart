@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../../core/network/api_response_dto.dart';
 
 part 'auth_response_dto.freezed.dart';
 part 'auth_response_dto.g.dart';
@@ -51,6 +52,7 @@ class RefreshTokenResponse with _$RefreshTokenResponse {
     @Default(3600) int expiresIn,
     @Default('Bearer') String tokenType,
     DateTime? issuedAt,
+    @Default(UserRole.user) UserRole role,
   }) = _RefreshTokenResponse;
 
   factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) =>
@@ -70,37 +72,6 @@ class LogoutResponse with _$LogoutResponse {
       _$LogoutResponseFromJson(json);
 }
 
-/// ❌ 에러 응답 DTO
-@freezed
-class ErrorResponse with _$ErrorResponse {
-  const factory ErrorResponse({
-    required String error,
-    required String errorDescription,
-    String? errorCode,
-    String? errorUri,
-    Map<String, dynamic>? details,
-    DateTime? timestamp,
-  }) = _ErrorResponse;
-
-  factory ErrorResponse.fromJson(Map<String, dynamic> json) =>
-      _$ErrorResponseFromJson(json);
-}
-
-/// 📊 API 응답 래퍼 DTO
-@freezed
-class ApiResponse<T> with _$ApiResponse<T> {
-  const factory ApiResponse({
-    required bool success,
-    T? data,
-    String? message,
-    ErrorResponse? error,
-    Map<String, dynamic>? metadata,
-    DateTime? timestamp,
-  }) = _ApiResponse<T>;
-
-  // 🔄 제네릭 타입 때문에 fromJson 제거
-  // 대신 각 타입별로 팩토리 메서드 사용
-}
 
 /// 🎯 Response DTO 확장 메서드들
 extension AuthResponseExtension on AuthResponse {
@@ -141,61 +112,7 @@ extension AuthResponseExtension on AuthResponse {
   }
 }
 
-/// 🎯 ApiResponse 팩토리 메서드들
-/// 
-/// 제네릭 타입별로 안전한 생성자 제공
-class ApiResponseFactory {
-  /// AuthResponse용 팩토리
-  static ApiResponse<AuthResponse> forAuth(Map<String, dynamic> json) {
-    return ApiResponse<AuthResponse>(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? AuthResponse.fromJson(json['data']) : null,
-      message: json['message'],
-      error: json['error'] != null ? ErrorResponse.fromJson(json['error']) : null,
-      metadata: json['metadata'],
-      timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : null,
-    );
-  }
 
-  /// UserResponse용 팩토리
-  static ApiResponse<UserResponse> forUser(Map<String, dynamic> json) {
-    return ApiResponse<UserResponse>(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? UserResponse.fromJson(json['data']) : null,
-      message: json['message'],
-      error: json['error'] != null ? ErrorResponse.fromJson(json['error']) : null,
-      metadata: json['metadata'],
-      timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : null,
-    );
-  }
-
-  /// RefreshTokenResponse용 팩토리
-  static ApiResponse<RefreshTokenResponse> forRefreshToken(Map<String, dynamic> json) {
-    return ApiResponse<RefreshTokenResponse>(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? RefreshTokenResponse.fromJson(json['data']) : null,
-      message: json['message'],
-      error: json['error'] != null ? ErrorResponse.fromJson(json['error']) : null,
-      metadata: json['metadata'],
-      timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : null,
-    );
-  }
-
-  /// 제네릭 팩토리 (커스텀 fromJson 함수 사용)
-  static ApiResponse<T> generic<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJsonT,
-  ) {
-    return ApiResponse<T>(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? fromJsonT(json['data']) : null,
-      message: json['message'],
-      error: json['error'] != null ? ErrorResponse.fromJson(json['error']) : null,
-      metadata: json['metadata'],
-      timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : null,
-    );
-  }
-}
 
 extension UserResponseExtension on UserResponse {
   /// 프로필이 완성되었는지 확인
@@ -266,4 +183,12 @@ extension ApiResponseExtension<T> on ApiResponse<T> {
 
   /// 에러 코드 반환
   String? get errorCode => error?.errorCode;
+}
+
+enum UserRole {
+  @JsonValue('USER')
+  user,
+
+  @JsonValue('ADMIN')
+  admin,
 }

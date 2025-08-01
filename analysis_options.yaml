@@ -1,44 +1,45 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  # ✨ 코드 생성 파일을 분석에서 제외하여 불필요한 경고를 줄입니다.
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-    - "**/*.gen.dart"
-    - "build/**"
-  errors:
-    # freezed 관련 에러 무시
-    invalid_annotation_target: ignore
-    undefined_identifier: ignore
-    undefined_class: ignore
-    undefined_function: ignore
+    - "lib/generated_plugin_registrant.dart"
 
+  # ✨ 잠재적인 오류를 더 엄격하게 검사하도록 설정합니다.
+  errors:
+    # '정의되지 않은 이름'을 '에러'로 취급하여 Provider 등을 못 찾을 때 알려줍니다.
+    undefined_name: error
+    # '정의되지 않은 함수/메서드'를 '에러'로 취급합니다.
+    undefined_function: error
+    # '잘못된 타입 할당'을 '에러'로 취급합니다.
+    invalid_assignment: error
+    # '존재하지 않는 getter/setter 호출'을 '에러'로 취급합니다.
+    undefined_getter: error
+    undefined_setter: error
+
+    # ✨ 자주 발생하는 실수들을 '경고'로 표시하여 코드 품질을 높입니다.
+    # 사용되지 않는 import 문
+    unused_import: warning
+    # 필수 파라미터 누락
+    missing_required_param: warning
+    # null이 될 수 없는 값에 null을 할당하려는 시도
+    non_nullable_equals_parameter: warning
+
+# Linter 규칙: 좋은 코딩 습관을 위한 추가 규칙들
 linter:
   rules:
-    # Type Safety
-    always_declare_return_types: true
-    avoid_dynamic_calls: true
-    
-    # Style
-    prefer_single_quotes: true
-    prefer_const_constructors: true
-    prefer_final_fields: true
-    
-    # Flutter specific
-    use_key_in_widget_constructors: true
-    prefer_const_constructors_in_immutables: true
-    
-    # Riverpod specific
-    invalid_use_of_protected_member: true
+    # --- Style ---
+    - prefer_single_quotes
+    - prefer_const_constructors
+    - prefer_final_fields
+    - avoid_print # 개발 중에는 괜찮지만, 릴리즈 버전에는 print문을 남기지 않도록 경고
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # --- Flutter specific ---
+    - use_key_in_widget_constructors
+    - prefer_const_constructors_in_immutables
+
+    # --- Type Safety ---
+    - always_declare_return_types
+    # - avoid_dynamic_calls # 이 규칙은 매우 강력하지만, 때로는 불편할 수 있어 주석 처리

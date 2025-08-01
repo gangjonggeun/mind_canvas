@@ -14,299 +14,15 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-AppleLoginRequest _$AppleLoginRequestFromJson(Map<String, dynamic> json) {
-  return _AppleLoginRequest.fromJson(json);
-}
-
-/// @nodoc
-mixin _$AppleLoginRequest {
-  String get identityToken => throw _privateConstructorUsedError;
-  String get authorizationCode => throw _privateConstructorUsedError;
-  String? get userIdentifier => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError;
-  String? get fullName => throw _privateConstructorUsedError;
-  String? get deviceId => throw _privateConstructorUsedError;
-  String? get fcmToken => throw _privateConstructorUsedError;
-
-  /// Serializes this AppleLoginRequest to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of AppleLoginRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AppleLoginRequestCopyWith<AppleLoginRequest> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $AppleLoginRequestCopyWith<$Res> {
-  factory $AppleLoginRequestCopyWith(
-          AppleLoginRequest value, $Res Function(AppleLoginRequest) then) =
-      _$AppleLoginRequestCopyWithImpl<$Res, AppleLoginRequest>;
-  @useResult
-  $Res call(
-      {String identityToken,
-      String authorizationCode,
-      String? userIdentifier,
-      String? email,
-      String? fullName,
-      String? deviceId,
-      String? fcmToken});
-}
-
-/// @nodoc
-class _$AppleLoginRequestCopyWithImpl<$Res, $Val extends AppleLoginRequest>
-    implements $AppleLoginRequestCopyWith<$Res> {
-  _$AppleLoginRequestCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of AppleLoginRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? identityToken = null,
-    Object? authorizationCode = null,
-    Object? userIdentifier = freezed,
-    Object? email = freezed,
-    Object? fullName = freezed,
-    Object? deviceId = freezed,
-    Object? fcmToken = freezed,
-  }) {
-    return _then(_value.copyWith(
-      identityToken: null == identityToken
-          ? _value.identityToken
-          : identityToken // ignore: cast_nullable_to_non_nullable
-              as String,
-      authorizationCode: null == authorizationCode
-          ? _value.authorizationCode
-          : authorizationCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      userIdentifier: freezed == userIdentifier
-          ? _value.userIdentifier
-          : userIdentifier // ignore: cast_nullable_to_non_nullable
-              as String?,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fullName: freezed == fullName
-          ? _value.fullName
-          : fullName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      deviceId: freezed == deviceId
-          ? _value.deviceId
-          : deviceId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fcmToken: freezed == fcmToken
-          ? _value.fcmToken
-          : fcmToken // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$AppleLoginRequestImplCopyWith<$Res>
-    implements $AppleLoginRequestCopyWith<$Res> {
-  factory _$$AppleLoginRequestImplCopyWith(_$AppleLoginRequestImpl value,
-          $Res Function(_$AppleLoginRequestImpl) then) =
-      __$$AppleLoginRequestImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String identityToken,
-      String authorizationCode,
-      String? userIdentifier,
-      String? email,
-      String? fullName,
-      String? deviceId,
-      String? fcmToken});
-}
-
-/// @nodoc
-class __$$AppleLoginRequestImplCopyWithImpl<$Res>
-    extends _$AppleLoginRequestCopyWithImpl<$Res, _$AppleLoginRequestImpl>
-    implements _$$AppleLoginRequestImplCopyWith<$Res> {
-  __$$AppleLoginRequestImplCopyWithImpl(_$AppleLoginRequestImpl _value,
-      $Res Function(_$AppleLoginRequestImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AppleLoginRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? identityToken = null,
-    Object? authorizationCode = null,
-    Object? userIdentifier = freezed,
-    Object? email = freezed,
-    Object? fullName = freezed,
-    Object? deviceId = freezed,
-    Object? fcmToken = freezed,
-  }) {
-    return _then(_$AppleLoginRequestImpl(
-      identityToken: null == identityToken
-          ? _value.identityToken
-          : identityToken // ignore: cast_nullable_to_non_nullable
-              as String,
-      authorizationCode: null == authorizationCode
-          ? _value.authorizationCode
-          : authorizationCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      userIdentifier: freezed == userIdentifier
-          ? _value.userIdentifier
-          : userIdentifier // ignore: cast_nullable_to_non_nullable
-              as String?,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fullName: freezed == fullName
-          ? _value.fullName
-          : fullName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      deviceId: freezed == deviceId
-          ? _value.deviceId
-          : deviceId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fcmToken: freezed == fcmToken
-          ? _value.fcmToken
-          : fcmToken // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$AppleLoginRequestImpl implements _AppleLoginRequest {
-  const _$AppleLoginRequestImpl(
-      {required this.identityToken,
-      required this.authorizationCode,
-      this.userIdentifier,
-      this.email,
-      this.fullName,
-      this.deviceId,
-      this.fcmToken});
-
-  factory _$AppleLoginRequestImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AppleLoginRequestImplFromJson(json);
-
-  @override
-  final String identityToken;
-  @override
-  final String authorizationCode;
-  @override
-  final String? userIdentifier;
-  @override
-  final String? email;
-  @override
-  final String? fullName;
-  @override
-  final String? deviceId;
-  @override
-  final String? fcmToken;
-
-  @override
-  String toString() {
-    return 'AppleLoginRequest(identityToken: $identityToken, authorizationCode: $authorizationCode, userIdentifier: $userIdentifier, email: $email, fullName: $fullName, deviceId: $deviceId, fcmToken: $fcmToken)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AppleLoginRequestImpl &&
-            (identical(other.identityToken, identityToken) ||
-                other.identityToken == identityToken) &&
-            (identical(other.authorizationCode, authorizationCode) ||
-                other.authorizationCode == authorizationCode) &&
-            (identical(other.userIdentifier, userIdentifier) ||
-                other.userIdentifier == userIdentifier) &&
-            (identical(other.email, email) || other.email == email) &&
-            (identical(other.fullName, fullName) ||
-                other.fullName == fullName) &&
-            (identical(other.deviceId, deviceId) ||
-                other.deviceId == deviceId) &&
-            (identical(other.fcmToken, fcmToken) ||
-                other.fcmToken == fcmToken));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, identityToken, authorizationCode,
-      userIdentifier, email, fullName, deviceId, fcmToken);
-
-  /// Create a copy of AppleLoginRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AppleLoginRequestImplCopyWith<_$AppleLoginRequestImpl> get copyWith =>
-      __$$AppleLoginRequestImplCopyWithImpl<_$AppleLoginRequestImpl>(
-          this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AppleLoginRequestImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _AppleLoginRequest implements AppleLoginRequest {
-  const factory _AppleLoginRequest(
-      {required final String identityToken,
-      required final String authorizationCode,
-      final String? userIdentifier,
-      final String? email,
-      final String? fullName,
-      final String? deviceId,
-      final String? fcmToken}) = _$AppleLoginRequestImpl;
-
-  factory _AppleLoginRequest.fromJson(Map<String, dynamic> json) =
-      _$AppleLoginRequestImpl.fromJson;
-
-  @override
-  String get identityToken;
-  @override
-  String get authorizationCode;
-  @override
-  String? get userIdentifier;
-  @override
-  String? get email;
-  @override
-  String? get fullName;
-  @override
-  String? get deviceId;
-  @override
-  String? get fcmToken;
-
-  /// Create a copy of AppleLoginRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AppleLoginRequestImplCopyWith<_$AppleLoginRequestImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
 GoogleLoginRequest _$GoogleLoginRequestFromJson(Map<String, dynamic> json) {
   return _GoogleLoginRequest.fromJson(json);
 }
 
 /// @nodoc
 mixin _$GoogleLoginRequest {
-  String get idToken => throw _privateConstructorUsedError;
-  String get accessToken => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError;
-  String? get displayName => throw _privateConstructorUsedError;
-  String? get photoUrl => throw _privateConstructorUsedError;
-  String? get deviceId => throw _privateConstructorUsedError;
+  String get idToken =>
+      throw _privateConstructorUsedError; // 🔑 핵심! 서버에서 검증할 토큰
+  String? get deviceId => throw _privateConstructorUsedError; // 📱 기기 식별 (선택)
   String? get fcmToken => throw _privateConstructorUsedError;
 
   /// Serializes this GoogleLoginRequest to a JSON map.
@@ -325,14 +41,7 @@ abstract class $GoogleLoginRequestCopyWith<$Res> {
           GoogleLoginRequest value, $Res Function(GoogleLoginRequest) then) =
       _$GoogleLoginRequestCopyWithImpl<$Res, GoogleLoginRequest>;
   @useResult
-  $Res call(
-      {String idToken,
-      String accessToken,
-      String? email,
-      String? displayName,
-      String? photoUrl,
-      String? deviceId,
-      String? fcmToken});
+  $Res call({String idToken, String? deviceId, String? fcmToken});
 }
 
 /// @nodoc
@@ -351,10 +60,6 @@ class _$GoogleLoginRequestCopyWithImpl<$Res, $Val extends GoogleLoginRequest>
   @override
   $Res call({
     Object? idToken = null,
-    Object? accessToken = null,
-    Object? email = freezed,
-    Object? displayName = freezed,
-    Object? photoUrl = freezed,
     Object? deviceId = freezed,
     Object? fcmToken = freezed,
   }) {
@@ -363,22 +68,6 @@ class _$GoogleLoginRequestCopyWithImpl<$Res, $Val extends GoogleLoginRequest>
           ? _value.idToken
           : idToken // ignore: cast_nullable_to_non_nullable
               as String,
-      accessToken: null == accessToken
-          ? _value.accessToken
-          : accessToken // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      displayName: freezed == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
       deviceId: freezed == deviceId
           ? _value.deviceId
           : deviceId // ignore: cast_nullable_to_non_nullable
@@ -399,14 +88,7 @@ abstract class _$$GoogleLoginRequestImplCopyWith<$Res>
       __$$GoogleLoginRequestImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String idToken,
-      String accessToken,
-      String? email,
-      String? displayName,
-      String? photoUrl,
-      String? deviceId,
-      String? fcmToken});
+  $Res call({String idToken, String? deviceId, String? fcmToken});
 }
 
 /// @nodoc
@@ -423,10 +105,6 @@ class __$$GoogleLoginRequestImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? idToken = null,
-    Object? accessToken = null,
-    Object? email = freezed,
-    Object? displayName = freezed,
-    Object? photoUrl = freezed,
     Object? deviceId = freezed,
     Object? fcmToken = freezed,
   }) {
@@ -435,22 +113,6 @@ class __$$GoogleLoginRequestImplCopyWithImpl<$Res>
           ? _value.idToken
           : idToken // ignore: cast_nullable_to_non_nullable
               as String,
-      accessToken: null == accessToken
-          ? _value.accessToken
-          : accessToken // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      displayName: freezed == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
       deviceId: freezed == deviceId
           ? _value.deviceId
           : deviceId // ignore: cast_nullable_to_non_nullable
@@ -467,35 +129,23 @@ class __$$GoogleLoginRequestImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
   const _$GoogleLoginRequestImpl(
-      {required this.idToken,
-      required this.accessToken,
-      this.email,
-      this.displayName,
-      this.photoUrl,
-      this.deviceId,
-      this.fcmToken});
+      {required this.idToken, this.deviceId, this.fcmToken});
 
   factory _$GoogleLoginRequestImpl.fromJson(Map<String, dynamic> json) =>
       _$$GoogleLoginRequestImplFromJson(json);
 
   @override
   final String idToken;
-  @override
-  final String accessToken;
-  @override
-  final String? email;
-  @override
-  final String? displayName;
-  @override
-  final String? photoUrl;
+// 🔑 핵심! 서버에서 검증할 토큰
   @override
   final String? deviceId;
+// 📱 기기 식별 (선택)
   @override
   final String? fcmToken;
 
   @override
   String toString() {
-    return 'GoogleLoginRequest(idToken: $idToken, accessToken: $accessToken, email: $email, displayName: $displayName, photoUrl: $photoUrl, deviceId: $deviceId, fcmToken: $fcmToken)';
+    return 'GoogleLoginRequest(idToken: $idToken, deviceId: $deviceId, fcmToken: $fcmToken)';
   }
 
   @override
@@ -504,13 +154,6 @@ class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
         (other.runtimeType == runtimeType &&
             other is _$GoogleLoginRequestImpl &&
             (identical(other.idToken, idToken) || other.idToken == idToken) &&
-            (identical(other.accessToken, accessToken) ||
-                other.accessToken == accessToken) &&
-            (identical(other.email, email) || other.email == email) &&
-            (identical(other.displayName, displayName) ||
-                other.displayName == displayName) &&
-            (identical(other.photoUrl, photoUrl) ||
-                other.photoUrl == photoUrl) &&
             (identical(other.deviceId, deviceId) ||
                 other.deviceId == deviceId) &&
             (identical(other.fcmToken, fcmToken) ||
@@ -519,8 +162,7 @@ class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, idToken, accessToken, email,
-      displayName, photoUrl, deviceId, fcmToken);
+  int get hashCode => Object.hash(runtimeType, idToken, deviceId, fcmToken);
 
   /// Create a copy of GoogleLoginRequest
   /// with the given fields replaced by the non-null parameter values.
@@ -542,10 +184,6 @@ class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
 abstract class _GoogleLoginRequest implements GoogleLoginRequest {
   const factory _GoogleLoginRequest(
       {required final String idToken,
-      required final String accessToken,
-      final String? email,
-      final String? displayName,
-      final String? photoUrl,
       final String? deviceId,
       final String? fcmToken}) = _$GoogleLoginRequestImpl;
 
@@ -553,17 +191,9 @@ abstract class _GoogleLoginRequest implements GoogleLoginRequest {
       _$GoogleLoginRequestImpl.fromJson;
 
   @override
-  String get idToken;
+  String get idToken; // 🔑 핵심! 서버에서 검증할 토큰
   @override
-  String get accessToken;
-  @override
-  String? get email;
-  @override
-  String? get displayName;
-  @override
-  String? get photoUrl;
-  @override
-  String? get deviceId;
+  String? get deviceId; // 📱 기기 식별 (선택)
   @override
   String? get fcmToken;
 
@@ -572,6 +202,197 @@ abstract class _GoogleLoginRequest implements GoogleLoginRequest {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GoogleLoginRequestImplCopyWith<_$GoogleLoginRequestImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+AppleLoginRequest _$AppleLoginRequestFromJson(Map<String, dynamic> json) {
+  return _AppleLoginRequest.fromJson(json);
+}
+
+/// @nodoc
+mixin _$AppleLoginRequest {
+  String get idToken =>
+      throw _privateConstructorUsedError; // 🔑 핵심! 서버에서 검증할 토큰
+  String? get deviceId => throw _privateConstructorUsedError; // 📱 기기 식별 (선택)
+  String? get fcmToken => throw _privateConstructorUsedError;
+
+  /// Serializes this AppleLoginRequest to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of AppleLoginRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $AppleLoginRequestCopyWith<AppleLoginRequest> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AppleLoginRequestCopyWith<$Res> {
+  factory $AppleLoginRequestCopyWith(
+          AppleLoginRequest value, $Res Function(AppleLoginRequest) then) =
+      _$AppleLoginRequestCopyWithImpl<$Res, AppleLoginRequest>;
+  @useResult
+  $Res call({String idToken, String? deviceId, String? fcmToken});
+}
+
+/// @nodoc
+class _$AppleLoginRequestCopyWithImpl<$Res, $Val extends AppleLoginRequest>
+    implements $AppleLoginRequestCopyWith<$Res> {
+  _$AppleLoginRequestCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of AppleLoginRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? idToken = null,
+    Object? deviceId = freezed,
+    Object? fcmToken = freezed,
+  }) {
+    return _then(_value.copyWith(
+      idToken: null == idToken
+          ? _value.idToken
+          : idToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      deviceId: freezed == deviceId
+          ? _value.deviceId
+          : deviceId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      fcmToken: freezed == fcmToken
+          ? _value.fcmToken
+          : fcmToken // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$AppleLoginRequestImplCopyWith<$Res>
+    implements $AppleLoginRequestCopyWith<$Res> {
+  factory _$$AppleLoginRequestImplCopyWith(_$AppleLoginRequestImpl value,
+          $Res Function(_$AppleLoginRequestImpl) then) =
+      __$$AppleLoginRequestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String idToken, String? deviceId, String? fcmToken});
+}
+
+/// @nodoc
+class __$$AppleLoginRequestImplCopyWithImpl<$Res>
+    extends _$AppleLoginRequestCopyWithImpl<$Res, _$AppleLoginRequestImpl>
+    implements _$$AppleLoginRequestImplCopyWith<$Res> {
+  __$$AppleLoginRequestImplCopyWithImpl(_$AppleLoginRequestImpl _value,
+      $Res Function(_$AppleLoginRequestImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AppleLoginRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? idToken = null,
+    Object? deviceId = freezed,
+    Object? fcmToken = freezed,
+  }) {
+    return _then(_$AppleLoginRequestImpl(
+      idToken: null == idToken
+          ? _value.idToken
+          : idToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      deviceId: freezed == deviceId
+          ? _value.deviceId
+          : deviceId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      fcmToken: freezed == fcmToken
+          ? _value.fcmToken
+          : fcmToken // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AppleLoginRequestImpl implements _AppleLoginRequest {
+  const _$AppleLoginRequestImpl(
+      {required this.idToken, this.deviceId, this.fcmToken});
+
+  factory _$AppleLoginRequestImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AppleLoginRequestImplFromJson(json);
+
+  @override
+  final String idToken;
+// 🔑 핵심! 서버에서 검증할 토큰
+  @override
+  final String? deviceId;
+// 📱 기기 식별 (선택)
+  @override
+  final String? fcmToken;
+
+  @override
+  String toString() {
+    return 'AppleLoginRequest(idToken: $idToken, deviceId: $deviceId, fcmToken: $fcmToken)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AppleLoginRequestImpl &&
+            (identical(other.idToken, idToken) || other.idToken == idToken) &&
+            (identical(other.deviceId, deviceId) ||
+                other.deviceId == deviceId) &&
+            (identical(other.fcmToken, fcmToken) ||
+                other.fcmToken == fcmToken));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, idToken, deviceId, fcmToken);
+
+  /// Create a copy of AppleLoginRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AppleLoginRequestImplCopyWith<_$AppleLoginRequestImpl> get copyWith =>
+      __$$AppleLoginRequestImplCopyWithImpl<_$AppleLoginRequestImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AppleLoginRequestImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _AppleLoginRequest implements AppleLoginRequest {
+  const factory _AppleLoginRequest(
+      {required final String idToken,
+      final String? deviceId,
+      final String? fcmToken}) = _$AppleLoginRequestImpl;
+
+  factory _AppleLoginRequest.fromJson(Map<String, dynamic> json) =
+      _$AppleLoginRequestImpl.fromJson;
+
+  @override
+  String get idToken; // 🔑 핵심! 서버에서 검증할 토큰
+  @override
+  String? get deviceId; // 📱 기기 식별 (선택)
+  @override
+  String? get fcmToken;
+
+  /// Create a copy of AppleLoginRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AppleLoginRequestImplCopyWith<_$AppleLoginRequestImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

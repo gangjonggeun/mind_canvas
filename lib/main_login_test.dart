@@ -4,8 +4,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    // 안전하게 .env 로드
+    await dotenv.load(fileName: ".env");
+    print("✅ .env 파일 로드 성공");
+  } catch (e) {
+    print("❌ .env 파일 로드 실패: $e");
+    // .env 로드 실패해도 앱은 실행
+  }
+
   runApp(
     const ProviderScope(
       child: MindCanvasApp(),

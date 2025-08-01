@@ -1,44 +1,119 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
-android {
-    namespace = "com.example.mind_canvas"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { stream ->
+        localProperties.load(stream)
     }
+}
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21.toString()
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 1
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
+
+android {
+    namespace = "com.mcc.mind_canvas"
+    compileSdk = 35
+
+    sourceSets {
+        getByName("main").java.srcDirs("src/main/kotlin")
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mind_canvas"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21  // Android 5.0 (API 21) - 99%+ 커버리지
-        targetSdk = 34  // Android 14 - 안정적이고 널리 사용됨
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId = "com.mcc.mind_canvas"
+        minSdk = 23
+        targetSdk = 35
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
+        multiDexEnabled = true
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        
+        getByName("debug") {
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+        quiet = true
+        ignoreWarnings = true
+        disable.addAll(listOf(
+            "MissingPermission",
+            "ProtectedPermissions",
+            "UnsafeOptInUsageError",
+            "ObsoleteLintCustomCheck",
+            "InvalidPackage"
+        ))
+    }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module"
+            )
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Firebase BOM으로 버전 통합 관리 (Google Play Services 포함)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    
+    // Google Play Services (Firebase BOM에서 관리됨)
+    implementation("com.google.android.gms:play-services-base:18.2.0")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    
+    // 중복 제거: Google Play Core 라이브러리들 제거
+    // implementation("com.google.android.play:core:1.10.3")      // 제거
+    // implementation("com.google.android.play:core-ktx:1.8.1")   // 제거
+    
+    // 대신 최신 App Update API 사용 (필요시)
+    // implementation("com.google.android.play:app-update:2.1.0")
+    // implementation("com.google.android.play:app-update-ktx:2.1.0")
+    
+    // 멀티덱스
+    implementation("androidx.multidex:multidex:2.0.1")
+    
+    // 최신 AndroidX
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }

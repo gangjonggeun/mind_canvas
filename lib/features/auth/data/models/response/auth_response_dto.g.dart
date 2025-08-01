@@ -72,6 +72,8 @@ _$RefreshTokenResponseImpl _$$RefreshTokenResponseImplFromJson(
       issuedAt: json['issuedAt'] == null
           ? null
           : DateTime.parse(json['issuedAt'] as String),
+      role:
+          $enumDecodeNullable(_$UserRoleEnumMap, json['role']) ?? UserRole.user,
     );
 
 Map<String, dynamic> _$$RefreshTokenResponseImplToJson(
@@ -82,7 +84,13 @@ Map<String, dynamic> _$$RefreshTokenResponseImplToJson(
       'expiresIn': instance.expiresIn,
       'tokenType': instance.tokenType,
       'issuedAt': instance.issuedAt?.toIso8601String(),
+      'role': _$UserRoleEnumMap[instance.role]!,
     };
+
+const _$UserRoleEnumMap = {
+  UserRole.user: 'USER',
+  UserRole.admin: 'ADMIN',
+};
 
 _$LogoutResponseImpl _$$LogoutResponseImplFromJson(Map<String, dynamic> json) =>
     _$LogoutResponseImpl(
@@ -99,26 +107,4 @@ Map<String, dynamic> _$$LogoutResponseImplToJson(
       'success': instance.success,
       'message': instance.message,
       'loggedOutAt': instance.loggedOutAt?.toIso8601String(),
-    };
-
-_$ErrorResponseImpl _$$ErrorResponseImplFromJson(Map<String, dynamic> json) =>
-    _$ErrorResponseImpl(
-      error: json['error'] as String,
-      errorDescription: json['errorDescription'] as String,
-      errorCode: json['errorCode'] as String?,
-      errorUri: json['errorUri'] as String?,
-      details: json['details'] as Map<String, dynamic>?,
-      timestamp: json['timestamp'] == null
-          ? null
-          : DateTime.parse(json['timestamp'] as String),
-    );
-
-Map<String, dynamic> _$$ErrorResponseImplToJson(_$ErrorResponseImpl instance) =>
-    <String, dynamic>{
-      'error': instance.error,
-      'errorDescription': instance.errorDescription,
-      'errorCode': instance.errorCode,
-      'errorUri': instance.errorUri,
-      'details': instance.details,
-      'timestamp': instance.timestamp?.toIso8601String(),
     };
