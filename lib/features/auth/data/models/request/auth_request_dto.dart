@@ -1,15 +1,16 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'auth_request_dto.freezed.dart';
+
 part 'auth_request_dto.g.dart';
 
 /// 🌐 Google 로그인 요청 DTO - 간소화
 @freezed
 class GoogleLoginRequest with _$GoogleLoginRequest {
   const factory GoogleLoginRequest({
-    required String idToken,      // 🔑 핵심! 서버에서 검증할 토큰
-    String? deviceId,            // 📱 기기 식별 (선택)
-    String? fcmToken,            // 🔔 푸시 알림 (선택)
+    required String idToken, // 🔑 핵심! 서버에서 검증할 토큰
+    String? deviceId, // 📱 기기 식별 (선택)
+    String? fcmToken, // 🔔 푸시 알림 (선택)
   }) = _GoogleLoginRequest;
 
   factory GoogleLoginRequest.fromJson(Map<String, dynamic> json) =>
@@ -20,8 +21,8 @@ class GoogleLoginRequest with _$GoogleLoginRequest {
 @freezed
 class AppleLoginRequest with _$AppleLoginRequest {
   const factory AppleLoginRequest({
-    required String idToken,      // 🔑 핵심! 서버에서 검증할 토큰
-    String? deviceId,            // 📱 기기 식별 (선택)
+    required String idToken, // 🔑 핵심! 서버에서 검증할 토큰
+    String? deviceId, // 📱 기기 식별 (선택)
     String? fcmToken,
   }) = _AppleLoginRequest;
 
@@ -101,5 +102,4 @@ extension AppleLoginRequestExtension on AppleLoginRequest {
       if (fcmToken != null) 'fcm_token': fcmToken,
     };
   }
-
 }
