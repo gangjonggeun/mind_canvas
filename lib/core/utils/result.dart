@@ -1,190 +1,201 @@
-/// 🔄 Result 패턴 - 추상클래스 버전 (네트워크 통신 최적화)
-/// 
-/// **장점:**
-/// - 빌드 오류 없음 ✅
-/// - JSON 직렬화 문제 없음 ✅
-/// - 네트워크 에러 처리 최적화 ✅
-/// - 메모리 효율적 ✅
-abstract class Result<T> {
-  const Result();
+// =============================================================
+// 📁 core/utils/result.dart - fold 메서드 추가
+// =============================================================
 
-  /// 성공 여부 확인
-  bool get isSuccess => this is Success<T>;
-  bool get isFailure => this is Failure<T>;
-  bool get isLoading => this is Loading<T>;
+/// 🎯 Result 패턴 (Dart 버전)
+///
+/// Exception 대신 사용하는 안전한 결과 타입입니다.
+class Result<T> {
+  final bool _success;
+  final T? _data;
+  final String? _message;
+  final String? _errorCode;
 
-  /// 데이터 안전하게 가져오기
-  T? get dataOrNull {
-    if (this is Success<T>) {
-      return (this as Success<T>).data;
-    }
-    return null;
+  // Private 생성자
+  const Result._({
+    required bool success,
+    T? data,
+    String? message,
+    String? errorCode,
+  }) : _success = success,
+        _data = data,
+        _message = message,
+        _errorCode = errorCode;
+
+  // =============================================================
+  // 🏭 팩토리 메서드들
+  // =============================================================
+
+  /// ✅ 성공 결과 생성
+  static Result<T> success<T>(T data, [String? message]) {
+    return Result._(
+      success: true,
+      data: data,
+      message: message ?? '성공적으로 처리되었습니다',
+    );
   }
 
-  /// 에러 메시지 가져오기
-  String? get errorMessage {
-    if (this is Failure<T>) {
-      return (this as Failure<T>).message;
-    }
-    return null;
+  /// ❌ 실패 결과 생성
+  static Result<T> failure<T>(String message, [String? errorCode]) {
+    return Result._(
+      success: false,
+      message: message,
+      errorCode: errorCode,
+    );
   }
 
-  /// 편의 메서드 - when 패턴
-  R when<R>({
-    required R Function(T data) success,
-    required R Function(String message, String? code) failure,
-    required R Function() loading,
+  /// 🔄 로딩 결과 생성
+  static Result<T> loading<T>([String? message]) {
+    return Result._(
+      success: false,
+      message: message ?? '처리 중입니다...',
+      errorCode: 'LOADING',
+    );
+  }
+
+  // =============================================================
+  // 🔍 Getter들
+  // =============================================================
+
+  bool get isSuccess => _success;
+  bool get isFailure => !_success;
+  bool get isLoading => _errorCode == 'LOADING';
+
+  T? get data => _data;
+  String? get message => _message;
+  String? get errorCode => _errorCode;
+
+  bool get hasData => _success && _data != null;
+
+  // =============================================================
+  // 🎯 fold 메서드 (핵심!)
+  // =============================================================
+
+  /// 🎯 결과에 따라 다른 동작 수행 (fold pattern)
+  R fold<R>({
+    required R Function(T data) onSuccess,
+    required R Function(String message, String? errorCode) onFailure,
   }) {
-    if (this is Success<T>) {
-      return success((this as Success<T>).data);
-    } else if (this is Failure<T>) {
-      final failure_ = this as Failure<T>;
-      return failure(failure_.message, failure_.code);
-    } else if (this is Loading<T>) {
-      return loading();
+    if (_success && _data != null) {
+      return onSuccess(_data as T);
     } else {
-      throw StateError('Unknown Result type: ${runtimeType}');
+      return onFailure(_message ?? '알 수 없는 오류', _errorCode);
     }
   }
 
-  /// 편의 메서드 - map (성공시에만 변환)
-  Result<R> map<R>(R Function(T) mapper) {
-    if (this is Success<T>) {
+  /// 🎯 간단한 fold (에러 코드 불필요한 경우)
+  R foldSimple<R>({
+    required R Function(T data) onSuccess,
+    required R Function(String message) onFailure,
+  }) {
+    if (_success && _data != null) {
+      return onSuccess(_data as T);
+    } else {
+      return onFailure(_message ?? '알 수 없는 오류');
+    }
+  }
+
+  // =============================================================
+  // 🔄 함수형 프로그래밍 메서드들
+  // =============================================================
+
+  /// 🗺️ 성공 시 데이터 변환
+  Result<R> map<R>(R Function(T data) mapper) {
+    if (_success && _data != null) {
       try {
-        final newData = mapper((this as Success<T>).data);
-        return Success(newData);
+        final newData = mapper(_data as T);
+        return Result.success(newData, _message);
       } catch (e) {
-        return Failure('Data transformation failed: ${e.toString()}');
+        return Result.failure('데이터 변환 중 오류: $e');
       }
-    } else if (this is Failure<T>) {
-      return Failure<R>((this as Failure<T>).message, (this as Failure<T>).code);
     } else {
-      return Loading<R>();
+      return Result.failure(_message ?? '변환할 데이터가 없습니다', _errorCode);
+    }
+  }
+
+  /// 🔗 성공 시 다른 Result 체이닝
+  Result<R> flatMap<R>(Result<R> Function(T data) mapper) {
+    if (_success && _data != null) {
+      try {
+        return mapper(_data as T);
+      } catch (e) {
+        return Result.failure('체이닝 중 오류: $e');
+      }
+    } else {
+      return Result.failure(_message ?? '체이닝할 데이터가 없습니다', _errorCode);
+    }
+  }
+
+  /// 🔄 실패 시 대체 Result 반환
+  Result<T> orElse(Result<T> alternative) {
+    return _success ? this : alternative;
+  }
+
+  // =============================================================
+  // 🎭 부작용(Side Effect) 메서드들
+  // =============================================================
+
+  /// 🎉 성공 시 동작 수행
+  Result<T> onSuccess(void Function(T data) action) {
+    if (_success && _data != null) {
+      action(_data as T);
+    }
+    return this;
+  }
+
+  /// 😱 실패 시 동작 수행
+  Result<T> onFailure(void Function(String message, String? errorCode) action) {
+    if (!_success) {
+      action(_message ?? '알 수 없는 오류', _errorCode);
+    }
+    return this;
+  }
+
+  // =============================================================
+  // 🔧 유틸리티 메서드들
+  // =============================================================
+
+  /// 데이터 가져오기 (실패 시 기본값)
+  T getOrDefault(T defaultValue) {
+    return (_success && _data != null) ? _data as T : defaultValue;
+  }
+
+  /// 데이터 가져오기 (실패 시 예외 발생)
+  T getOrThrow() {
+    if (_success && _data != null) {
+      return _data as T;
+    } else {
+      throw Exception(_message ?? '데이터가 없습니다');
+    }
+  }
+
+  @override
+  String toString() {
+    if (_success) {
+      return 'Result.success(data: $data, message: $_message)';
+    } else {
+      return 'Result.failure(message: $_message, errorCode: $_errorCode)';
     }
   }
 }
 
-/// ✅ 성공 결과
-class Success<T> extends Result<T> {
-  final T data;
-  
-  const Success(this.data);
+// =============================================================
+// 🏭 Results 헬퍼 클래스 (기존 코드와 호환성)
+// =============================================================
 
-  @override
-  String toString() => 'Success(data: $data)';
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Success && runtimeType == other.runtimeType && data == other.data;
-
-  @override
-  int get hashCode => data.hashCode;
-}
-
-/// ❌ 실패 결과
-class Failure<T> extends Result<T> {
-  final String message;
-  final String? code;
-
-  const Failure(this.message, [this.code]);
-
-  @override
-  String toString() => 'Failure(message: $message, code: $code)';
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Failure &&
-          runtimeType == other.runtimeType &&
-          message == other.message &&
-          code == other.code;
-
-  @override
-  int get hashCode => message.hashCode ^ code.hashCode;
-}
-
-/// ⏳ 로딩 상태
-class Loading<T> extends Result<T> {
-  const Loading();
-
-  @override
-  String toString() => 'Loading()';
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is Loading && runtimeType == other.runtimeType;
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-}
-
-/// 🎯 편의 생성자들
 class Results {
-  /// 성공 결과 생성
-  static Result<T> success<T>(T data) => Success(data);
-  
-  /// 실패 결과 생성
-  static Result<T> failure<T>(String message, [String? code]) => Failure(message, code);
-  
-  /// 로딩 상태 생성
-  static Result<T> loading<T>() => Loading<T>();
-
-  /// HTTP 상태 코드 기반 실패 생성
-  static Result<T> httpFailure<T>(int statusCode, String message) {
-    final code = 'HTTP_$statusCode';
-    return Failure(message, code);
+  /// ✅ 성공 결과 생성
+  static Result<T> success<T>(T data, [String? message]) {
+    return Result.success(data, message);
   }
 
-  /// 네트워크 에러 생성
-  static Result<T> networkError<T>([String? message]) {
-    return Failure(message ?? '네트워크 연결을 확인해주세요', 'NETWORK_ERROR');
+  /// ❌ 실패 결과 생성
+  static Result<T> failure<T>(String message, [String? errorCode]) {
+    return Result.failure(message, errorCode);
   }
 
-  /// 타임아웃 에러 생성
-  static Result<T> timeoutError<T>([String? message]) {
-    return Failure(message ?? '요청 시간이 초과되었습니다', 'TIMEOUT_ERROR');
+  /// 🔄 로딩 결과 생성
+  static Result<T> loading<T>([String? message]) {
+    return Result.loading(message);
   }
 }
-
-/// ===== 🎨 사용법 예시 =====
-/// 
-/// ```dart
-/// // 기본 사용법
-/// Result<String> result = Success('데이터');
-/// Result<String> result = Failure('에러 발생', 'ERROR_CODE');
-/// Result<String> result = Loading();
-/// 
-/// // 편의 생성자 사용
-/// Result<String> result = Results.success('데이터');
-/// Result<String> result = Results.failure('에러');
-/// Result<String> result = Results.networkError();
-/// 
-/// // 패턴 매칭
-/// final message = result.when(
-///   success: (data) => '성공: $data',
-///   failure: (message, code) => '실패: $message ($code)',
-///   loading: () => '로딩 중...',
-/// );
-/// 
-/// // 데이터 변환
-/// final mappedResult = result.map((data) => data.length);
-/// 
-/// // 네트워크 서비스에서 사용
-/// Future<Result<List<Movie>>> getMovies() async {
-///   try {
-///     final response = await dio.get('/movies');
-///     return Results.success(response.data);
-///   } on DioException catch (e) {
-///     if (e.type == DioExceptionType.connectionTimeout) {
-///       return Results.timeoutError();
-///     } else if (e.type == DioExceptionType.connectionError) {
-///       return Results.networkError();
-///     } else {
-///       return Results.httpFailure(e.response?.statusCode ?? 0, e.message ?? '알 수 없는 오류');
-///     }
-///   } catch (e) {
-///     return Results.failure('예상치 못한 오류: ${e.toString()}');
-///   }
-/// }
-/// ```

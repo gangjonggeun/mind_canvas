@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../core/htp/htp_dashboard_screen.dart';
+import '../../htp/htp_dashboard_screen.dart';
 import '../../psytest/psy_test_screen.dart';
 
 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mind_canvas/core/home/widgets/recommended_content_section.dart';
-import 'package:mind_canvas/core/recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
+
+import '../../core/theme/app_assets.dart';
+import '../../core/theme/app_colors.dart';
 import '../../features/info/info_screen.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_assets.dart';
-import '../theme/app_theme.dart';
+
+import '../recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
 import 'widgets/home_viewpager.dart';
 
 

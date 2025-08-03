@@ -6,35 +6,50 @@ part of 'taro_consultation_state.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TaroConsultationStateImpl _$$TaroConsultationStateImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TaroConsultationStateImpl(
-      theme: json['theme'] as String? ?? '',
-      selectedSpreadType: json['selectedSpreadType'] == null
-          ? null
-          : TaroSpreadType.fromJson(
-              json['selectedSpreadType'] as Map<String, dynamic>),
-      selectedCards: (json['selectedCards'] as List<dynamic>?)
-              ?.map((e) => e as String?)
-              .toList() ??
-          const [],
-      status: $enumDecodeNullable(_$TaroStatusEnumMap, json['status']) ??
-          TaroStatus.initial,
-      result: json['result'] == null
-          ? null
-          : TaroResult.fromJson(json['result'] as Map<String, dynamic>),
-      interpretation: json['interpretation'] as String?,
-      errorMessage: json['errorMessage'] as String?,
+_$TaroConsultationStateImpl _$$TaroConsultationStateImplFromJson(Map json) =>
+    $checkedCreate(
+      r'_$TaroConsultationStateImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$TaroConsultationStateImpl(
+          theme: $checkedConvert('theme', (v) => v as String? ?? ''),
+          selectedSpreadType: $checkedConvert(
+              'selectedSpreadType',
+              (v) => v == null
+                  ? null
+                  : TaroSpreadType.fromJson(
+                      Map<String, dynamic>.from(v as Map))),
+          selectedCards: $checkedConvert(
+              'selectedCards',
+              (v) =>
+                  (v as List<dynamic>?)?.map((e) => e as String?).toList() ??
+                  const []),
+          status: $checkedConvert(
+              'status',
+              (v) =>
+                  $enumDecodeNullable(_$TaroStatusEnumMap, v) ??
+                  TaroStatus.initial),
+          result: $checkedConvert(
+              'result',
+              (v) => v == null
+                  ? null
+                  : TaroResult.fromJson(Map<String, dynamic>.from(v as Map))),
+          interpretation:
+              $checkedConvert('interpretation', (v) => v as String?),
+          errorMessage: $checkedConvert('errorMessage', (v) => v as String?),
+        );
+        return val;
+      },
     );
 
 Map<String, dynamic> _$$TaroConsultationStateImplToJson(
         _$TaroConsultationStateImpl instance) =>
     <String, dynamic>{
       'theme': instance.theme,
-      'selectedSpreadType': instance.selectedSpreadType,
+      'selectedSpreadType': instance.selectedSpreadType?.toJson(),
       'selectedCards': instance.selectedCards,
       'status': _$TaroStatusEnumMap[instance.status]!,
-      'result': instance.result,
+      'result': instance.result?.toJson(),
       'interpretation': instance.interpretation,
       'errorMessage': instance.errorMessage,
     };

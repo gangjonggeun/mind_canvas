@@ -2,7 +2,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:mind_canvas/core/htp/htp_dashboard_screen.dart';
+import 'package:mind_canvas/features/htp/htp_dashboard_screen.dart';
 import 'package:mind_canvas/features/info/factories/test_factory.dart';
 import 'package:mind_canvas/features/psytest/psy_test_screen.dart';
 

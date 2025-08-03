@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mind_canvas/core/recommendation/presentation/widgets/personalized_content_section.dart';
 
 // 실제 프로젝트에서는 아래 import 경로를 활성화하고 사용하세요.
 import 'pages/ideal_type_worldcup_page.dart';
@@ -7,7 +6,7 @@ import 'pages/personality_recommendations_page.dart';
 import 'pages/user_recommendation_page.dart';
 import '../data/mock_content_data.dart'; // 제공해주신 Mock 데이터 파일
 import '../domain/recommendation_enums.dart';
-import '../presentation/widgets/personalized_content_section.dart'; // 위젯 import
+import 'widgets/personalized_content_section.dart'; // 위젯 import
 // --- 코드 실행을 위한 임시 Enum 정의 ---
 // 실제 프로젝트에 이미 정의되어 있다면 이 부분은 삭제해도 됩니다.
 

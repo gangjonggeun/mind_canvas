@@ -6,9 +6,14 @@ part of 'auth_repository_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authRepositoryHash() => r'7861c5aab1c2336778a9cfaa51eeb8d8779b265b';
+String _$authRepositoryHash() => r'62c30fc836ed04e6d2af92dca118dbcd5072a41a';
 
-/// See also [authRepository].
+/// 🔑 AuthRepository Provider
+///
+/// TokenManager와 AuthApiDataSource를 주입받아 AuthRepositoryImpl을 생성합니다.
+/// Riverpod의 의존성 주입을 통해 테스트 가능하고 관리하기 쉬운 구조를 제공합니다.
+///
+/// Copied from [authRepository].
 @ProviderFor(authRepository)
 final authRepositoryProvider = AutoDisposeProvider<AuthRepository>.internal(
   authRepository,

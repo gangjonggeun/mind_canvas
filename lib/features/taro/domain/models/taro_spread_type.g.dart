@@ -6,12 +6,18 @@ part of 'taro_spread_type.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TaroSpreadTypeImpl _$$TaroSpreadTypeImplFromJson(Map<String, dynamic> json) =>
-    _$TaroSpreadTypeImpl(
-      cardCount: (json['cardCount'] as num).toInt(),
-      name: json['name'] as String,
-      description: json['description'] as String,
-      nameEn: json['nameEn'] as String,
+_$TaroSpreadTypeImpl _$$TaroSpreadTypeImplFromJson(Map json) => $checkedCreate(
+      r'_$TaroSpreadTypeImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$TaroSpreadTypeImpl(
+          cardCount: $checkedConvert('cardCount', (v) => (v as num).toInt()),
+          name: $checkedConvert('name', (v) => v as String),
+          description: $checkedConvert('description', (v) => v as String),
+          nameEn: $checkedConvert('nameEn', (v) => v as String),
+        );
+        return val;
+      },
     );
 
 Map<String, dynamic> _$$TaroSpreadTypeImplToJson(

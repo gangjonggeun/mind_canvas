@@ -7,20 +7,33 @@ part of 'api_response_dto.dart';
 // **************************************************************************
 
 _$ApiResponseImpl<T> _$$ApiResponseImplFromJson<T>(
-  Map<String, dynamic> json,
+  Map json,
   T Function(Object? json) fromJsonT,
 ) =>
-    _$ApiResponseImpl<T>(
-      success: json['success'] as bool,
-      data: _$nullableGenericFromJson(json['data'], fromJsonT),
-      message: json['message'] as String?,
-      error: json['error'] == null
-          ? null
-          : ErrorResponse.fromJson(json['error'] as Map<String, dynamic>),
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      timestamp: json['timestamp'] == null
-          ? null
-          : DateTime.parse(json['timestamp'] as String),
+    $checkedCreate(
+      r'_$ApiResponseImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$ApiResponseImpl<T>(
+          success: $checkedConvert('success', (v) => v as bool),
+          data: $checkedConvert(
+              'data', (v) => _$nullableGenericFromJson(v, fromJsonT)),
+          message: $checkedConvert('message', (v) => v as String?),
+          error: $checkedConvert(
+              'error',
+              (v) => v == null
+                  ? null
+                  : ErrorInfo.fromJson(Map<String, dynamic>.from(v as Map))),
+          metadata: $checkedConvert(
+              'metadata',
+              (v) => (v as Map?)?.map(
+                    (k, e) => MapEntry(k as String, e),
+                  )),
+          timestamp: $checkedConvert('timestamp',
+              (v) => v == null ? null : DateTime.parse(v as String)),
+        );
+        return val;
+      },
     );
 
 Map<String, dynamic> _$$ApiResponseImplToJson<T>(
@@ -31,7 +44,7 @@ Map<String, dynamic> _$$ApiResponseImplToJson<T>(
       'success': instance.success,
       'data': _$nullableGenericToJson(instance.data, toJsonT),
       'message': instance.message,
-      'error': instance.error,
+      'error': instance.error?.toJson(),
       'metadata': instance.metadata,
       'timestamp': instance.timestamp?.toIso8601String(),
     };
@@ -48,24 +61,20 @@ Object? _$nullableGenericToJson<T>(
 ) =>
     input == null ? null : toJson(input);
 
-_$ErrorResponseImpl _$$ErrorResponseImplFromJson(Map<String, dynamic> json) =>
-    _$ErrorResponseImpl(
-      error: json['error'] as String,
-      errorDescription: json['errorDescription'] as String,
-      errorCode: json['errorCode'] as String?,
-      errorUri: json['errorUri'] as String?,
-      details: json['details'] as Map<String, dynamic>?,
-      timestamp: json['timestamp'] == null
-          ? null
-          : DateTime.parse(json['timestamp'] as String),
+_$ErrorInfoImpl _$$ErrorInfoImplFromJson(Map json) => $checkedCreate(
+      r'_$ErrorInfoImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$ErrorInfoImpl(
+          code: $checkedConvert('code', (v) => v as String),
+          message: $checkedConvert('message', (v) => v as String),
+        );
+        return val;
+      },
     );
 
-Map<String, dynamic> _$$ErrorResponseImplToJson(_$ErrorResponseImpl instance) =>
+Map<String, dynamic> _$$ErrorInfoImplToJson(_$ErrorInfoImpl instance) =>
     <String, dynamic>{
-      'error': instance.error,
-      'errorDescription': instance.errorDescription,
-      'errorCode': instance.errorCode,
-      'errorUri': instance.errorUri,
-      'details': instance.details,
-      'timestamp': instance.timestamp?.toIso8601String(),
+      'code': instance.code,
+      'message': instance.message,
     };

@@ -8,9 +8,9 @@ part 'auth_request_dto.g.dart';
 @freezed
 class GoogleLoginRequest with _$GoogleLoginRequest {
   const factory GoogleLoginRequest({
-    required String idToken, // 🔑 핵심! 서버에서 검증할 토큰
-    String? deviceId, // 📱 기기 식별 (선택)
-    String? fcmToken, // 🔔 푸시 알림 (선택)
+    @JsonKey(name: 'id_token') required String idToken,
+    @JsonKey(name: 'device_id') String? deviceId,
+    @JsonKey(name: 'fcm_token') String? fcmToken,
   }) = _GoogleLoginRequest;
 
   factory GoogleLoginRequest.fromJson(Map<String, dynamic> json) =>
@@ -78,14 +78,6 @@ extension GoogleLoginRequestExtension on GoogleLoginRequest {
     return idToken.isNotEmpty;
   }
 
-  /// API 전송용 Map으로 변환
-  Map<String, dynamic> toApiJson() {
-    return {
-      'id_token': idToken,
-      if (deviceId != null) 'device_id': deviceId,
-      if (fcmToken != null) 'fcm_token': fcmToken,
-    };
-  }
 }
 
 extension AppleLoginRequestExtension on AppleLoginRequest {

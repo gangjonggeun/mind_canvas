@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../core/analysis/presentation/analysis_screen.dart';
-import '../core/consulting/presentation/consulting_screen.dart';
-import '../core/home/home_screen.dart';
-import '../core/profile/screens/profile_screen.dart';
-import '../core/recommendation/presentation/recommendation_screen.dart';
+import 'package:mind_canvas/features/consulting/presentation/consulting_screen.dart';
+import 'package:mind_canvas/features/profile/screens/profile_screen.dart';
+
+import '../features/analysis/presentation/analysis_screen.dart';
+import '../features/home/home_screen.dart';
+import '../features/recommendation/presentation/recommendation_screen.dart';
+
 
 /// Mind Canvas 메인 화면
 ///

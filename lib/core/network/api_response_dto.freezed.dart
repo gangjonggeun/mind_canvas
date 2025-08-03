@@ -24,7 +24,8 @@ mixin _$ApiResponse<T> {
   bool get success => throw _privateConstructorUsedError;
   T? get data => throw _privateConstructorUsedError;
   String? get message => throw _privateConstructorUsedError;
-  ErrorResponse? get error => throw _privateConstructorUsedError;
+  ErrorInfo? get error =>
+      throw _privateConstructorUsedError; // ← 서버의 ErrorInfo와 매칭
   Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
   DateTime? get timestamp => throw _privateConstructorUsedError;
 
@@ -49,11 +50,11 @@ abstract class $ApiResponseCopyWith<T, $Res> {
       {bool success,
       T? data,
       String? message,
-      ErrorResponse? error,
+      ErrorInfo? error,
       Map<String, dynamic>? metadata,
       DateTime? timestamp});
 
-  $ErrorResponseCopyWith<$Res>? get error;
+  $ErrorInfoCopyWith<$Res>? get error;
 }
 
 /// @nodoc
@@ -94,7 +95,7 @@ class _$ApiResponseCopyWithImpl<T, $Res, $Val extends ApiResponse<T>>
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
-              as ErrorResponse?,
+              as ErrorInfo?,
       metadata: freezed == metadata
           ? _value.metadata
           : metadata // ignore: cast_nullable_to_non_nullable
@@ -110,12 +111,12 @@ class _$ApiResponseCopyWithImpl<T, $Res, $Val extends ApiResponse<T>>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $ErrorResponseCopyWith<$Res>? get error {
+  $ErrorInfoCopyWith<$Res>? get error {
     if (_value.error == null) {
       return null;
     }
 
-    return $ErrorResponseCopyWith<$Res>(_value.error!, (value) {
+    return $ErrorInfoCopyWith<$Res>(_value.error!, (value) {
       return _then(_value.copyWith(error: value) as $Val);
     });
   }
@@ -133,12 +134,12 @@ abstract class _$$ApiResponseImplCopyWith<T, $Res>
       {bool success,
       T? data,
       String? message,
-      ErrorResponse? error,
+      ErrorInfo? error,
       Map<String, dynamic>? metadata,
       DateTime? timestamp});
 
   @override
-  $ErrorResponseCopyWith<$Res>? get error;
+  $ErrorInfoCopyWith<$Res>? get error;
 }
 
 /// @nodoc
@@ -177,7 +178,7 @@ class __$$ApiResponseImplCopyWithImpl<T, $Res>
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
-              as ErrorResponse?,
+              as ErrorInfo?,
       metadata: freezed == metadata
           ? _value._metadata
           : metadata // ignore: cast_nullable_to_non_nullable
@@ -213,8 +214,10 @@ class _$ApiResponseImpl<T> implements _ApiResponse<T> {
   @override
   final String? message;
   @override
-  final ErrorResponse? error;
+  final ErrorInfo? error;
+// ← 서버의 ErrorInfo와 매칭
   final Map<String, dynamic>? _metadata;
+// ← 서버의 ErrorInfo와 매칭
   @override
   Map<String, dynamic>? get metadata {
     final value = _metadata;
@@ -277,7 +280,7 @@ abstract class _ApiResponse<T> implements ApiResponse<T> {
       {required final bool success,
       final T? data,
       final String? message,
-      final ErrorResponse? error,
+      final ErrorInfo? error,
       final Map<String, dynamic>? metadata,
       final DateTime? timestamp}) = _$ApiResponseImpl<T>;
 
@@ -292,7 +295,7 @@ abstract class _ApiResponse<T> implements ApiResponse<T> {
   @override
   String? get message;
   @override
-  ErrorResponse? get error;
+  ErrorInfo? get error; // ← 서버의 ErrorInfo와 매칭
   @override
   Map<String, dynamic>? get metadata;
   @override
@@ -306,275 +309,169 @@ abstract class _ApiResponse<T> implements ApiResponse<T> {
       throw _privateConstructorUsedError;
 }
 
-ErrorResponse _$ErrorResponseFromJson(Map<String, dynamic> json) {
-  return _ErrorResponse.fromJson(json);
+ErrorInfo _$ErrorInfoFromJson(Map<String, dynamic> json) {
+  return _ErrorInfo.fromJson(json);
 }
 
 /// @nodoc
-mixin _$ErrorResponse {
-  String get error => throw _privateConstructorUsedError;
-  String get errorDescription => throw _privateConstructorUsedError;
-  String? get errorCode => throw _privateConstructorUsedError;
-  String? get errorUri => throw _privateConstructorUsedError;
-  Map<String, dynamic>? get details => throw _privateConstructorUsedError;
-  DateTime? get timestamp => throw _privateConstructorUsedError;
+mixin _$ErrorInfo {
+  String get code => throw _privateConstructorUsedError; // 서버의 "code" 필드
+  String get message => throw _privateConstructorUsedError;
 
-  /// Serializes this ErrorResponse to a JSON map.
+  /// Serializes this ErrorInfo to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of ErrorResponse
+  /// Create a copy of ErrorInfo
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $ErrorResponseCopyWith<ErrorResponse> get copyWith =>
+  $ErrorInfoCopyWith<ErrorInfo> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ErrorResponseCopyWith<$Res> {
-  factory $ErrorResponseCopyWith(
-          ErrorResponse value, $Res Function(ErrorResponse) then) =
-      _$ErrorResponseCopyWithImpl<$Res, ErrorResponse>;
+abstract class $ErrorInfoCopyWith<$Res> {
+  factory $ErrorInfoCopyWith(ErrorInfo value, $Res Function(ErrorInfo) then) =
+      _$ErrorInfoCopyWithImpl<$Res, ErrorInfo>;
   @useResult
-  $Res call(
-      {String error,
-      String errorDescription,
-      String? errorCode,
-      String? errorUri,
-      Map<String, dynamic>? details,
-      DateTime? timestamp});
+  $Res call({String code, String message});
 }
 
 /// @nodoc
-class _$ErrorResponseCopyWithImpl<$Res, $Val extends ErrorResponse>
-    implements $ErrorResponseCopyWith<$Res> {
-  _$ErrorResponseCopyWithImpl(this._value, this._then);
+class _$ErrorInfoCopyWithImpl<$Res, $Val extends ErrorInfo>
+    implements $ErrorInfoCopyWith<$Res> {
+  _$ErrorInfoCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of ErrorResponse
+  /// Create a copy of ErrorInfo
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? error = null,
-    Object? errorDescription = null,
-    Object? errorCode = freezed,
-    Object? errorUri = freezed,
-    Object? details = freezed,
-    Object? timestamp = freezed,
+    Object? code = null,
+    Object? message = null,
   }) {
     return _then(_value.copyWith(
-      error: null == error
-          ? _value.error
-          : error // ignore: cast_nullable_to_non_nullable
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
               as String,
-      errorDescription: null == errorDescription
-          ? _value.errorDescription
-          : errorDescription // ignore: cast_nullable_to_non_nullable
+      message: null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
               as String,
-      errorCode: freezed == errorCode
-          ? _value.errorCode
-          : errorCode // ignore: cast_nullable_to_non_nullable
-              as String?,
-      errorUri: freezed == errorUri
-          ? _value.errorUri
-          : errorUri // ignore: cast_nullable_to_non_nullable
-              as String?,
-      details: freezed == details
-          ? _value.details
-          : details // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-      timestamp: freezed == timestamp
-          ? _value.timestamp
-          : timestamp // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$ErrorResponseImplCopyWith<$Res>
-    implements $ErrorResponseCopyWith<$Res> {
-  factory _$$ErrorResponseImplCopyWith(
-          _$ErrorResponseImpl value, $Res Function(_$ErrorResponseImpl) then) =
-      __$$ErrorResponseImplCopyWithImpl<$Res>;
+abstract class _$$ErrorInfoImplCopyWith<$Res>
+    implements $ErrorInfoCopyWith<$Res> {
+  factory _$$ErrorInfoImplCopyWith(
+          _$ErrorInfoImpl value, $Res Function(_$ErrorInfoImpl) then) =
+      __$$ErrorInfoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String error,
-      String errorDescription,
-      String? errorCode,
-      String? errorUri,
-      Map<String, dynamic>? details,
-      DateTime? timestamp});
+  $Res call({String code, String message});
 }
 
 /// @nodoc
-class __$$ErrorResponseImplCopyWithImpl<$Res>
-    extends _$ErrorResponseCopyWithImpl<$Res, _$ErrorResponseImpl>
-    implements _$$ErrorResponseImplCopyWith<$Res> {
-  __$$ErrorResponseImplCopyWithImpl(
-      _$ErrorResponseImpl _value, $Res Function(_$ErrorResponseImpl) _then)
+class __$$ErrorInfoImplCopyWithImpl<$Res>
+    extends _$ErrorInfoCopyWithImpl<$Res, _$ErrorInfoImpl>
+    implements _$$ErrorInfoImplCopyWith<$Res> {
+  __$$ErrorInfoImplCopyWithImpl(
+      _$ErrorInfoImpl _value, $Res Function(_$ErrorInfoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of ErrorResponse
+  /// Create a copy of ErrorInfo
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? error = null,
-    Object? errorDescription = null,
-    Object? errorCode = freezed,
-    Object? errorUri = freezed,
-    Object? details = freezed,
-    Object? timestamp = freezed,
+    Object? code = null,
+    Object? message = null,
   }) {
-    return _then(_$ErrorResponseImpl(
-      error: null == error
-          ? _value.error
-          : error // ignore: cast_nullable_to_non_nullable
+    return _then(_$ErrorInfoImpl(
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
               as String,
-      errorDescription: null == errorDescription
-          ? _value.errorDescription
-          : errorDescription // ignore: cast_nullable_to_non_nullable
+      message: null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
               as String,
-      errorCode: freezed == errorCode
-          ? _value.errorCode
-          : errorCode // ignore: cast_nullable_to_non_nullable
-              as String?,
-      errorUri: freezed == errorUri
-          ? _value.errorUri
-          : errorUri // ignore: cast_nullable_to_non_nullable
-              as String?,
-      details: freezed == details
-          ? _value._details
-          : details // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-      timestamp: freezed == timestamp
-          ? _value.timestamp
-          : timestamp // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$ErrorResponseImpl implements _ErrorResponse {
-  const _$ErrorResponseImpl(
-      {required this.error,
-      required this.errorDescription,
-      this.errorCode,
-      this.errorUri,
-      final Map<String, dynamic>? details,
-      this.timestamp})
-      : _details = details;
+class _$ErrorInfoImpl implements _ErrorInfo {
+  const _$ErrorInfoImpl({required this.code, required this.message});
 
-  factory _$ErrorResponseImpl.fromJson(Map<String, dynamic> json) =>
-      _$$ErrorResponseImplFromJson(json);
+  factory _$ErrorInfoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ErrorInfoImplFromJson(json);
 
   @override
-  final String error;
+  final String code;
+// 서버의 "code" 필드
   @override
-  final String errorDescription;
-  @override
-  final String? errorCode;
-  @override
-  final String? errorUri;
-  final Map<String, dynamic>? _details;
-  @override
-  Map<String, dynamic>? get details {
-    final value = _details;
-    if (value == null) return null;
-    if (_details is EqualUnmodifiableMapView) return _details;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(value);
-  }
-
-  @override
-  final DateTime? timestamp;
+  final String message;
 
   @override
   String toString() {
-    return 'ErrorResponse(error: $error, errorDescription: $errorDescription, errorCode: $errorCode, errorUri: $errorUri, details: $details, timestamp: $timestamp)';
+    return 'ErrorInfo(code: $code, message: $message)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ErrorResponseImpl &&
-            (identical(other.error, error) || other.error == error) &&
-            (identical(other.errorDescription, errorDescription) ||
-                other.errorDescription == errorDescription) &&
-            (identical(other.errorCode, errorCode) ||
-                other.errorCode == errorCode) &&
-            (identical(other.errorUri, errorUri) ||
-                other.errorUri == errorUri) &&
-            const DeepCollectionEquality().equals(other._details, _details) &&
-            (identical(other.timestamp, timestamp) ||
-                other.timestamp == timestamp));
+            other is _$ErrorInfoImpl &&
+            (identical(other.code, code) || other.code == code) &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      error,
-      errorDescription,
-      errorCode,
-      errorUri,
-      const DeepCollectionEquality().hash(_details),
-      timestamp);
+  int get hashCode => Object.hash(runtimeType, code, message);
 
-  /// Create a copy of ErrorResponse
+  /// Create a copy of ErrorInfo
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$ErrorResponseImplCopyWith<_$ErrorResponseImpl> get copyWith =>
-      __$$ErrorResponseImplCopyWithImpl<_$ErrorResponseImpl>(this, _$identity);
+  _$$ErrorInfoImplCopyWith<_$ErrorInfoImpl> get copyWith =>
+      __$$ErrorInfoImplCopyWithImpl<_$ErrorInfoImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$ErrorResponseImplToJson(
+    return _$$ErrorInfoImplToJson(
       this,
     );
   }
 }
 
-abstract class _ErrorResponse implements ErrorResponse {
-  const factory _ErrorResponse(
-      {required final String error,
-      required final String errorDescription,
-      final String? errorCode,
-      final String? errorUri,
-      final Map<String, dynamic>? details,
-      final DateTime? timestamp}) = _$ErrorResponseImpl;
+abstract class _ErrorInfo implements ErrorInfo {
+  const factory _ErrorInfo(
+      {required final String code,
+      required final String message}) = _$ErrorInfoImpl;
 
-  factory _ErrorResponse.fromJson(Map<String, dynamic> json) =
-      _$ErrorResponseImpl.fromJson;
+  factory _ErrorInfo.fromJson(Map<String, dynamic> json) =
+      _$ErrorInfoImpl.fromJson;
 
   @override
-  String get error;
+  String get code; // 서버의 "code" 필드
   @override
-  String get errorDescription;
-  @override
-  String? get errorCode;
-  @override
-  String? get errorUri;
-  @override
-  Map<String, dynamic>? get details;
-  @override
-  DateTime? get timestamp;
+  String get message;
 
-  /// Create a copy of ErrorResponse
+  /// Create a copy of ErrorInfo
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ErrorResponseImplCopyWith<_$ErrorResponseImpl> get copyWith =>
+  _$$ErrorInfoImplCopyWith<_$ErrorInfoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

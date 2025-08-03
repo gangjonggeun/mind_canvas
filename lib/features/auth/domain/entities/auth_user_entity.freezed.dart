@@ -25,7 +25,7 @@ mixin _$AuthUser {
   String? get nickname => throw _privateConstructorUsedError; // 로그인 후 설정
   String? get profileImageUrl =>
       throw _privateConstructorUsedError; // 소셜에서 받아올 수 있음
-  AuthProvider get authProvider => throw _privateConstructorUsedError;
+  LoginType get loginType => throw _privateConstructorUsedError;
   bool get isEmailVerified =>
       throw _privateConstructorUsedError; // 소셜은 항상 true, 익명은 의미없음
   bool get isProfileComplete => throw _privateConstructorUsedError;
@@ -50,7 +50,7 @@ abstract class $AuthUserCopyWith<$Res> {
       String? email,
       String? nickname,
       String? profileImageUrl,
-      AuthProvider authProvider,
+      LoginType loginType,
       bool isEmailVerified,
       bool isProfileComplete});
 }
@@ -74,7 +74,7 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
     Object? email = freezed,
     Object? nickname = freezed,
     Object? profileImageUrl = freezed,
-    Object? authProvider = null,
+    Object? loginType = null,
     Object? isEmailVerified = null,
     Object? isProfileComplete = null,
   }) {
@@ -95,10 +95,10 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
           ? _value.profileImageUrl
           : profileImageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      authProvider: null == authProvider
-          ? _value.authProvider
-          : authProvider // ignore: cast_nullable_to_non_nullable
-              as AuthProvider,
+      loginType: null == loginType
+          ? _value.loginType
+          : loginType // ignore: cast_nullable_to_non_nullable
+              as LoginType,
       isEmailVerified: null == isEmailVerified
           ? _value.isEmailVerified
           : isEmailVerified // ignore: cast_nullable_to_non_nullable
@@ -124,7 +124,7 @@ abstract class _$$AuthUserImplCopyWith<$Res>
       String? email,
       String? nickname,
       String? profileImageUrl,
-      AuthProvider authProvider,
+      LoginType loginType,
       bool isEmailVerified,
       bool isProfileComplete});
 }
@@ -146,7 +146,7 @@ class __$$AuthUserImplCopyWithImpl<$Res>
     Object? email = freezed,
     Object? nickname = freezed,
     Object? profileImageUrl = freezed,
-    Object? authProvider = null,
+    Object? loginType = null,
     Object? isEmailVerified = null,
     Object? isProfileComplete = null,
   }) {
@@ -167,10 +167,10 @@ class __$$AuthUserImplCopyWithImpl<$Res>
           ? _value.profileImageUrl
           : profileImageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      authProvider: null == authProvider
-          ? _value.authProvider
-          : authProvider // ignore: cast_nullable_to_non_nullable
-              as AuthProvider,
+      loginType: null == loginType
+          ? _value.loginType
+          : loginType // ignore: cast_nullable_to_non_nullable
+              as LoginType,
       isEmailVerified: null == isEmailVerified
           ? _value.isEmailVerified
           : isEmailVerified // ignore: cast_nullable_to_non_nullable
@@ -191,7 +191,7 @@ class _$AuthUserImpl implements _AuthUser {
       this.email,
       this.nickname,
       this.profileImageUrl,
-      required this.authProvider,
+      required this.loginType,
       this.isEmailVerified = true,
       this.isProfileComplete = false});
 
@@ -210,7 +210,7 @@ class _$AuthUserImpl implements _AuthUser {
   final String? profileImageUrl;
 // 소셜에서 받아올 수 있음
   @override
-  final AuthProvider authProvider;
+  final LoginType loginType;
   @override
   @JsonKey()
   final bool isEmailVerified;
@@ -221,7 +221,7 @@ class _$AuthUserImpl implements _AuthUser {
 
   @override
   String toString() {
-    return 'AuthUser(id: $id, email: $email, nickname: $nickname, profileImageUrl: $profileImageUrl, authProvider: $authProvider, isEmailVerified: $isEmailVerified, isProfileComplete: $isProfileComplete)';
+    return 'AuthUser(id: $id, email: $email, nickname: $nickname, profileImageUrl: $profileImageUrl, loginType: $loginType, isEmailVerified: $isEmailVerified, isProfileComplete: $isProfileComplete)';
   }
 
   @override
@@ -235,8 +235,8 @@ class _$AuthUserImpl implements _AuthUser {
                 other.nickname == nickname) &&
             (identical(other.profileImageUrl, profileImageUrl) ||
                 other.profileImageUrl == profileImageUrl) &&
-            (identical(other.authProvider, authProvider) ||
-                other.authProvider == authProvider) &&
+            (identical(other.loginType, loginType) ||
+                other.loginType == loginType) &&
             (identical(other.isEmailVerified, isEmailVerified) ||
                 other.isEmailVerified == isEmailVerified) &&
             (identical(other.isProfileComplete, isProfileComplete) ||
@@ -246,7 +246,7 @@ class _$AuthUserImpl implements _AuthUser {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, email, nickname,
-      profileImageUrl, authProvider, isEmailVerified, isProfileComplete);
+      profileImageUrl, loginType, isEmailVerified, isProfileComplete);
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.
@@ -270,7 +270,7 @@ abstract class _AuthUser implements AuthUser {
       final String? email,
       final String? nickname,
       final String? profileImageUrl,
-      required final AuthProvider authProvider,
+      required final LoginType loginType,
       final bool isEmailVerified,
       final bool isProfileComplete}) = _$AuthUserImpl;
 
@@ -286,7 +286,7 @@ abstract class _AuthUser implements AuthUser {
   @override
   String? get profileImageUrl; // 소셜에서 받아올 수 있음
   @override
-  AuthProvider get authProvider;
+  LoginType get loginType;
   @override
   bool get isEmailVerified; // 소셜은 항상 true, 익명은 의미없음
   @override

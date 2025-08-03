@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../animations/htp_background_animation.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_assets.dart';
-import '../../theme/app_theme.dart';
+
+import '../../../core/animations/htp_background_animation.dart';
+import '../../../core/theme/app_assets.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../features/taro/presentation/pages/taro_consultation_setup_page.dart';
 
 /// ViewPager 개별 페이지 아이템들 (통일된 오버플로우 방지 버전)

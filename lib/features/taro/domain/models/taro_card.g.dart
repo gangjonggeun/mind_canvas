@@ -6,15 +6,22 @@ part of 'taro_card.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TaroCardImpl _$$TaroCardImplFromJson(Map<String, dynamic> json) =>
-    _$TaroCardImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      nameEn: json['nameEn'] as String,
-      imagePath: json['imagePath'] as String,
-      type: $enumDecode(_$TaroCardTypeEnumMap, json['type']),
-      description: json['description'] as String,
-      isReversed: json['isReversed'] as bool? ?? false,
+_$TaroCardImpl _$$TaroCardImplFromJson(Map json) => $checkedCreate(
+      r'_$TaroCardImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$TaroCardImpl(
+          id: $checkedConvert('id', (v) => v as String),
+          name: $checkedConvert('name', (v) => v as String),
+          nameEn: $checkedConvert('nameEn', (v) => v as String),
+          imagePath: $checkedConvert('imagePath', (v) => v as String),
+          type: $checkedConvert(
+              'type', (v) => $enumDecode(_$TaroCardTypeEnumMap, v)),
+          description: $checkedConvert('description', (v) => v as String),
+          isReversed: $checkedConvert('isReversed', (v) => v as bool? ?? false),
+        );
+        return val;
+      },
     );
 
 Map<String, dynamic> _$$TaroCardImplToJson(_$TaroCardImpl instance) =>

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/recommended_content_entity.dart';
 import '../data/recommended_content_data_service.dart';
-import '../../utils/app_logger.dart';
 
 
 
@@ -87,28 +86,29 @@ class RecommendedContentNotifier extends StateNotifier<RecommendedContentState> 
       partnerMbti: state.partnerMbti,
     );
 
-    result.when(
-      success: (contents) {
-        // logger.state('추천 컨텐츠 로딩 성공: ${contents.length}개');
-        
-        state = state.copyWith(
-          contents: contents,
-          isLoading: false,
-          errorMessage: null,
-        );
-      },
-      failure: (message, code) {
-        // logger.e('추천 컨텐츠 로딩 실패: $message', null, null, AppLogger.tagState);
-        
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: message,
-        );
-      },
-      loading: () {
-        // 이미 로딩 상태 설정됨
-      },
-    );
+    // TODO:  이부분 다시 제작
+    // result.when(
+    //   success: (contents) {
+    //     // logger.state('추천 컨텐츠 로딩 성공: ${contents.length}개');
+    //
+    //     state = state.copyWith(
+    //       contents: contents,
+    //       isLoading: false,
+    //       errorMessage: null,
+    //     );
+    //   },
+    //   failure: (message, code) {
+    //     // logger.e('추천 컨텐츠 로딩 실패: $message', null, null, AppLogger.tagState);
+    //
+    //     state = state.copyWith(
+    //       isLoading: false,
+    //       errorMessage: message,
+    //     );
+    //   },
+    //   loading: () {
+    //     // 이미 로딩 상태 설정됨
+    //   },
+    // );
   }
 
   /// 🔄 새로고침

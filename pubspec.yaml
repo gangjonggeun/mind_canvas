@@ -1,5 +1,6 @@
+
 name: mind_canvas
-description: "Color-Mind Canvas project."
+description: "Mind-Color Canvas project."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,106 +10,71 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # dio logger
+  pretty_dio_logger: ^1.4.0
+  # UI & Core
   cupertino_icons: ^1.0.8
-
-  # 구글 로그인
-  google_sign_in: ^6.2.1
-  # 🔥 State Management
-  flutter_riverpod: ^2.6.1          #  상태관리
-  riverpod_annotation: ^2.3.5       # 코드 생성용
-
-  # 🌐 Network & API
-  dio: ^5.7.0                       # HTTP 클라이언트
-  retrofit: ^4.4.1                  # REST API 클라이언트 생성
-  pretty_dio_logger: ^1.4.0         # 네트워크 로깅
-
-  # 📦 Serialization (최신 트렌드)
-#  dart_mappable: ^4.2.2             # 🔥 복잡한 JSON 직렬화 (가장 빠름!)
-  json_annotation: ^4.9.0           # JSON 직렬화 (하위 호환)
-
-  # 💾 Local Storage
-  shared_preferences: ^2.3.2        # 간단한 key-value 저장
-  sqflite: ^2.4.0                   # SQLite 데이터베이스
-  hive: ^2.2.3                      # NoSQL 로컬 DB (빠름)
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  go_router: ^14.2.7
+  # Network & Data
+  dio: ^5.7.0
+  retrofit: ^4.1.0
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  hive: ^2.2.3
   hive_flutter: ^1.1.0
-
-  # 🎨 UI & Design
-  flutter_screenutil: ^5.9.3        # 반응형 화면 크기
-  gap: ^3.0.1                       # 간격 위젯
-  cached_network_image: ^3.4.1      # 이미지 캐싱
-  flutter_svg: ^2.0.10+1            # SVG 지원
-  lottie: ^3.1.2                    # 화려한 애니메이션 (After Effects)
-  audioplayers: ^6.1.0              # 사운드 재생 (가벼운 라이브러리, ~200kb)
-  
-  # 🎨 그리기 라이브러리 (다양한 옵션)
-  scribble: ^0.10.0+1               # 경량 그리기 ( HTP 검사용)
-  value_notifier_tools: ^0.1.2       # Scribble 상태 관리 도구
-
-  # 🔐 Security & Auth
-  crypto: ^3.0.5                    # 암호화
-  local_auth: ^2.3.0                # 생체인증
-
-  # 📱 Device & Platform
-  permission_handler: ^11.3.1       # 권한 관리
-#  device_info_plus: ^8.2.2          # 기기 정보 (더 안정적인 버전으로 다운그레이드)  -> 이거때문에 환경 다꼬임 다른 라이브러리나 기본거 사용해야할듯
-  package_info_plus: ^8.0.2         # 앱 정보
-
-  # 🧭 Navigation
-  go_router: ^14.2.7                # 최신 라우팅
-
-  # 🛠️ Utils & Tools
-  freezed_annotation: ^2.4.4        # 불변 클래스 생성
-  logger: ^2.4.0                    # 로깅
-  intl: ^0.19.0                     # 국제화
-  flutter_dotenv: ^5.1.0            # 환경변수 관리 🔐
-
-  # 📊 Analytics & Monitoring (Firebase)
-  firebase_core: ^3.6.0             # Firebase 기본
-  firebase_auth: ^5.3.1             # Firebase 인증
-  firebase_analytics: ^11.3.3       # 분석 (Google OAuth2 연동용)
+  flutter_secure_storage: ^9.2.2
+  # Firebase & Google
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  firebase_analytics: ^11.3.3
+  google_sign_in: ^6.3.0
+  # ETC
+  flutter_screenutil: ^5.9.3
+  gap: ^3.0.1
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.2
+  audioplayers: ^6.1.0
+  scribble: ^0.10.0+1
+  value_notifier_tools: ^0.1.2
+  crypto: ^3.0.3
+  local_auth: ^2.3.0
+  permission_handler: ^11.4.0
+  package_info_plus: ^8.0.2
+  logger: ^2.4.0
+  intl: ^0.19.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-
-  # 🔧 Code Generation
-  build_runner: ^2.4.13             # 코드 생성 러너
-  freezed: ^2.5.7                   # 불변 클래스 생성기
-  dart_mappable_builder: ^4.2.2     # 🔥 dart_mappable 코드 생성기
-  json_serializable: ^6.8.0         # JSON 직렬화 생성기 (하위 호환)
-  retrofit_generator: ^8.2.1        # API 클라이언트 생성기
-  riverpod_generator: ^2.4.3        # Riverpod 코드 생성
-  hive_generator: ^2.0.1            # Hive 어댑터 생성
-
-  # 🧪 Testing (integration_test 제거)
-  mockito: ^5.4.4                   # Mock 객체 생성
+  flutter_lints: ^4.0.0
+  # Code Generation (Latest Stable Versions)
+  build_runner: ^2.4.11
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+  retrofit_generator: ^8.1.0
+  riverpod_generator: ^2.4.0
+  hive_generator: ^2.0.1
+  mockito: ^5.4.4
 
 flutter:
   uses-material-design: true
-
-  # 📁 Assets
   assets:
     - assets/images/
-    - assets/images/htp_pageview/  # HTP PageView 이미지들
-    - assets/images/taro_pageview/ # 타로 PageView 이미지들
-    - assets/images/persona_pageview/ # 페르소나 PageView 이미지들
+    - assets/images/htp_pageview/
+    - assets/images/taro_pageview/
+    - assets/images/persona_pageview/
     - assets/icons/
     - assets/fonts/
-    - assets/animations/  # Lottie 애니메이션 파일들
-    - assets/sounds/      # 사운드 파일들 (mp3, wav 등)
+    - assets/animations/
+    - assets/sounds/
     - assets/illustrations/
-    - assets/illustrations/item/  # 아이템 이미지들 (WebP 포함)
-    - assets/illustrations/taro/  # 타로 이미지들 (WebP 포함)
+    - assets/illustrations/item/
+    - assets/illustrations/taro/
     - assets/images/background/
     - assets/images/logo/
     - .env
-
-
-  # 🔤 Custom Fonts (예시)
-  # fonts:
-  #   - family: Pretendard
-  #     fonts:
-  #       - asset: assets/fonts/Pretendard-Regular.ttf
-  #       - asset: assets/fonts/Pretendard-Bold.ttf
-  #         weight: 700

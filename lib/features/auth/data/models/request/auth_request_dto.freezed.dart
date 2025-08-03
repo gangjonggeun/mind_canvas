@@ -20,9 +20,11 @@ GoogleLoginRequest _$GoogleLoginRequestFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$GoogleLoginRequest {
-  String get idToken =>
-      throw _privateConstructorUsedError; // 🔑 핵심! 서버에서 검증할 토큰
-  String? get deviceId => throw _privateConstructorUsedError; // 📱 기기 식별 (선택)
+  @JsonKey(name: 'id_token')
+  String get idToken => throw _privateConstructorUsedError;
+  @JsonKey(name: 'device_id')
+  String? get deviceId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'fcm_token')
   String? get fcmToken => throw _privateConstructorUsedError;
 
   /// Serializes this GoogleLoginRequest to a JSON map.
@@ -41,7 +43,10 @@ abstract class $GoogleLoginRequestCopyWith<$Res> {
           GoogleLoginRequest value, $Res Function(GoogleLoginRequest) then) =
       _$GoogleLoginRequestCopyWithImpl<$Res, GoogleLoginRequest>;
   @useResult
-  $Res call({String idToken, String? deviceId, String? fcmToken});
+  $Res call(
+      {@JsonKey(name: 'id_token') String idToken,
+      @JsonKey(name: 'device_id') String? deviceId,
+      @JsonKey(name: 'fcm_token') String? fcmToken});
 }
 
 /// @nodoc
@@ -88,7 +93,10 @@ abstract class _$$GoogleLoginRequestImplCopyWith<$Res>
       __$$GoogleLoginRequestImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String idToken, String? deviceId, String? fcmToken});
+  $Res call(
+      {@JsonKey(name: 'id_token') String idToken,
+      @JsonKey(name: 'device_id') String? deviceId,
+      @JsonKey(name: 'fcm_token') String? fcmToken});
 }
 
 /// @nodoc
@@ -129,18 +137,21 @@ class __$$GoogleLoginRequestImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
   const _$GoogleLoginRequestImpl(
-      {required this.idToken, this.deviceId, this.fcmToken});
+      {@JsonKey(name: 'id_token') required this.idToken,
+      @JsonKey(name: 'device_id') this.deviceId,
+      @JsonKey(name: 'fcm_token') this.fcmToken});
 
   factory _$GoogleLoginRequestImpl.fromJson(Map<String, dynamic> json) =>
       _$$GoogleLoginRequestImplFromJson(json);
 
   @override
+  @JsonKey(name: 'id_token')
   final String idToken;
-// 🔑 핵심! 서버에서 검증할 토큰
   @override
+  @JsonKey(name: 'device_id')
   final String? deviceId;
-// 📱 기기 식별 (선택)
   @override
+  @JsonKey(name: 'fcm_token')
   final String? fcmToken;
 
   @override
@@ -183,18 +194,22 @@ class _$GoogleLoginRequestImpl implements _GoogleLoginRequest {
 
 abstract class _GoogleLoginRequest implements GoogleLoginRequest {
   const factory _GoogleLoginRequest(
-      {required final String idToken,
-      final String? deviceId,
-      final String? fcmToken}) = _$GoogleLoginRequestImpl;
+          {@JsonKey(name: 'id_token') required final String idToken,
+          @JsonKey(name: 'device_id') final String? deviceId,
+          @JsonKey(name: 'fcm_token') final String? fcmToken}) =
+      _$GoogleLoginRequestImpl;
 
   factory _GoogleLoginRequest.fromJson(Map<String, dynamic> json) =
       _$GoogleLoginRequestImpl.fromJson;
 
   @override
-  String get idToken; // 🔑 핵심! 서버에서 검증할 토큰
+  @JsonKey(name: 'id_token')
+  String get idToken;
   @override
-  String? get deviceId; // 📱 기기 식별 (선택)
+  @JsonKey(name: 'device_id')
+  String? get deviceId;
   @override
+  @JsonKey(name: 'fcm_token')
   String? get fcmToken;
 
   /// Create a copy of GoogleLoginRequest

@@ -5,8 +5,6 @@ import 'app/main_screen.dart';
 // import 'core/utils/app_logger.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'package:mind_canvas/core/home/domain/entities/recommended_content_entity.dart';
-
 import 'features/auth/presentation/screens/login_screen.dart';
 void main()  async{
   // 🚀 Logger 초기화 (최우선)

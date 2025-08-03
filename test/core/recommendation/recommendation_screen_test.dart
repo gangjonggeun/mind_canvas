@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mind_canvas/core/recommendation/presentation/recommendation_screen.dart';
+import 'package:mind_canvas/features/recommendation/presentation/recommendation_screen.dart';
 
 /// 🧪 추천 메인 화면 테스트
 /// 
