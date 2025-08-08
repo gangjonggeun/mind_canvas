@@ -41,10 +41,12 @@ class AuthRepositoryImpl implements AuthRepository {
       // API 호출 - ApiResponse<AuthResponse> 반환
       final apiResponse = await _dataSource.loginWithGoogle(request);
 
+      print("여기는 구글 레포지토리!!! ");
       // ApiResponse 성공 체크
       if (apiResponse.isSuccess && apiResponse.hasData) {
         final authResponse = apiResponse.data!;
 
+        print("성공!! ");
         // TokenManager에 저장
         await _tokenManager.saveAuthResponse(authResponse);
 

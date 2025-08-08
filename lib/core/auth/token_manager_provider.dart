@@ -11,32 +11,20 @@ part 'token_manager_provider.g.dart';
 @Riverpod(keepAlive: true)
 TokenManager tokenManager(TokenManagerRef ref) {
   final manager = TokenManager();
-
-  // Provider가 dispose될 때 TokenManager도 정리
-  ref.onDispose(() {
-    manager.dispose();
-  });
-
+  ref.onDispose(manager.dispose);
   return manager;
 }
 
-/// 🔐 로그인 상태 Provider (reactive)
-///
-/// TokenManager의 로그인 상태를 실시간으로 감시
-/// UI에서 로그인 상태 변경 시 자동으로 rebuild됨
 @riverpod
 bool isLoggedIn(IsLoggedInRef ref) {
-  final manager = ref.watch(tokenManagerProvider);
-  return manager.isLoggedIn;
+  // 단순화된 getter를 사용
+  return ref.watch(tokenManagerProvider).isLoggedIn;
 }
 
-/// 🚀 API 호출 가능 상태 Provider
-///
-/// 액세스 토큰이 유효하여 즉시 API 호출이 가능한지 확인
 @riverpod
 bool canMakeApiCall(CanMakeApiCallRef ref) {
-  final manager = ref.watch(tokenManagerProvider);
-  return manager.canMakeApiCall;
+  // 단순화된 getter를 사용
+  return ref.watch(tokenManagerProvider).canMakeApiCall;
 }
 
 /// 📊 토큰 상태 요약 Provider (디버깅용)

@@ -8,7 +8,7 @@ part of 'auth_provider.dart';
 
 String _$isAuthenticatedHash() => r'bb77c47cd47dcd5e7e2b3ef11c052dcd62643bfc';
 
-/// 편의 Provider들
+/// 편의 Provider들 (이 부분은 수정할 필요가 없습니다)
 ///
 /// Copied from [isAuthenticated].
 @ProviderFor(isAuthenticated)
@@ -41,7 +41,7 @@ final currentUserProvider = AutoDisposeProvider<AuthUser?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUserRef = AutoDisposeProviderRef<AuthUser?>;
-String _$authNotifierHash() => r'801956301330b6a1ad704e08889b1bf07b40c859';
+String _$authNotifierHash() => r'4d57f93cf43a383bae275a9a88d7aac46aa4fd27';
 
 /// See also [AuthNotifier].
 @ProviderFor(AuthNotifier)

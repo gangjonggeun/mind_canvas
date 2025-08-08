@@ -6,26 +6,31 @@ targets:
       # Riverpod: provider나 notifier 파일만 처리
       riverpod_generator:
         generate_for:
-          - lib/features/**/*_provider.dart
-          - lib/features/**/*_notifier.dart
+          - lib/**.dart
+#          - lib/features/**/*_provider.dart
+#          - lib/features/**/*_notifier.dart
+#          - lib/core/**/*.dart
 
       # Retrofit: _api.dart 로 끝나는 파일만 처리
       retrofit_generator:
         generate_for:
-          - lib/features/**/data/datasources/**_api.dart
+          - lib/**.dart
+#          - lib/features/**/data/datasources/**_api.dart
 
       # Freezed: entity, model, dto 파일만 처리
       freezed:
         generate_for:
-          - lib/features/**/domain/entities/**.dart
-          - lib/features/**/data/models/**.dart
-          - lib/core/utils/result.dart # 예시
+          - lib/**.dart
+#          - lib/features/**/domain/entities/**.dart
+#          - lib/features/**/data/models/**.dart
+#          - lib/core/utils/result.dart # 예시
 
       # Hive: _hive_model.dart 로 끝나는 파일만 처리 (규칙 예시)
       hive_generator:
         generate_for:
-          - lib/features/**/data/models/*_hive_model.dart
-      
+          - lib/**.dart
+#          - lib/features/**/data/models/*_hive_model.dart
+
       # json_serializable: 다른 빌더(Freezed 등)가 처리하는 파일 외에는 건드리지 않음
       # generate_for를 명시하지 않으면 자동으로 필요한 곳에서만 작동합니다.
       json_serializable:

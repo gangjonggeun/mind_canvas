@@ -4,7 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/services/google_oauth_service.dart';
+import '../../../../core/services/google/google_oauth_result.dart';
+import '../../../../core/services/google/google_oauth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/auth_user_entity.dart';
 import '../providers/auth_provider.dart';
@@ -90,11 +91,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     ref.listen<AsyncValue<AuthUser?>>(authNotifierProvider, (previous, next) {
       next.whenData((user) {
         if (user != null) {
-          if (user.needsNickname) {
+          if (user.nickname == null) {
             _showNicknameDialog(user);
           } else {
             _handleLoginSuccess(user);
           }
+
+          // _handleLoginSuccess(user);
         }
       });
 
@@ -215,7 +218,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   /// 🔑 카드 없는 직접 로그인 버튼들
   Widget _buildDirectLoginButtons() {
-    final isLoading = ref.watch(isLoadingProvider);
+    final authState = ref.watch(authNotifierProvider);
+    final isLoading = authState.isLoading; // AsyncValue는
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w), // 좌우 여백 유지
@@ -338,66 +342,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _showSuccessSnackBar('언어가 $_currentLanguage로 변경되었습니다');
   }
 
-  /// 🌐 Google 로그인 핸들러 (새로운 OAuth 서비스 사용)
+  /// 🌐 Google 로그인 핸들러 (AuthNotifier를 통해 실행)
   Future<void> _handleGoogleLogin() async {
     debugPrint('[$_logTag] Google 로그인 시도');
     HapticFeedback.selectionClick();
 
-    try {
-      // 새로운 Google OAuth 서비스 사용
-      final result = await GoogleOAuthService.instance.signIn();
-
-      result.when(
-        success: (userInfo) {
-          // 성공 시 ID Token 확인
-          _showSuccessSnackBar('확인 완료! 닉네임을 설정해주세요.');
-          //TODO : 닉네임 설정 창 띄우늘 로직
-        },
-        failure: (error) {
-          _showErrorSnackBar(error.message);
-        },
-      );
-    } catch (e) {
-      debugPrint('[$_logTag] Google 로그인 오류: $e');
-      _showErrorSnackBar('네트워크 오류가 발생했습니다');
-    }
+    // ✨✨✨ 3. 이제 모든 로직은 Notifier에게 위임합니다! ✨✨✨
+    // 화면은 더 이상 "어떻게" 로그인하는지 알 필요가 없습니다.
+    // "로그인 해줘!" 라고 요청만 하면 끝입니다.
+    // 에러 처리는 build 메서드의 ref.listen에서 자동으로 처리됩니다.
+    await ref.read(authNotifierProvider.notifier).googleLogin();
   }
+
 
   /// 🍎 Apple 로그인 핸들러
   Future<void> _handleAppleLogin() async {
-    debugPrint('[$_logTag] Apple 로그인 시도');
-    HapticFeedback.selectionClick();
-
-    try {
-      final result = await ref.read(authNotifierProvider.notifier).appleLogin(
-        identityToken: 'mock_identity_token',
-        authorizationCode: 'mock_auth_code',
-      );
-
-      if (result.isFailure) {
-        _showErrorSnackBar(result.errorMessage ?? 'Apple 로그인에 실패했습니다');
-      }
-    } catch (e) {
-      debugPrint('[$_logTag] Apple 로그인 오류: $e');
-      _showErrorSnackBar('네트워크 오류가 발생했습니다');
-    }
+    // debugPrint('[$_logTag] Apple 로그인 시도');
+    // HapticFeedback.selectionClick();
+    //
+    // try {
+    //   final result = await ref.read(authNotifierProvider.notifier).appleLogin(
+    //     identityToken: 'mock_identity_token',
+    //     authorizationCode: 'mock_auth_code',
+    //   );
+    //
+    //   if (result.isFailure) {
+    //     _showErrorSnackBar(result.errorMessage ?? 'Apple 로그인에 실패했습니다');
+    //   }
+    // } catch (e) {
+    //   debugPrint('[$_logTag] Apple 로그인 오류: $e');
+    //   _showErrorSnackBar('네트워크 오류가 발생했습니다');
+    // }
   }
 
   /// 🔍 익명 로그인 핸들러
   Future<void> _handleAnonymousLogin() async {
-    debugPrint('[$_logTag] 익명 로그인 시도');
-    HapticFeedback.selectionClick();
-
-    try {
-      final result = await ref.read(authNotifierProvider.notifier).anonymousLogin();
-
-      if (result.isFailure) {
-        _showErrorSnackBar(result.errorMessage ?? '익명 로그인에 실패했습니다');
-      }
-    } catch (e) {
-      debugPrint('[$_logTag] 익명 로그인 오류: $e');
-      _showErrorSnackBar('네트워크 오류가 발생했습니다');
-    }
+    // debugPrint('[$_logTag] 익명 로그인 시도');
+    // HapticFeedback.selectionClick();
+    //
+    // try {
+    //   final result = await ref.read(authNotifierProvider.notifier).anonymousLogin();
+    //
+    //   if (result.isFailure) {
+    //     _showErrorSnackBar(result.errorMessage ?? '익명 로그인에 실패했습니다');
+    //   }
+    // } catch (e) {
+    //   debugPrint('[$_logTag] 익명 로그인 오류: $e');
+    //   _showErrorSnackBar('네트워크 오류가 발생했습니다');
+    // }
   }
 
   /// 📝 닉네임 설정 다이얼로그
@@ -466,12 +458,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               if (nickname.isNotEmpty) {
                 Navigator.of(context).pop();
 
-                final result = await ref.read(authNotifierProvider.notifier)
-                    .setNickname(nickname);
 
-                if (result.isFailure) {
-                  _showErrorSnackBar(result.errorMessage ?? '닉네임 설정에 실패했습니다');
-                }
+                //TODO: 닉네임 로직 만들고 추가
+                // final result = await ref.read(authNotifierProvider.notifier).setNickname(nickname);
+                //
+                // if (result.isFailure) {
+                //   _showErrorSnackBar(result.errorMessage ?? '닉네임 설정에 실패했습니다');
+                // }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -496,11 +489,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   /// ✅ 로그인 성공 처리
   void _handleLoginSuccess(AuthUser user) {
-    debugPrint('[$_logTag] 로그인 성공: ${user.displayName}');
+    debugPrint('[$_logTag] 로그인 성공: ');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${user.displayName}님, 환영합니다!'),
+        content: Text(' 환영합니다!'),
         backgroundColor: AppColors.statusSuccess,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),

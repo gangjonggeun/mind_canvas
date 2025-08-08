@@ -75,6 +75,8 @@ class TokenManager {
     if (expiresAt == null) return true;
     return DateTime.now().isAfter(expiresAt);
   }
+  bool get isTokenExpired => isAccessTokenExpired;
+
 
   /// 리프레시 토큰이 만료되었는지 확인
   bool get isRefreshTokenExpired {
@@ -263,7 +265,7 @@ class TokenManager {
 // =============================================================
 
 /// 글로벌 토큰 매니저 (Riverpod Provider로 대체 권장)
-final tokenManager = TokenManager();
+// final tokenManager = TokenManager();
 
 // =============================================================
 // 🎯 사용 예시
