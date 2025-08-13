@@ -37,7 +37,7 @@ class AuthUseCase {
 
       return result.fold(
         onSuccess: (authResponse) {
-          _logLoginSuccess(LoginType.google, 'unknown'); // 사용자 ID는 별도 API에서
+          _logLoginSuccess(LoginType.google, 'google'); // 사용자 ID는 별도 API에서
           return Results.success(authResponse);
         },
         onFailure: (message, code) {
@@ -130,9 +130,9 @@ class AuthUseCase {
   // =============================================================
 
   /// 🔄 토큰 갱신
-  Future<Result<AuthResponse>> refreshToken() async {
+  Future<Result<AuthResponse>> refreshTokens() async {
     try {
-      final result = await _authRepository.refreshToken();
+      final result = await _authRepository.refreshTokens();
 
       return result.fold(
         onSuccess: (authResponse) {
@@ -150,12 +150,12 @@ class AuthUseCase {
   }
 
   /// 🔍 토큰 유효성 검증
-  Future<Result<int?>> validateToken() async {
+  Future<Result<void>> validateToken() async {
     try {
       final result = await _authRepository.validateToken();
 
       return result.fold(
-        onSuccess: (userId) => Results.success(userId),
+        onSuccess: (userId) => Results.success(null),
         onFailure: (message, code) => Results.failure<int?>(message, code),
       );
     } catch (e) {
@@ -192,8 +192,8 @@ class AuthUseCase {
   // =============================================================
   // 🧪 편의 메서드들
   // =============================================================
-  /// 🔐 완전한 로그인 플로우 (로그인 + 사용자 정보 조회)
-  Future<Result<AuthUser?>> completeLoginFlow({
+  /// 🔐 완전한 로그인 플로우 (수정된 버전)
+  Future<Result<AuthResponse>> completeLoginFlow({  // 🎯 AuthUser? → AuthResponse로 변경!
     required String idToken,
     String? deviceId,
     String? fcmToken,
@@ -205,18 +205,13 @@ class AuthUseCase {
       fcmToken: fcmToken,
     );
 
-    // ✅ fold 사용으로 변경
     return loginResult.fold(
-      onSuccess: (authResponse) async {
-        // 2단계: 사용자 정보 조회 (선택적)
-        final userResult = await getCurrentUser();
-        return userResult.fold(
-          onSuccess: (user) => Results.success(user),
-          onFailure: (_, __) => Results.success(null), // 실패해도 로그인은 성공으로 처리
-        );
+      onSuccess: (authResponse) {
+        print('🔍 completeLoginFlow - 서버 응답 닉네임: ${authResponse.nickname}');
+        return Results.success(authResponse);  // 🎯 AuthResponse 그대로 반환
       },
       onFailure: (message, code) {
-        return Results.failure<AuthUser?>(message, code);
+        return Results.failure<AuthResponse>(message, code);  // 🎯 타입도 AuthResponse로
       },
     );
   }

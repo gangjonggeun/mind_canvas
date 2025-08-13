@@ -61,12 +61,12 @@ class _AuthApiDataSource implements AuthApiDataSource {
   }
 
   @override
-  Future<ApiResponse<AuthResponse>> refreshToken(String authorization) async {
+  Future<ApiResponse<AuthResponse>> refreshTokens(
+      RefreshTokenRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{r'Authorization': authorization};
-    _headers.removeWhere((k, v) => v == null);
-    const Map<String, dynamic>? _data = null;
+    final _headers = <String, dynamic>{};
+    final _data = request;
     final _options = _setStreamType<ApiResponse<AuthResponse>>(Options(
       method: 'POST',
       headers: _headers,
@@ -135,13 +135,13 @@ class _AuthApiDataSource implements AuthApiDataSource {
   }
 
   @override
-  Future<ApiResponse<int>> validateToken(String authorization) async {
+  Future<ApiResponse<bool>> validateToken(String authorization) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{r'Authorization': authorization};
     _headers.removeWhere((k, v) => v == null);
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<ApiResponse<int>>(Options(
+    final _options = _setStreamType<ApiResponse<bool>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -158,11 +158,11 @@ class _AuthApiDataSource implements AuthApiDataSource {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ApiResponse<int> _value;
+    late ApiResponse<bool> _value;
     try {
-      _value = ApiResponse<int>.fromJson(
+      _value = ApiResponse<bool>.fromJson(
         _result.data!,
-        (json) => json as int,
+        (json) => json as bool,
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

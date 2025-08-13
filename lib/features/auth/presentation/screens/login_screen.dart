@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mind_canvas/features/profile/domain/usecases/profile_usecase.dart';
 
-import '../../../../core/services/google/google_oauth_result.dart';
-import '../../../../core/services/google/google_oauth_service.dart';
+import '../../../../app/main_screen.dart';
 import '../../../../core/theme/app_colors.dart';
+// 🎯 Profile 관련 import 추가
+import '../../../profile/domain/usecases/profile_usecase_provider.dart';
 import '../../domain/entities/auth_user_entity.dart';
+import '../../domain/enums/login_type.dart'; // ✅ LoginType용
 import '../providers/auth_provider.dart';
-
 /// 🎨 Mind Canvas 미니멀 로그인 스크린
 ///
 /// **미니멀 디자인 특징:**
@@ -30,6 +33,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   static const String _logTag = 'LoginScreen';
+
+
+  bool _isProcessing = false;
+
 
   // 🎮 단일 애니메이션 컨트롤러로 최적화
   late AnimationController _animationController;
@@ -89,20 +96,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     // 🎯 인증 상태 리스너
     ref.listen<AsyncValue<AuthUser?>>(authNotifierProvider, (previous, next) {
+
+
+      print("🔍 listen 호출됨!");
+      print("🔍 previous: $previous");
+      print("🔍 next: $next");
+      print("🔍 next.value?.nickname: ${next.value?.nickname}");
+
       next.whenData((user) {
+        print("🔍 whenData 진입 - user: $user");
         if (user != null) {
+          print("🔍 user.nickname: ${user.nickname}");
           if (user.nickname == null) {
-            _showNicknameDialog(user);
+            print("🔍 닉네임 다이얼로그 표시 예정");
+            _showNicknameDialog(context);
           } else {
+            print("🔍 메인 화면으로 이동 예정");
             _handleLoginSuccess(user);
           }
-
-          // _handleLoginSuccess(user);
         }
       });
 
       next.whenOrNull(
         error: (error, stackTrace) {
+          print("❌ listen에서 에러: $error");
           _showErrorSnackBar(error.toString());
         },
       );
@@ -239,12 +256,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
           // 3. 색상이 추가될 로그인 버튼들 (아래에서 스타일 수정)
           _LoginButton(
-            icon: Icons.g_mobiledata, // 실제로는 Google 로고 아이콘 사용 권장
+            icon: Icons.g_mobiledata,
+            // 실제로는 Google 로고 아이콘 사용 권장
             label: 'Google로 로그인',
             onPressed: isLoading ? null : _handleGoogleLogin,
             isLoading: isLoading,
             // 여기에 새로운 색상 스타일을 적용할 예정
-            backgroundColor: const Color(0xFF4285F4), // Google Blue
+            backgroundColor: const Color(0xFF4285F4),
+            // Google Blue
             foregroundColor: Colors.white,
           ),
           Gap(12.h),
@@ -253,7 +272,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             label: 'Apple로 로그인',
             onPressed: isLoading ? null : _handleAppleLogin,
             isLoading: isLoading,
-            backgroundColor: Colors.black, // Apple Black
+            backgroundColor: Colors.black,
+            // Apple Black
             foregroundColor: Colors.white,
           ),
 
@@ -347,10 +367,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     debugPrint('[$_logTag] Google 로그인 시도');
     HapticFeedback.selectionClick();
 
-    // ✨✨✨ 3. 이제 모든 로직은 Notifier에게 위임합니다! ✨✨✨
-    // 화면은 더 이상 "어떻게" 로그인하는지 알 필요가 없습니다.
-    // "로그인 해줘!" 라고 요청만 하면 끝입니다.
-    // 에러 처리는 build 메서드의 ref.listen에서 자동으로 처리됩니다.
+
     await ref.read(authNotifierProvider.notifier).googleLogin();
   }
 
@@ -392,161 +409,325 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     // }
   }
 
-  /// 📝 닉네임 설정 다이얼로그
-  void _showNicknameDialog(AuthUser authUser) {
+  // 📍 LoginScreen의 _showNicknameDialog 메서드 수정
+
+  /// 📝 닉네임 설정 다이얼로그 (UseCase 연동)
+  Future<void> _showNicknameDialog(BuildContext context) async {
     final TextEditingController nicknameController = TextEditingController();
 
-    showDialog(
+    final String? nickname = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundCard,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        title: Text(
-          '닉네임 설정',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+      builder: (dialogContext) =>
+          StatefulBuilder(
+            builder: (context, setState) {
+              // 유효성 검사 로직 (기존과 동일)
+              String? validationError;
+              Widget? feedbackIcon;
+              Color borderColor = AppColors.primaryBlueDark;
+
+              void validateNickname(String nickname) {
+                final bool wasValid = validationError == null;
+                final RegExp validPattern = RegExp(r'^[a-zA-Z0-9ㄱ-ㅎ가-힣]*$');
+
+                if (nickname.isNotEmpty && nickname.length < 3) {
+                  validationError = '3글자 이상 입력해주세요.';
+                } else if (nickname.length > 12) {
+                  validationError = '12자 이하로 입력해주세요.';
+                } else
+                if (nickname.isNotEmpty && !validPattern.hasMatch(nickname)) {
+                  validationError = '특수문자는 사용할 수 없습니다.';
+                } else {
+                  validationError = null;
+                }
+
+                if (nickname.isEmpty) {
+                  feedbackIcon = null;
+                } else if (validationError == null) {
+                  feedbackIcon = Icon(Icons.check_circle_outline,
+                      color: AppColors.statusSuccess);
+                } else {
+                  feedbackIcon =
+                      Icon(Icons.error_outline, color: AppColors.statusError);
+                }
+
+                if (wasValid && validationError != null) {
+                  setState(() => borderColor = AppColors.statusError);
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (context.mounted) {
+                      setState(() => borderColor = AppColors.primaryBlueDark);
+                    }
+                  });
+                }
+              }
+
+              validateNickname(nicknameController.text);
+
+              return AlertDialog(
+                backgroundColor: AppColors.backgroundCard,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
+                title: Center(
+                  child: Text('닉네임 설정', style: TextStyle(fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary)),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text('사용할 닉네임을 설정해주세요', textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 14.sp, color: AppColors.textPrimary)),
+                    SizedBox(height: 4.h),
+                    Text('3~12자, 특수문자 제외', style: TextStyle(
+                        fontSize: 12.sp, color: AppColors.textSecondary)),
+                    SizedBox(height: 16.h),
+                    TextField(
+                      controller: nicknameController,
+                      onChanged: (nickname) =>
+                          setState(() => validateNickname(nickname)),
+                      decoration: InputDecoration(
+                        hintText: '닉네임을 입력해주세요',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                              color: borderColor, width: 1.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(color: validationError == null
+                              ? AppColors.primary
+                              : AppColors.statusError, width: 2.0),
+                        ),
+                        suffixIcon: feedbackIcon,
+                        counterText: '',
+                      ),
+                      maxLength: 12,
+                      autofocus: true,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z0-9ㄱ-ㅎ가-힣]')),
+                      ],
+                    ),
+                  ],
+                ),
+                actionsAlignment: MainAxisAlignment.center,
+                actions: [
+                  ElevatedButton(
+                    onPressed: (validationError == null &&
+                        nicknameController.text.isNotEmpty)
+                        ? () =>
+                        Navigator.of(dialogContext).pop(
+                            nicknameController.text.trim()) // ✅ 닉네임 반환
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      minimumSize: Size(double.infinity, 50.h),
+                    ),
+                    child: Text('확인', style: TextStyle(
+                        fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              );
+            },
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    );
+
+    // 🎯 여기서 닉네임 처리!
+    if (nickname != null && nickname.isNotEmpty) {
+      await _handleNicknameUpdate(nickname);
+    }
+  }
+
+  /// 🎯 닉네임 업데이트 핸들러 (개선된 버전)
+  Future<void> _handleNicknameUpdate(String nickname) async {
+    // 🔒 중복 요청 방지
+    if (_isProcessing) {
+      print('⚠️ 이미 처리 중입니다. 중복 요청을 무시합니다.');
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      // 🔄 로딩 상태 표시
+      _showLoadingSnackBar('닉네임을 설정하는 중...');
+
+      // 🎯 AuthNotifier를 통한 통합 처리 (권장 방식)
+      final result = await ref.read(authNotifierProvider.notifier).setupProfile(
+        nickname: nickname,
+      );
+
+      // 📊 결과 처리
+      result.fold(
+        onSuccess: (_) {
+          // ✅ 성공 처리
+          _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
+          _showSuccessSnackBar('닉네임이 "$nickname"로 설정되었습니다');
+
+          print('✅ 닉네임 설정 성공: $nickname');
+        },
+        onFailure: (error, errorCode) {
+          // ❌ 실패 처리
+          _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
+
+          // HTTP 405 오류 특별 처리
+          if (error.contains('405') || error.contains('Method Not Allowed')) {
+            _showErrorSnackBar('서버 설정 오류가 발생했습니다. 관리자에게 문의해주세요.');
+            print('❌ HTTP 405 오류 - 서버에서 허용하지 않는 메서드: $error');
+          } else {
+            _showErrorSnackBar(error);
+          }
+
+          print('❌ 닉네임 설정 실패: $error (코드: $errorCode)');
+        },
+      );
+    } catch (e) {
+      // 🚨 예상치 못한 예외 처리
+      _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
+
+      print('❌ 닉네임 설정 중 예외 발생: $e');
+
+      // DioException 특별 처리
+      if (e.toString().contains('405')) {
+        _showErrorSnackBar('서버 연결 방식에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        _showErrorSnackBar('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+
+      // 예외 발생 시 다시 시도 가능하도록
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) _showNicknameDialog(context);
+      });
+    } finally {
+      // 🧹 항상 상태 정리
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  // =============================================================
+  // 🎭 스낵바 관리 메서드들 (개선된 버전)
+  // =============================================================
+
+  /// 🔄 로딩 스낵바 (태그 기반 관리)
+  void _showLoadingSnackBar(String message) {
+    // 기존 스낵바가 있다면 먼저 숨김
+    _hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('loading_snackbar'),
+        // 식별용 키
+        content: Row(
           children: [
-            Text(
-              '커뮤니티에서 사용할 닉네임을 설정해주세요',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSecondary,
+            SizedBox(
+              width: 20.w,
+              height: 20.w,
+              child: const CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: nicknameController,
-              decoration: InputDecoration(
-                hintText: '닉네임을 입력하세요',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
-                ),
-              ),
-              maxLength: 20,
-              autofocus: true,
-            ),
+            SizedBox(width: 16.w),
+            Expanded(child: Text(message)), // Expanded로 오버플로우 방지
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              '취소',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final nickname = nicknameController.text.trim();
-              if (nickname.isNotEmpty) {
-                Navigator.of(context).pop();
-
-
-                //TODO: 닉네임 로직 만들고 추가
-                // final result = await ref.read(authNotifierProvider.notifier).setNickname(nickname);
-                //
-                // if (result.isFailure) {
-                //   _showErrorSnackBar(result.errorMessage ?? '닉네임 설정에 실패했습니다');
-                // }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: Text(
-              '확인',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ✅ 로그인 성공 처리
-  void _handleLoginSuccess(AuthUser user) {
-    debugPrint('[$_logTag] 로그인 성공: ');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(' 환영합니다!'),
-        backgroundColor: AppColors.statusSuccess,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.all(16.w),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    // 메인 화면으로 이동
-    Navigator.of(context).pushReplacementNamed('/main');
-  }
-
-  // ===== 🎯 스낵바 헬퍼 메서드들 =====
-
-  /// ✅ 성공 스낵바
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.statusSuccess,
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
         ),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(minutes: 5), // 충분히 긴 시간 (수동으로 제어)
       ),
     );
   }
 
-  /// ❌ 에러 스낵바
-  void _showErrorSnackBar(String message) {
+  /// 🚫 로딩 스낵바 숨기기 (핵심!)
+  void _hideLoadingSnackBar() {
+    _hideCurrentSnackBar();
+  }
+
+  /// 🧹 현재 스낵바 숨기기 (통합 메서드)
+  void _hideCurrentSnackBar() {
+    try {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    } catch (e) {
+      print('⚠️ 스낵바 숨기기 실패: $e');
+    }
+  }
+
+  /// ✅ 성공 스낵바 (개선된 버전)
+  void _showSuccessSnackBar(String message) {
+    _hideCurrentSnackBar(); // 기존 스낵바 숨기기
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.statusError,
+        key: const Key('success_snackbar'),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.statusSuccess,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
         ),
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  /// ❌ 에러 스낵바 (개선된 버전)
+  void _showErrorSnackBar(String message) {
+    _hideCurrentSnackBar(); // 기존 스낵바 숨기기
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('error_snackbar'),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.statusError,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: '닫기',
           textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
+          onPressed: _hideCurrentSnackBar,
         ),
       ),
     );
+  }
+
+  /// ✅ 로그인 성공 처리 (개선된 버전)
+  void _handleLoginSuccess(AuthUser user) {
+    debugPrint('[$_logTag] 로그인 성공');
+
+    _showSuccessSnackBar('${user.nickname ?? '사용자'}님, 환영합니다!');
+
+    // 즉시 메인 화면으로 이동
+    if (mounted) {
+      context.go('/main');
+    }
   }
 }
 

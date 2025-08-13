@@ -1,5 +1,6 @@
 // =============================================================
 // 📁 core/utils/result.dart - fold 메서드 추가
+//import 'package:mind_canvas/core/utils/result.dart';
 // =============================================================
 
 /// 🎯 Result 패턴 (Dart 버전)
@@ -76,7 +77,7 @@ class Result<T> {
     required R Function(T data) onSuccess,
     required R Function(String message, String? errorCode) onFailure,
   }) {
-    if (_success && _data != null) {
+    if (_success) {
       return onSuccess(_data as T);
     } else {
       return onFailure(_message ?? '알 수 없는 오류', _errorCode);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../data/models/user_profile.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/ink_balance_card.dart';
 import '../widgets/profile_menu_list.dart';
 import '../widgets/stats_section.dart';
-import '../models/user_profile.dart';
 
 /// 프로필 메인 화면
 ///

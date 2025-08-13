@@ -1,4 +1,5 @@
 import '../../features/auth/data/models/response/auth_response_dto.dart';
+import '../../features/auth/data/services/auth_service.dart';
 import 'auth_storage.dart';
 
 /// 🎯 토큰 관리자 - 토큰 관련 모든 비즈니스 로직 담당
@@ -11,6 +12,7 @@ class TokenManager {
   AuthResponse? _currentAuth;
   DateTime? _tokenIssuedAt;  // 토큰 발급 시간 기록
 
+  bool _isRefreshing = false;
   // =============================================================
   // 🏗️ 초기화 및 복원
   // =============================================================
@@ -118,11 +120,12 @@ class TokenManager {
     return '${_currentAuth!.tokenType} ${_currentAuth!.accessToken}';
   }
 
-  /// Refresh용 Authorization 헤더
-  String? get refreshAuthorizationHeader {
-    if (_currentAuth == null) return null;
-    return '${_currentAuth!.tokenType} ${_currentAuth!.refreshToken}';
-  }
+  // 리프레시는 바디로 보내는게 정석이래
+  // /// Refresh용 Authorization 헤더
+  // String? get refreshAuthorizationHeader {
+  //   if (_currentAuth == null) return null;
+  //   return '${_currentAuth!.tokenType} ${_currentAuth!.refreshToken}';
+  // }
 
   /// 유효한 Access Token 반환 (자동 갱신 포함)
   Future<String?> getValidAccessToken() async {
@@ -153,32 +156,35 @@ class TokenManager {
   // 🔄 토큰 갱신 로직
   // =============================================================
 
-  /// 토큰 갱신 시도
+  /// 🔄 토큰 갱신 시도 (멍청한 버전)
   Future<bool> _attemptTokenRefresh() async {
+    // 중복 갱신 방지
+    if (_isRefreshing) {
+      print('⚠️ 이미 토큰 갱신 중...');
+      return false;
+    }
+
     try {
+      _isRefreshing = true;
+
       if (_currentAuth == null || isRefreshTokenExpired) {
+        print('❌ 갱신할 토큰이 없거나 리프레시 토큰이 만료됨');
         return false;
       }
 
-      // TODO: AuthRepository에서 실제 갱신 API 호출
-      // final refreshRequest = RefreshTokenRequest(
-      //   refreshToken: _currentAuth!.refreshToken,
-      // );
-      //
-      // final result = await authRepository.refreshToken(refreshRequest);
-      // if (result.isSuccess) {
-      //   await saveAuthResponse(result.data!);
-      //   print('✅ 토큰 갱신 성공');
-      //   return true;
-      // }
+      print('🔄 토큰 갱신 시도...');
 
-      print('⚠️ 토큰 갱신 미구현 - AuthRepository 연동 필요');
-      return false;  // 임시
+      // TODO: 실제 토큰 갱신 API 호출 구현 예정
+      // 지금은 임시로 실패 반환
+      print('⚠️ 토큰 갱신 로직 미구현 - AuthRepository 연동 필요');
+      return false;
+
     } catch (e) {
       print('❌ 토큰 갱신 중 오류: $e');
-      // 갱신 실패 시 토큰 제거
       await _handleTokenError();
       return false;
+    } finally {
+      _isRefreshing = false;
     }
   }
 

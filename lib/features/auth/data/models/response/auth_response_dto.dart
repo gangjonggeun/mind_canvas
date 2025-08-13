@@ -13,6 +13,7 @@ class AuthResponse with _$AuthResponse {
     @JsonKey(name: 'access_expires_in') @Default(3600) int accessExpiresIn,
     @JsonKey(name: 'refresh_expires_in') @Default(1209600) int refreshExpiresIn,
     @JsonKey(name: 'token_type') @Default('Bearer') String tokenType,
+    @JsonKey(name: 'nickname') String? nickname,
 
     // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
     @JsonKey(includeFromJson: false, includeToJson: false)

@@ -2,7 +2,9 @@ import 'package:mind_canvas/core/services/google/google_oauth_result.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:mind_canvas/core/utils/result.dart';
 import '../../../../core/providers/google_oauth_provider.dart';
+import '../../../profile/domain/usecases/profile_usecase_provider.dart';
 import '../../domain/entities/auth_user_entity.dart';
+import '../../domain/enums/login_type.dart';
 import '../../domain/usecases/auth_usecase_provider.dart';
 
 part 'auth_provider.g.dart';
@@ -34,50 +36,113 @@ class AuthNotifier extends _$AuthNotifier {
   Future<Result<AuthUser?>> googleLogin() async {
     state = const AsyncLoading(); // UI에 로딩 상태 알림
 
+
+    print("🔍 state 업데이트 완료: $state");
+    print("🔍 state.value?.nickname: ${state.value?.nickname}");
     print("✅ 체크포인트 1: googleLogin 메서드 시작됨.");
+
+
     // ✨ 4. 우리가 만든 GoogleOAuthService를 Provider를 통해 가져옵니다.
     final googleOAuthService = ref.read(googleOAuthServiceProvider);
 
     // ✨ 5. 서비스에게 "로그인 해줘!" 라고 시키기만 하면 끝.
     //        웹/모바일 구분은 서비스가 알아서 처리합니다.
     final googleResult = await googleOAuthService.signIn();
-    print("✅ 체크포인트 2: googleOAuthService.signIn() 호출 완료. 결과 타입: ${googleResult.runtimeType}");
+    print(
+      "✅ 체크포인트 2: googleOAuthService.signIn() 호출 완료. 결과 타입: ${googleResult.runtimeType}",
+    );
 
-
-    // 구글 로그인 결과(성공/실패)에 따라 다음 행동을 결정합니다.
     return await googleResult.when(
-
-      // 구글 로그인 성공 시 (idToken을 받아옴)
       success: (idToken) async {
         print("✅ 체크포인트 3-1: success 블록 진입 성공!");
-        // 획득한 idToken으로 우리 서버에 최종 로그인(또는 회원가입)을 요청합니다.
+
         final authUseCase = ref.read(authUseCaseProvider);
-        print("✅ 체크포인트 3-2: AuthUseCase 가져오기 성공!");
         final result = await authUseCase.completeLoginFlow(idToken: idToken);
         print("✅ 체크포인트 3-3: 서버 로그인(completeLoginFlow) 완료!");
-        // 우리 서버의 최종 로그인 결과에 따라 상태를 업데이트합니다.
-        return result.fold(
 
-          onSuccess: (authUser) {
+        return result.fold(
+          onSuccess: (authResponse) {  // 🎯 이제 AuthResponse가 올바르게 들어옴
             print("✅ 체크포인트 3-4: 서버 로그인 최종 성공!");
-            state = AsyncData(authUser); // UI에 최종 유저 정보 업데이트
+            print("🔍 서버 응답 닉네임: ${authResponse.nickname}");
+
+            // 🎯 AuthResponse를 AuthUser로 변환
+            final authUser = AuthUser(
+              nickname: authResponse.nickname,  // 🎯 이제 닉네임이 제대로 들어감
+              loginType: LoginType.google,
+            );
+
+            print("🔍 생성된 AuthUser: $authUser");
+            print("🔍 AuthUser 닉네임: ${authUser.nickname}");
+
+            state = AsyncData(authUser);
+            print("🔍 state 업데이트 완료: $state");
+            print("🔍 state.value?.nickname: ${state.value?.nickname}");
+
             return Results.success(authUser);
           },
           onFailure: (message, code) {
             print("❌ 체크포인트 3-5: 서버 로그인 최종 실패! 원인: $message");
-            state = AsyncError(message, StackTrace.current); // UI에 에러 상태 업데이트
+            state = AsyncError(message, StackTrace.current);
             return Results.failure<AuthUser?>(message, code);
           },
         );
       },
-
-      // 구글 로그인 실패 시 (사용자가 팝업을 닫는 등)
       failure: (error) {
-        print("실패 !! $error ");
-        state = AsyncData(state.valueOrNull); // 로딩 상태를 풀고 이전 상태로 복귀
-        return Results.failure(error.message); // OAuthError의 메시지를 그대로 반환
+        print("구글 로그인 실패 !! $error ");
+        state = AsyncData(state.valueOrNull);
+        return Results.failure(error.message);
       },
     );
+  }
+  /// 📝 프로필 설정 (개선된 버전)
+  Future<Result<void>> setupProfile({
+    required String nickname,
+    String? profileImageUrl,
+  }) async {
+    try {
+      final currentUser = state.valueOrNull;
+      if (currentUser == null) {
+        return Result.failure('로그인이 필요합니다');
+      }
+
+      print('📝 프로필 설정 시작: nickname=$nickname');
+
+      // 🌐 서버 업데이트
+      final profileUseCase = ref.read(profileUseCaseProvider);
+      final setupResult = await profileUseCase.setupProfile(
+        nickname: nickname,
+        profileImageUrl: profileImageUrl,
+      );
+
+      return setupResult.fold(
+        onSuccess: (authResponse) {
+          print("✅ 체크포인트 3-4: 서버 로그인 최종 성공!");
+          print("🔍 서버 응답 닉네임: ${authResponse?.nickname}");
+
+          final authUser = AuthUser(
+            nickname: authResponse?.nickname,  // 🎯 서버에서 받은 닉네임 사용
+            loginType: LoginType.google,
+          );
+
+          print("🔍 생성된 AuthUser: $authUser");
+          print("🔍 AuthUser 닉네임: ${authUser.nickname}");
+
+          state = AsyncData(authUser);
+          print("🔍 state 업데이트 후: $state");
+
+          return Results.success(authUser);
+        },
+        onFailure: (message, code) {
+          print("❌ 체크포인트 3-5: 서버 로그인 최종 실패! 원인: $message");
+          state = AsyncError(message, StackTrace.current);
+          return Results.failure<AuthUser?>(message, code);
+        },
+      );
+
+    } catch (e) {
+      print('❌ 프로필 설정 예외: $e');
+      return Result.failure('네트워크 오류가 발생했습니다: $e');
+    }
   }
 
   /// 🚪 로그아웃 (새로운 서비스와 연결된 최종 버전)
@@ -87,14 +152,10 @@ class AuthNotifier extends _$AuthNotifier {
       final googleOAuthService = ref.read(googleOAuthServiceProvider);
 
       // ✨ 6. 우리 서버 로그아웃과 구글 로그아웃을 동시에 처리합니다.
-      await Future.wait([
-        authUseCase.logout(),
-        googleOAuthService.signOut(),
-      ]);
+      await Future.wait([authUseCase.logout(), googleOAuthService.signOut()]);
 
       state = const AsyncData(null); // UI에 로그아웃 상태(유저 없음)를 알림
       return Results.success(null);
-
     } catch (error) {
       return Results.failure('로그아웃 중 오류가 발생했습니다.');
     }

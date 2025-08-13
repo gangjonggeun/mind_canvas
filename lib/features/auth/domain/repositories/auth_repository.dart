@@ -41,12 +41,13 @@ abstract class AuthRepository {
   /// 
   /// Repository에서 저장된 refresh token을 자동으로 사용
   /// @return Result<AuthResponse> 새로운 토큰 정보 또는 에러
-  Future<Result<AuthResponse>> refreshToken();
+  Future<Result<AuthResponse>> refreshTokens();
 
   /// 🔍 토큰 유효성 검증
   /// 
   /// @return Result<int?> 유효한 경우 사용자 ID, 무효한 경우 null
-  Future<Result<int?>> validateToken();
+  /// 자동로그인에서 사용
+  Future<Result<void>> validateToken();
 
   /// ⏰ 토큰 만료 여부 확인
   /// 

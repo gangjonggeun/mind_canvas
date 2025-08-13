@@ -20,15 +20,10 @@ AuthUser _$AuthUserFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AuthUser {
-  String get id => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError; // 익명: null, 소셜: 있음
-  String? get nickname => throw _privateConstructorUsedError; // 로그인 후 설정
-  String? get profileImageUrl =>
-      throw _privateConstructorUsedError; // 소셜에서 받아올 수 있음
+  @JsonKey(name: 'nickname')
+  String? get nickname => throw _privateConstructorUsedError;
+  @JsonKey(name: 'login_type')
   LoginType get loginType => throw _privateConstructorUsedError;
-  bool get isEmailVerified =>
-      throw _privateConstructorUsedError; // 소셜은 항상 true, 익명은 의미없음
-  bool get isProfileComplete => throw _privateConstructorUsedError;
 
   /// Serializes this AuthUser to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -46,13 +41,8 @@ abstract class $AuthUserCopyWith<$Res> {
       _$AuthUserCopyWithImpl<$Res, AuthUser>;
   @useResult
   $Res call(
-      {String id,
-      String? email,
-      String? nickname,
-      String? profileImageUrl,
-      LoginType loginType,
-      bool isEmailVerified,
-      bool isProfileComplete});
+      {@JsonKey(name: 'nickname') String? nickname,
+      @JsonKey(name: 'login_type') LoginType loginType});
 }
 
 /// @nodoc
@@ -70,43 +60,18 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? email = freezed,
     Object? nickname = freezed,
-    Object? profileImageUrl = freezed,
     Object? loginType = null,
-    Object? isEmailVerified = null,
-    Object? isProfileComplete = null,
   }) {
     return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
       nickname: freezed == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
-              as String?,
-      profileImageUrl: freezed == profileImageUrl
-          ? _value.profileImageUrl
-          : profileImageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       loginType: null == loginType
           ? _value.loginType
           : loginType // ignore: cast_nullable_to_non_nullable
               as LoginType,
-      isEmailVerified: null == isEmailVerified
-          ? _value.isEmailVerified
-          : isEmailVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      isProfileComplete: null == isProfileComplete
-          ? _value.isProfileComplete
-          : isProfileComplete // ignore: cast_nullable_to_non_nullable
-              as bool,
     ) as $Val);
   }
 }
@@ -120,13 +85,8 @@ abstract class _$$AuthUserImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String id,
-      String? email,
-      String? nickname,
-      String? profileImageUrl,
-      LoginType loginType,
-      bool isEmailVerified,
-      bool isProfileComplete});
+      {@JsonKey(name: 'nickname') String? nickname,
+      @JsonKey(name: 'login_type') LoginType loginType});
 }
 
 /// @nodoc
@@ -142,43 +102,18 @@ class __$$AuthUserImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? email = freezed,
     Object? nickname = freezed,
-    Object? profileImageUrl = freezed,
     Object? loginType = null,
-    Object? isEmailVerified = null,
-    Object? isProfileComplete = null,
   }) {
     return _then(_$AuthUserImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: freezed == email
-          ? _value.email
-          : email // ignore: cast_nullable_to_non_nullable
-              as String?,
       nickname: freezed == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
-              as String?,
-      profileImageUrl: freezed == profileImageUrl
-          ? _value.profileImageUrl
-          : profileImageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       loginType: null == loginType
           ? _value.loginType
           : loginType // ignore: cast_nullable_to_non_nullable
               as LoginType,
-      isEmailVerified: null == isEmailVerified
-          ? _value.isEmailVerified
-          : isEmailVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      isProfileComplete: null == isProfileComplete
-          ? _value.isProfileComplete
-          : isProfileComplete // ignore: cast_nullable_to_non_nullable
-              as bool,
     ));
   }
 }
@@ -187,41 +122,22 @@ class __$$AuthUserImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AuthUserImpl implements _AuthUser {
   const _$AuthUserImpl(
-      {required this.id,
-      this.email,
-      this.nickname,
-      this.profileImageUrl,
-      required this.loginType,
-      this.isEmailVerified = true,
-      this.isProfileComplete = false});
+      {@JsonKey(name: 'nickname') this.nickname,
+      @JsonKey(name: 'login_type') required this.loginType});
 
   factory _$AuthUserImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthUserImplFromJson(json);
 
   @override
-  final String id;
-  @override
-  final String? email;
-// 익명: null, 소셜: 있음
-  @override
+  @JsonKey(name: 'nickname')
   final String? nickname;
-// 로그인 후 설정
   @override
-  final String? profileImageUrl;
-// 소셜에서 받아올 수 있음
-  @override
+  @JsonKey(name: 'login_type')
   final LoginType loginType;
-  @override
-  @JsonKey()
-  final bool isEmailVerified;
-// 소셜은 항상 true, 익명은 의미없음
-  @override
-  @JsonKey()
-  final bool isProfileComplete;
 
   @override
   String toString() {
-    return 'AuthUser(id: $id, email: $email, nickname: $nickname, profileImageUrl: $profileImageUrl, loginType: $loginType, isEmailVerified: $isEmailVerified, isProfileComplete: $isProfileComplete)';
+    return 'AuthUser(nickname: $nickname, loginType: $loginType)';
   }
 
   @override
@@ -229,24 +145,15 @@ class _$AuthUserImpl implements _AuthUser {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AuthUserImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.email, email) || other.email == email) &&
             (identical(other.nickname, nickname) ||
                 other.nickname == nickname) &&
-            (identical(other.profileImageUrl, profileImageUrl) ||
-                other.profileImageUrl == profileImageUrl) &&
             (identical(other.loginType, loginType) ||
-                other.loginType == loginType) &&
-            (identical(other.isEmailVerified, isEmailVerified) ||
-                other.isEmailVerified == isEmailVerified) &&
-            (identical(other.isProfileComplete, isProfileComplete) ||
-                other.isProfileComplete == isProfileComplete));
+                other.loginType == loginType));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, email, nickname,
-      profileImageUrl, loginType, isEmailVerified, isProfileComplete);
+  int get hashCode => Object.hash(runtimeType, nickname, loginType);
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.
@@ -266,31 +173,19 @@ class _$AuthUserImpl implements _AuthUser {
 
 abstract class _AuthUser implements AuthUser {
   const factory _AuthUser(
-      {required final String id,
-      final String? email,
-      final String? nickname,
-      final String? profileImageUrl,
-      required final LoginType loginType,
-      final bool isEmailVerified,
-      final bool isProfileComplete}) = _$AuthUserImpl;
+          {@JsonKey(name: 'nickname') final String? nickname,
+          @JsonKey(name: 'login_type') required final LoginType loginType}) =
+      _$AuthUserImpl;
 
   factory _AuthUser.fromJson(Map<String, dynamic> json) =
       _$AuthUserImpl.fromJson;
 
   @override
-  String get id;
+  @JsonKey(name: 'nickname')
+  String? get nickname;
   @override
-  String? get email; // 익명: null, 소셜: 있음
-  @override
-  String? get nickname; // 로그인 후 설정
-  @override
-  String? get profileImageUrl; // 소셜에서 받아올 수 있음
-  @override
+  @JsonKey(name: 'login_type')
   LoginType get loginType;
-  @override
-  bool get isEmailVerified; // 소셜은 항상 true, 익명은 의미없음
-  @override
-  bool get isProfileComplete;
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.

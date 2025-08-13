@@ -29,7 +29,9 @@ mixin _$AuthResponse {
   @JsonKey(name: 'refresh_expires_in')
   int get refreshExpiresIn => throw _privateConstructorUsedError;
   @JsonKey(name: 'token_type')
-  String get tokenType =>
+  String get tokenType => throw _privateConstructorUsedError;
+  @JsonKey(name: 'nickname')
+  String? get nickname =>
       throw _privateConstructorUsedError; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @JsonKey(includeFromJson: false, includeToJson: false)
   DateTime? get issuedAt => throw _privateConstructorUsedError;
@@ -56,6 +58,7 @@ abstract class $AuthResponseCopyWith<$Res> {
       @JsonKey(name: 'access_expires_in') int accessExpiresIn,
       @JsonKey(name: 'refresh_expires_in') int refreshExpiresIn,
       @JsonKey(name: 'token_type') String tokenType,
+      @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(includeFromJson: false, includeToJson: false)
       DateTime? issuedAt});
 }
@@ -80,6 +83,7 @@ class _$AuthResponseCopyWithImpl<$Res, $Val extends AuthResponse>
     Object? accessExpiresIn = null,
     Object? refreshExpiresIn = null,
     Object? tokenType = null,
+    Object? nickname = freezed,
     Object? issuedAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -103,6 +107,10 @@ class _$AuthResponseCopyWithImpl<$Res, $Val extends AuthResponse>
           ? _value.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
               as String,
+      nickname: freezed == nickname
+          ? _value.nickname
+          : nickname // ignore: cast_nullable_to_non_nullable
+              as String?,
       issuedAt: freezed == issuedAt
           ? _value.issuedAt
           : issuedAt // ignore: cast_nullable_to_non_nullable
@@ -125,6 +133,7 @@ abstract class _$$AuthResponseImplCopyWith<$Res>
       @JsonKey(name: 'access_expires_in') int accessExpiresIn,
       @JsonKey(name: 'refresh_expires_in') int refreshExpiresIn,
       @JsonKey(name: 'token_type') String tokenType,
+      @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(includeFromJson: false, includeToJson: false)
       DateTime? issuedAt});
 }
@@ -147,6 +156,7 @@ class __$$AuthResponseImplCopyWithImpl<$Res>
     Object? accessExpiresIn = null,
     Object? refreshExpiresIn = null,
     Object? tokenType = null,
+    Object? nickname = freezed,
     Object? issuedAt = freezed,
   }) {
     return _then(_$AuthResponseImpl(
@@ -170,6 +180,10 @@ class __$$AuthResponseImplCopyWithImpl<$Res>
           ? _value.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
               as String,
+      nickname: freezed == nickname
+          ? _value.nickname
+          : nickname // ignore: cast_nullable_to_non_nullable
+              as String?,
       issuedAt: freezed == issuedAt
           ? _value.issuedAt
           : issuedAt // ignore: cast_nullable_to_non_nullable
@@ -185,8 +199,9 @@ class _$AuthResponseImpl implements _AuthResponse {
       {@JsonKey(name: 'access_token') required this.accessToken,
       @JsonKey(name: 'refresh_token') required this.refreshToken,
       @JsonKey(name: 'access_expires_in') this.accessExpiresIn = 3600,
-      @JsonKey(name: 'refresh_expires_in') this.refreshExpiresIn = 604800,
+      @JsonKey(name: 'refresh_expires_in') this.refreshExpiresIn = 1209600,
       @JsonKey(name: 'token_type') this.tokenType = 'Bearer',
+      @JsonKey(name: 'nickname') this.nickname,
       @JsonKey(includeFromJson: false, includeToJson: false) this.issuedAt});
 
   factory _$AuthResponseImpl.fromJson(Map<String, dynamic> json) =>
@@ -207,6 +222,9 @@ class _$AuthResponseImpl implements _AuthResponse {
   @override
   @JsonKey(name: 'token_type')
   final String tokenType;
+  @override
+  @JsonKey(name: 'nickname')
+  final String? nickname;
 // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -214,7 +232,7 @@ class _$AuthResponseImpl implements _AuthResponse {
 
   @override
   String toString() {
-    return 'AuthResponse(accessToken: $accessToken, refreshToken: $refreshToken, accessExpiresIn: $accessExpiresIn, refreshExpiresIn: $refreshExpiresIn, tokenType: $tokenType, issuedAt: $issuedAt)';
+    return 'AuthResponse(accessToken: $accessToken, refreshToken: $refreshToken, accessExpiresIn: $accessExpiresIn, refreshExpiresIn: $refreshExpiresIn, tokenType: $tokenType, nickname: $nickname, issuedAt: $issuedAt)';
   }
 
   @override
@@ -232,6 +250,8 @@ class _$AuthResponseImpl implements _AuthResponse {
                 other.refreshExpiresIn == refreshExpiresIn) &&
             (identical(other.tokenType, tokenType) ||
                 other.tokenType == tokenType) &&
+            (identical(other.nickname, nickname) ||
+                other.nickname == nickname) &&
             (identical(other.issuedAt, issuedAt) ||
                 other.issuedAt == issuedAt));
   }
@@ -239,7 +259,7 @@ class _$AuthResponseImpl implements _AuthResponse {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, accessToken, refreshToken,
-      accessExpiresIn, refreshExpiresIn, tokenType, issuedAt);
+      accessExpiresIn, refreshExpiresIn, tokenType, nickname, issuedAt);
 
   /// Create a copy of AuthResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -264,6 +284,7 @@ abstract class _AuthResponse implements AuthResponse {
       @JsonKey(name: 'access_expires_in') final int accessExpiresIn,
       @JsonKey(name: 'refresh_expires_in') final int refreshExpiresIn,
       @JsonKey(name: 'token_type') final String tokenType,
+      @JsonKey(name: 'nickname') final String? nickname,
       @JsonKey(includeFromJson: false, includeToJson: false)
       final DateTime? issuedAt}) = _$AuthResponseImpl;
 
@@ -284,7 +305,10 @@ abstract class _AuthResponse implements AuthResponse {
   int get refreshExpiresIn;
   @override
   @JsonKey(name: 'token_type')
-  String get tokenType; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
+  String get tokenType;
+  @override
+  @JsonKey(name: 'nickname')
+  String? get nickname; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   DateTime? get issuedAt;

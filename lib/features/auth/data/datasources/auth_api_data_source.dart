@@ -13,17 +13,20 @@ abstract class AuthApiDataSource {
 
   /// Google 로그인 ✅
   @POST('/auth/google')
-  @Headers(<String, dynamic>{ // ✅ 헤더 추가
-    'Content-Type': 'application/json',
-  })
+  // @Headers(<String, dynamic>{ // ✅ 헤더 추가
+  //   'Content-Type': 'application/json',
+  // })
   Future<ApiResponse<AuthResponse>> loginWithGoogle(
       @Body() GoogleLoginRequest request,
       );
 
-  /// 토큰 갱신 ✅
+  /// 토큰 갱신 ✅ 및 자동로그인에서 사용
   @POST('/auth/refresh')
-  Future<ApiResponse<AuthResponse>> refreshToken(
-      @Header('Authorization') String authorization,
+  // @Headers(<String, dynamic>{ // ✅ 이 헤더 추가 필요!
+  //   'Content-Type': 'application/json',
+  // })
+  Future<ApiResponse<AuthResponse>> refreshTokens(
+      @Body() RefreshTokenRequest request,  // 🔄 Header에서 Body로 변경!
       );
 
   /// 로그아웃 ✅
@@ -32,9 +35,11 @@ abstract class AuthApiDataSource {
       @Header('Authorization') String authorization,
       );
 
+
+
   /// Access Token 검증 ✅
   @GET('/auth/validate')
-  Future<ApiResponse<int>> validateToken(
+  Future<ApiResponse<bool>> validateToken(
       @Header('Authorization') String authorization,
       );
 

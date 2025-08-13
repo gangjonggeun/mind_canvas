@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/user_profile.dart';
+
+import '../../data/models/user_profile.dart';
 
 /// 사용자 통계 섹션 위젯
 /// 

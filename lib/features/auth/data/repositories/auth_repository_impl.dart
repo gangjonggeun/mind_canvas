@@ -27,7 +27,8 @@ class AuthRepositoryImpl implements AuthRepository {
   // =============================================================
 
   @override
-  Future<Result<AuthResponse>> loginWithGoogle(String idToken, {
+  Future<Result<AuthResponse>> loginWithGoogle(
+    String idToken, {
     String? deviceId,
     String? fcmToken,
   }) async {
@@ -41,12 +42,10 @@ class AuthRepositoryImpl implements AuthRepository {
       // API 호출 - ApiResponse<AuthResponse> 반환
       final apiResponse = await _dataSource.loginWithGoogle(request);
 
-      print("여기는 구글 레포지토리!!! ");
       // ApiResponse 성공 체크
       if (apiResponse.isSuccess && apiResponse.hasData) {
         final authResponse = apiResponse.data!;
 
-        print("성공!! ");
         // TokenManager에 저장
         await _tokenManager.saveAuthResponse(authResponse);
 
@@ -66,17 +65,29 @@ class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
+
+  /**
+   *  자동로그인에서 사용 해당 리프레시 토큰 토큰매니져에서 가져오고 바디로
+   *  감싸서 보냄 (rtt 방식 )
+   *
+   * */
   @override
-  Future<Result<AuthResponse>> refreshToken() async {
+  Future<Result<AuthResponse>> refreshTokens() async {
     return _safeApiCall(() async {
       // 현재 저장된 refresh token 가져오기
-      final refreshAuthHeader = _tokenManager.refreshAuthorizationHeader;
-      if (refreshAuthHeader == null) {
+      final currentAuth = _tokenManager.currentAuth;
+      if (currentAuth?.refreshToken == null) {
         throw Exception('Refresh Token이 없습니다');
       }
 
-      // API 호출
-      final apiResponse = await _dataSource.refreshToken(refreshAuthHeader);
+      // RefreshTokenRequest 객체 생성
+      final request = RefreshTokenRequest(
+        refreshToken: currentAuth!.refreshToken,
+        deviceId: await _getDeviceId(), // 선택사항: 디바이스 ID 추가
+      );
+
+      // API 호출 (Body 방식)
+      final apiResponse = await _dataSource.refreshTokens(request);
 
       if (apiResponse.isSuccess && apiResponse.hasData) {
         final authResponse = apiResponse.data!;
@@ -90,6 +101,27 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception(errorMessage);
       }
     });
+  }
+
+  /**
+   * 디바이스 가져오는 라이브러리 버전 맞춘 후 작업
+   *
+   * */
+  Future<String?> _getDeviceId() async {
+    try {
+      // device_info_plus 패키지 사용 예시
+      // final deviceInfo = DeviceInfoPlugin();
+      // if (Platform.isAndroid) {
+      //   final androidInfo = await deviceInfo.androidInfo;
+      //   return androidInfo.id;
+      // } else if (Platform.isIOS) {
+      //   final iosInfo = await deviceInfo.iosInfo;
+      //   return iosInfo.identifierForVendor;
+      // }
+      return null; // 임시로 null 반환
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -154,21 +186,30 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<int?>> validateToken() async {
-    return _safeApiCall(() async {
+  Future<Result<void>> validateToken() async {
+    try {
+      // 1. 토큰 확인
       final authHeader = _tokenManager.authorizationHeader;
       if (authHeader == null) {
-        return null;
+        return Result.failure('저장된 토큰이 없습니다', 'NO_TOKEN');
       }
 
+      // 2. API 호출
       final apiResponse = await _dataSource.validateToken(authHeader);
 
+      // 3. ApiResponse → Result 변환
       if (apiResponse.isSuccess && apiResponse.hasData) {
-        return apiResponse.data!;  // 사용자 ID
+        return Result.success(null, '토큰이 유효합니다'); // ✅ void니까 null
       } else {
-        return null;
+        return Result.failure(
+          apiResponse.errorMessage ?? '토큰 검증 실패',
+          apiResponse.errorCode ?? 'VALIDATION_FAILED',
+        );
       }
-    });
+    } catch (e) {
+      print('❌ 토큰 검증 중 오류: $e');
+      return Result.failure('토큰 검증 중 오류가 발생했습니다', 'VALIDATION_ERROR');
+    }
   }
 
   // =============================================================
@@ -243,7 +284,8 @@ class AuthRepositoryImpl implements AuthRepository {
       // ApiResponse 형태의 에러
       if (responseData.containsKey('error')) {
         final error = responseData['error'] as Map<String, dynamic>?;
-        final errorMessage = error?['message'] ?? responseData['message'] ?? '서버 오류가 발생했습니다';
+        final errorMessage =
+            error?['message'] ?? responseData['message'] ?? '서버 오류가 발생했습니다';
         final errorCode = error?['code'] ?? e.response?.statusCode?.toString();
 
         return Results.failure(errorMessage, errorCode);
@@ -262,7 +304,10 @@ class AuthRepositoryImpl implements AuthRepository {
         return Results.failure('서버 내부 오류가 발생했습니다', '500');
       default:
         final errorMessage = e.message ?? '네트워크 오류가 발생했습니다';
-        return Results.failure(errorMessage, e.response?.statusCode?.toString());
+        return Results.failure(
+          errorMessage,
+          e.response?.statusCode?.toString(),
+        );
     }
   }
 }

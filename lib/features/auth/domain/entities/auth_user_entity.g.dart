@@ -11,35 +11,23 @@ _$AuthUserImpl _$$AuthUserImplFromJson(Map json) => $checkedCreate(
       json,
       ($checkedConvert) {
         final val = _$AuthUserImpl(
-          id: $checkedConvert('id', (v) => v as String),
-          email: $checkedConvert('email', (v) => v as String?),
           nickname: $checkedConvert('nickname', (v) => v as String?),
-          profileImageUrl:
-              $checkedConvert('profileImageUrl', (v) => v as String?),
           loginType: $checkedConvert(
-              'loginType', (v) => $enumDecode(_$LoginTypeEnumMap, v)),
-          isEmailVerified:
-              $checkedConvert('isEmailVerified', (v) => v as bool? ?? true),
-          isProfileComplete:
-              $checkedConvert('isProfileComplete', (v) => v as bool? ?? false),
+              'login_type', (v) => $enumDecode(_$LoginTypeEnumMap, v)),
         );
         return val;
       },
+      fieldKeyMap: const {'loginType': 'login_type'},
     );
 
 Map<String, dynamic> _$$AuthUserImplToJson(_$AuthUserImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'email': instance.email,
       'nickname': instance.nickname,
-      'profileImageUrl': instance.profileImageUrl,
-      'loginType': _$LoginTypeEnumMap[instance.loginType]!,
-      'isEmailVerified': instance.isEmailVerified,
-      'isProfileComplete': instance.isProfileComplete,
+      'login_type': _$LoginTypeEnumMap[instance.loginType]!,
     };
 
 const _$LoginTypeEnumMap = {
-  LoginType.google: 'google',
-  LoginType.apple: 'apple',
-  LoginType.guest: 'guest',
+  LoginType.google: 'GOOGLE',
+  LoginType.apple: 'APPLE',
+  LoginType.guest: 'GUEST',
 };
