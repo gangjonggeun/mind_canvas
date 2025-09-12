@@ -26,14 +26,12 @@ class _AuthApiDataSource implements AuthApiDataSource {
       GoogleLoginRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
-    _headers.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
     final _data = request;
     final _options = _setStreamType<ApiResponse<AuthResponse>>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
-      contentType: 'application/json',
     )
         .compose(
           _dio.options,

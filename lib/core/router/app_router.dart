@@ -12,6 +12,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/home_screen.dart';
 
 // Provider imports
+import '../../features/home/presentation/screen/popular_test_ranking_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../auth/token_manager_provider.dart';
 
@@ -61,6 +62,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
 
+      // 📄 기타 화면들...
+      GoRoute(
+        path: '/popular_test',
+        name: 'popular_test',
+        builder: (context, state) => const PopularTestRankingScreen(),
+      ),
 
     ],
 

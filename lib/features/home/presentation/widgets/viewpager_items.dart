@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mind_canvas/core/theme/app_assets.dart' show AppAssets;
+import 'package:mind_canvas/core/theme/app_colors.dart';
+import 'package:mind_canvas/features/taro/presentation/pages/taro_consultation_setup_page.dart';
 
-import '../../../core/animations/htp_background_animation.dart';
-import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../features/taro/presentation/pages/taro_consultation_setup_page.dart';
+import '../../../../core/animations/htp_background_animation.dart';
+
+
 
 /// ViewPager 개별 페이지 아이템들 (통일된 오버플로우 방지 버전)
 /// 

@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/entities/recommended_content_entity.dart';
-import '../data/recommended_content_data_service.dart';
+import '../../data/recommended_content_data_service.dart';
+import '../../domain/entities/recommended_content_entity.dart';
+
+
 
 
 

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
+import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.dart';
+// import 'package:mind_canvas/features/home/screen/popular_test_ranking_screen.dart';
 
 import '../../core/theme/app_assets.dart';
 import '../../core/theme/app_colors.dart';
@@ -8,7 +12,7 @@ import '../../features/info/info_screen.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
 
 import '../recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
-import 'widgets/home_viewpager.dart';
+// import 'widgets/home_viewpager.dart';
 
 
 
@@ -332,7 +336,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('🏆 인기 테스트 랭킹', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            TextButton(onPressed: () {}, child: const Text('더보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))),
+            TextButton(onPressed: () {
+              print("인기테스트 더보기 버튼 클릭 이동 예정");
+
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PopularTestRankingScreen(),
+                ),
+              );
+
+            }, child: const Text('더보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))),
           ],
         ),
         const SizedBox(height: 16),
