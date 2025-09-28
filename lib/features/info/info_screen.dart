@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
-import 'factories/test_factory.dart';
-import 'navigation/test_router.dart';
+import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_notifier.dart';
+
+import 'data/models/response/test_detail_response.dart';
 
 /// 🔍 테스트 정보 화면
 ///
@@ -14,180 +17,75 @@ import 'navigation/test_router.dart';
 /// - const 생성자 사용
 /// - 위젯 재사용 최대화
 /// - 이미지 로딩 최적화
-class InfoScreen extends StatefulWidget {
-  final String testId;
-  final String? heroTag; // Hero 애니메이션용
+class InfoScreen extends ConsumerStatefulWidget {
+  final int testId;
+  final TestDetailResponse? testDetail;
 
   const InfoScreen({
     Key? key,
     required this.testId,
-    this.heroTag,
+    this.testDetail
   }) : super(key: key);
 
   @override
-  State<InfoScreen> createState() => _InfoScreenState();
+  ConsumerState<InfoScreen> createState() => _InfoScreenState();
 }
 
-class _InfoScreenState extends State<InfoScreen>
-    with SingleTickerProviderStateMixin {
-
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  // TODO: 서버에서 받아올 데이터 (현재는 Mock 데이터)
-  TestInfoData? _testInfo;
-  bool _isLoading = true;
-
+class _InfoScreenState extends ConsumerState<InfoScreen> {
   // 화면 패딩 상수
   static const double screenPadding = 20.0;
 
   @override
   void initState() {
     super.initState();
-    _initAnimations();
     _loadTestInfo();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-  }
-
   Future<void> _loadTestInfo() async {
-    // TODO: 실제 API 호출로 교체
-    // final testInfo = await TestApiService.getTestInfo(widget.testId);
 
-    // Mock 데이터 로딩 시뮬레이션
-    await Future.delayed(const Duration(milliseconds: 500));
+    print('📱 InfoScreen _loadTestInfo 시작: ${widget.testId}');
 
-    if (mounted) {
-      setState(() {
-        _testInfo = _getMockTestInfo(widget.testId);
-        _isLoading = false;
-      });
-
-      _animationController.forward();
+    // 이미 testDetail이 있으면 로딩하지 않음
+    if (widget.testDetail != null) {
+      return;
     }
+
+    // ✅ 최신 방식: .notifier 사용
+    await ref.read(testDetailNotifierProvider.notifier).loadTestDetail(widget.testId);
   }
 
-  // TODO: 실제 API 연동 시 제거
-  TestInfoData _getMockTestInfo(String testId) {
-    final mockData = {
-      'htp': TestInfoData(
-        id: 'htp',
-        title: 'HTP 심리검사',
-        subtitle: '그림으로 알아보는 나의 심리상태',
-        description: '집(House), 나무(Tree), 사람(Person)을 그려서 무의식 속 심리를 분석하는 검사입니다.',
-        instructions: [
-          '🏠 먼저 집을 자유롭게 그려주세요',
-          '🌳 다음으로 나무를 원하는 모양으로 그려주세요',
-          '👤 마지막으로 사람을 그려주세요',
-          '⏱️  각 그림당 제한시간은 없으니 편안하게 그리시면 됩니다',
-          '🎨 그림 실력은 중요하지 않습니다. 마음대로 표현해주세요',
-        ],
-        estimatedTime: '15-20분',
-        difficulty: '쉬움',
-        category: '투사 검사',
-        imageUrl: 'assets/images/htp_pageview/htp_intro.png',
-      ),
-      'mbti': TestInfoData(
-        id: 'mbti',
-        title: 'MBTI 성격유형 검사',
-        subtitle: '16가지 성격유형으로 나를 알아보자',
-        description: '세계에서 가장 널리 사용되는 성격유형 검사로, 당신의 성격을 16가지 유형 중 하나로 분류합니다.',
-        instructions: [
-          '📝 총 60개의 질문에 답하시면 됩니다',
-          '🤔 각 질문을 읽고 가장 가까운 답변을 선택해주세요',
-          '⚡ 너무 오래 고민하지 말고 직감적으로 답해주세요',
-          '🎯 정답은 없으니 솔직하게 답변해주시면 됩니다',
-          '📊 완료 후 상세한 성격 분석을 받아보실 수 있습니다',
-        ],
-        estimatedTime: '10-15분',
-        difficulty: '보통',
-        category: '성격 검사',
-        imageUrl: 'assets/images/persona_pageview/mbti_item_high.png',
-      ),
-      'persona': TestInfoData(
-        id: 'persona',
-        title: '페르소나 테스트',
-        subtitle: '진짜 나는 누구일까?',
-        description: '겉으로 드러나는 모습과 내면의 진짜 모습을 비교 분석하여 당신의 페르소나를 발견합니다.',
-        instructions: [
-          '🎭 상황별 질문에 솔직하게 답해주세요',
-          '🔄 같은 상황에서도 다른 관점의 질문이 나올 수 있습니다',
-          '💭 "다른 사람들이 보는 나"와 "내가 아는 나" 두 관점으로 생각해주세요',
-          '🎨 결과에서 당신만의 독특한 페르소나를 확인하실 수 있습니다',
-          '📈 성장을 위한 개인별 맞춤 조언도 제공됩니다',
-        ],
-        estimatedTime: '12-18분',
-        difficulty: '보통',
-        category: '자아 탐색',
-        imageUrl: 'assets/images/persona_pageview/persona_intro.png',
-      ),
-      'taro': TestInfoData(
-        id: 'taro',
-        title: '타로 상담',
-        subtitle: '카드로 알아보는 나의 운명',
-        description: '78장의 타로카드를 통해 과거, 현재, 미래를 읽고 인생의 방향을 찾아보세요.',
-        instructions: [
-          '🔮 질문을 마음속으로 생각해주세요',
-          '🃏 스프레드를 선택하고 카드를 뽑아주세요',
-          '✨ AI가 카드의 의미를 해석해드립니다',
-          '💫 결과를 통해 새로운 통찰을 얻어보세요',
-          '📱 결과는 저장하여 나중에 다시 볼 수 있습니다',
-        ],
-        estimatedTime: '5-10분',
-        difficulty: '쉬움',
-        category: '점술',
-        imageUrl: 'assets/images/taro_pageview/taro_high.webp',
-      ),
-    };
-
-    return mockData[testId] ?? TestInfoData(
-      id: testId,
-      title: '알 수 없는 테스트',
-      subtitle: '테스트 정보를 불러올 수 없습니다',
-      description: '잠시 후 다시 시도해주세요.',
-      instructions: const [],
-      estimatedTime: '알 수 없음',
-      difficulty: '알 수 없음',
-      category: '기타',
-      imageUrl: '',
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      body: _isLoading
-          ? _buildLoadingState()
-          : _buildContent(context),
+      body: Consumer(
+        builder: (context, ref, child) {
+          // ✅ TestListNotifier와 동일한 방식
+          final testDetailState = ref.watch(testDetailNotifierProvider);
+
+          final testDetail = widget.testDetail ?? testDetailState.testDetail;
+          final isLoading = testDetailState.isLoading && testDetail == null;
+
+          print('🖼️ UI 빌드: isLoading=$isLoading, testDetail=${testDetail?.title}');
+          print('🔍 상태 디버그: isLoading=${testDetailState.isLoading}, hasTestDetail=${testDetailState.testDetail != null}');
+
+          if (isLoading) {
+            return _buildLoadingState();
+          }
+
+          if (testDetail != null) {
+            return _buildContent(context, testDetail);
+          }
+
+          return _buildErrorState(testDetailState.errorMessage ?? '테스트 정보를 불러올 수 없습니다');
+        },
+      ),
     );
   }
 
@@ -212,97 +110,126 @@ class _InfoScreenState extends State<InfoScreen>
     );
   }
 
-  Widget _buildContent(BuildContext context) {
-    if (_testInfo == null) return const SizedBox.shrink();
-
-    return CustomScrollView(
-      slivers: [
-        _buildAppBar(context),
-        SliverToBoxAdapter(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: _buildBody(context),
+  Widget _buildErrorState(String? errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(screenPadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.statusError,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 300,
-      pinned: true,
-      backgroundColor: AppColors.backgroundCard,
-      foregroundColor: AppColors.textPrimary,
-      elevation: 0,
-      leading: IconButton(
-        onPressed: () => Navigator.of(context).pop(),
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundCard.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+            const SizedBox(height: 16),
+            Text(
+              '테스트 정보를 불러올 수 없습니다',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
-            ],
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: _buildHeroImage(),
-        collapseMode: CollapseMode.parallax,
-      ),
-    );
-  }
-
-  Widget _buildHeroImage() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primaryBlue.withOpacity(0.8),
-            AppColors.primaryBlue.withOpacity(0.4),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage ?? '알 수 없는 오류가 발생했습니다',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => _loadTestInfo(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('다시 시도'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('돌아가기'),
+            ),
           ],
         ),
       ),
-      child: Stack(
-        fit: StackFit.expand,
+    );
+  }
+
+  Widget _buildContent(BuildContext context, TestDetailResponse testDetail) {
+    return SingleChildScrollView(
+      child: Column(
         children: [
-          // 배경 이미지
-          if (_testInfo!.imageUrl.isNotEmpty)
-            ClipRRect(
-              child: Image.asset(
-                _testInfo!.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppColors.primaryBlue.withOpacity(0.1),
-                    child: const Icon(
-                      Icons.psychology,
-                      size: 80,
-                      color: AppColors.primaryBlue,
-                    ),
-                  );
-                },
+          _buildHeader(testDetail),
+          _buildBody(context, testDetail),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(TestDetailResponse testDetail) {
+    return Stack(
+      children: [
+        // 메인 이미지
+        Container(
+          height: 300,
+          width: double.infinity,
+          child: CachedNetworkImage(
+            imageUrl: testDetail.imagePath ?? '',
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              height: 300,
+              color: AppColors.backgroundCard,
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
             ),
+            errorWidget: (context, url, error) {
+              return Container(
+                height: 300,
+                color: AppColors.primaryBlue.withOpacity(0.1),
+                child: const Icon(
+                  Icons.psychology,
+                  size: 80,
+                  color: AppColors.primaryBlue,
+                ),
+              );
+            },
+          ),
+        ),
 
-          // 그라데이션 오버레이
-          Container(
+        // 뒤로가기 버튼
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          child: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+
+        // 하단 정보 오버레이
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(screenPadding),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -313,41 +240,35 @@ class _InfoScreenState extends State<InfoScreen>
                 ],
               ),
             ),
-          ),
-
-          // 테스트 기본 정보
-          Positioned(
-            bottom: 60,
-            left: screenPadding,
-            right: screenPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 카테고리 배지
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryBlue,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _testInfo!.category,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                if (testDetail.psychologyTag != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      testDetail.psychologyTag!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
 
                 const SizedBox(height: 12),
 
                 // 제목
                 Text(
-                  _testInfo!.title,
+                  testDetail.title ?? '제목 없음',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -359,41 +280,42 @@ class _InfoScreenState extends State<InfoScreen>
                 const SizedBox(height: 8),
 
                 // 부제목
-                Text(
-                  _testInfo!.subtitle,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
-                    height: 1.4,
+                if (testDetail.subtitle != null)
+                  Text(
+                    testDetail.subtitle!,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildBody(BuildContext context) {
+  Widget _buildBody(BuildContext context, TestDetailResponse testDetail) {
     return Padding(
       padding: const EdgeInsets.all(screenPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildQuickInfo(),
+          _buildQuickInfo(testDetail),
 
           const SizedBox(height: 32),
 
-          _buildDescription(),
+          _buildDescription(testDetail),
 
           const SizedBox(height: 32),
 
-          _buildInstructions(),
+          _buildInstructions(testDetail),
 
           const SizedBox(height: 40),
 
-          _buildStartButton(context),
+          _buildStartButton(context, testDetail),
 
           const SizedBox(height: 24),
         ],
@@ -401,7 +323,7 @@ class _InfoScreenState extends State<InfoScreen>
     );
   }
 
-  Widget _buildQuickInfo() {
+  Widget _buildQuickInfo(TestDetailResponse testDetail) {
     return Card(
       color: AppColors.backgroundCard,
       elevation: 2,
@@ -416,7 +338,9 @@ class _InfoScreenState extends State<InfoScreen>
               child: _buildInfoItem(
                 icon: Icons.access_time,
                 label: '소요 시간',
-                value: _testInfo!.estimatedTime,
+                value: testDetail.estimatedTime != null
+                    ? '${testDetail.estimatedTime}분'
+                    : '미정',
                 color: AppColors.primaryBlue,
               ),
             ),
@@ -431,8 +355,8 @@ class _InfoScreenState extends State<InfoScreen>
               child: _buildInfoItem(
                 icon: Icons.trending_up,
                 label: '난이도',
-                value: _testInfo!.difficulty,
-                color: _getDifficultyColor(_testInfo!.difficulty),
+                value: testDetail.difficulty ?? '보통',
+                color: _getDifficultyColor(testDetail.difficulty ?? '보통'),
               ),
             ),
           ],
@@ -489,7 +413,7 @@ class _InfoScreenState extends State<InfoScreen>
     }
   }
 
-  Widget _buildDescription() {
+  Widget _buildDescription(TestDetailResponse testDetail) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -526,7 +450,7 @@ class _InfoScreenState extends State<InfoScreen>
             ),
           ),
           child: Text(
-            _testInfo!.description,
+            testDetail.introduction ?? '테스트 소개 정보가 없습니다.',
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 15,
@@ -538,7 +462,13 @@ class _InfoScreenState extends State<InfoScreen>
     );
   }
 
-  Widget _buildInstructions() {
+  Widget _buildInstructions(TestDetailResponse testDetail) {
+    final instructions = testDetail.instructions ?? [];
+
+    if (instructions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -579,12 +509,12 @@ class _InfoScreenState extends State<InfoScreen>
 
         const SizedBox(height: 20),
 
-        ...List.generate(_testInfo!.instructions.length, (index) {
+        ...List.generate(instructions.length, (index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildInstructionItem(
               step: index + 1,
-              instruction: _testInfo!.instructions[index],
+              instruction: instructions[index],
             ),
           );
         }),
@@ -654,12 +584,12 @@ class _InfoScreenState extends State<InfoScreen>
     );
   }
 
-  Widget _buildStartButton(BuildContext context) {
+  Widget _buildStartButton(BuildContext context, TestDetailResponse testDetail) {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () => _startTest(context),
+        onPressed: () => _startTest(context, testDetail),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,
           foregroundColor: Colors.white,
@@ -690,10 +620,10 @@ class _InfoScreenState extends State<InfoScreen>
     );
   }
 
-  void _startTest(BuildContext context) {
+  void _startTest(BuildContext context, TestDetailResponse testDetail) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${_testInfo!.title} 시작!'),
+        content: Text('${testDetail.title ?? "테스트"} 시작!'),
         backgroundColor: AppColors.primaryBlue,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -702,86 +632,6 @@ class _InfoScreenState extends State<InfoScreen>
       ),
     );
 
-    // 🏭 Factory + Router 패턴 사용 - 수정된 부분
-    final testId = _testInfo!.id.toLowerCase();
-
-    if (testId == 'taro') {
-      // 타로는 별도 네비게이션
-      _navigateToTaro(context);
-    } else {
-      // 일반 테스트는 기존 Router 사용
-      TestRouter.navigateToTest(
-        context,
-        _getTestTypeFromInfo(_testInfo!),
-      );
-    }
-  }
-
-  // 타로 전용 네비게이션
-  void _navigateToTaro(BuildContext context) {
-    // 타로 상담 설정 페이지로 이동
-    Navigator.pushNamed(context, '/taro/setup');
-  }
-}
-
-// 팩토리 테스트 헬퍼 - 수정된 부분
-TestType _getTestTypeFromInfo(TestInfoData testInfo) {
-  // 실제로는 testInfo의 id나 type 필드로 판단
-  final testId = testInfo.id.toLowerCase();
-
-  switch (testId) {
-    case 'htp':
-      return TestType.htp;
-    case 'mbti':
-      return TestType.mbti;
-    case 'persona':
-      return TestType.persona;
-    case 'taro':
-    // 타로는 별도 네비게이션 처리
-      return TestType.cognitive; // 임시로 cognitive 사용
-    default:
-      return TestType.cognitive;
-  }
-}
-
-/// 📊 테스트 정보 데이터 모델
-///
-/// 서버에서 받아올 테스트 정보 구조
-class TestInfoData {
-  final String id;
-  final String title;
-  final String subtitle;
-  final String description;
-  final List<String> instructions;
-  final String estimatedTime;
-  final String difficulty;
-  final String category;
-  final String imageUrl;
-
-  const TestInfoData({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.instructions,
-    required this.estimatedTime,
-    required this.difficulty,
-    required this.category,
-    required this.imageUrl,
-  });
-
-  // TODO: 서버 연동 시 fromJson 구현
-  factory TestInfoData.fromJson(Map<String, dynamic> json) {
-    return TestInfoData(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      subtitle: json['subtitle'] ?? '',
-      description: json['description'] ?? '',
-      instructions: List<String>.from(json['instructions'] ?? []),
-      estimatedTime: json['estimatedTime'] ?? '',
-      difficulty: json['difficulty'] ?? '',
-      category: json['category'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-    );
+    // TODO: 실제 테스트 화면으로 이동 로직 추가
   }
 }

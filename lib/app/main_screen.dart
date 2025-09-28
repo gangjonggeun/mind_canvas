@@ -58,27 +58,29 @@ class _MainScreenState extends State<MainScreen> {
 
   /// 하단 네비게이션 바 구성
   Widget _buildBottomNavigation() {
-    return Container(
-      height: 65,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.home_outlined, '홈', 0),
-          _buildNavItem(Icons.bar_chart_outlined, '분석', 1),
-          _buildNavItem(Icons.star_border, '추천', 2),
-          _buildNavItem(Icons.psychology_outlined, '상담', 3),
-          _buildNavItem(Icons.person_outline, '프로필', 4),
-        ],
+    return SafeArea(
+      child: Container(
+        height: 65,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(Icons.home_outlined, '홈', 0),
+            _buildNavItem(Icons.bar_chart_outlined, '분석', 1),
+            _buildNavItem(Icons.star_border, '추천', 2),
+            _buildNavItem(Icons.psychology_outlined, '상담', 3),
+            _buildNavItem(Icons.person_outline, '프로필', 4),
+          ],
+        ),
       ),
     );
   }

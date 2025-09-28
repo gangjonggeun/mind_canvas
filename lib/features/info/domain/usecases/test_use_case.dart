@@ -1,14 +1,14 @@
 // =============================================================
-// 📁 lib/features/test/domain/usecases/test_use_case.dart
+// 📁 lib/features/info/domain/usecases/test_use_case.dart
 // =============================================================
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/utils/result.dart';
-import '../../../info/data/models/response/test_detail_response.dart';
-import '../models/test_ranking_item.dart';
-import '../repositories/test_repository.dart';
-import '../../data/repositories/test_repository_provider.dart';
+import '../../data/models/response/test_detail_response.dart';
+import '../../../home/domain/models/test_ranking_item.dart';
+import '../../../home/domain/repositories/test_repository.dart';
+import '../../../home/data/repositories/test_repository_provider.dart';
 
 part 'test_use_case.g.dart';
 
@@ -529,65 +529,3 @@ class TestUseCase {
     return Result.failure('즐겨찾기 기능은 준비 중입니다', 'FEATURE_NOT_IMPLEMENTED');
   }
 }
-
-// =============================================================
-// 📝 사용 예시 (주석)
-// =============================================================
-
-/*
-// Controller에서 UseCase 사용:
-
-class TestListController extends StateNotifier<TestListState> {
-  final TestUseCase _testUseCase;
-
-  TestListController(this._testUseCase) : super(TestListState.initial());
-
-  /// 인기 테스트 로드
-  Future<void> loadPopularTests() async {
-    state = TestListState.loading();
-
-    final result = await _testUseCase.getPopularTests();
-
-    result.fold(
-      onSuccess: (testListResult) {
-        state = TestListState.loaded(
-          items: testListResult.tests,
-          hasMore: testListResult.hasMore,
-          currentPage: 0,
-          isLoadingMore: false,
-          loadType: TestLoadType.popular,
-        );
-      },
-      onFailure: (message, errorCode) {
-        state = TestListState.error(message);
-      },
-    );
-  }
-
-  /// 트렌딩 테스트 로드
-  Future<void> loadTrendingTests({int page = 0}) async {
-    final result = await _testUseCase.getTrendingTests(page: page, size: 20);
-    // 결과 처리...
-  }
-}
-
-// Provider로 등록:
-@riverpod
-TestListController testListController(TestListControllerRef ref) {
-  final testUseCase = ref.watch(testUseCaseProvider);
-  return TestListController(testUseCase);
-}
-
-// 위젯에서 사용:
-class TestListWidget extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(testListControllerProvider.notifier);
-
-    return ElevatedButton(
-      onPressed: () => controller.loadTrendingTests(),
-      child: Text('트렌딩 테스트 보기'),
-    );
-  }
-}
-*/

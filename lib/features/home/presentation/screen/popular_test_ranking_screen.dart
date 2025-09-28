@@ -16,7 +16,7 @@ class PopularTestRankingScreen extends ConsumerStatefulWidget {
 class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScreen> {
   final ScrollController _scrollController = ScrollController();
 
-  // 필터 상태 (확장된 옵션)
+  // 필터 상태 (수정된 옵션)
   RankingFilter _selectedFilter = RankingFilter.popular;
 
   @override
@@ -36,7 +36,7 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
   void _initializeData() {
     // Notifier를 통해 최신 테스트 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(testListNotifierProvider.notifier).loadLatestTests();
+      ref.read(testListNotifierProvider.notifier).loadPopularTestsList();
     });
   }
 
@@ -59,13 +59,30 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
       _selectedFilter = filter;
     });
 
-    // 새로고침
-    _onRefresh();
+    // 필터별로 다른 로드 메서드 호출
+    final notifier = ref.read(testListNotifierProvider.notifier);
+    switch (filter) {
+      case RankingFilter.popular:
+        notifier.loadPopularTestsList();
+        break;
+      case RankingFilter.mostViewed:
+        notifier.loadMostViewedTests();
+        break;
+      case RankingFilter.trending:
+        notifier.loadTrendingTests();
+        break;
+      case RankingFilter.recent:
+        notifier.loadLatestTests();
+        break;
+      case RankingFilter.alphabetical:
+        notifier.loadAlphabeticalTests();
+        break;
+    }
   }
 
   /// 새로고침 처리
   Future<void> _onRefresh() async {
-    await ref.read(testListNotifierProvider.notifier).refresh();
+    _onFilterChanged(_selectedFilter);
   }
 
   @override
@@ -177,7 +194,7 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
     return testListState.when(
       initial: () => const SizedBox(),
       loading: () => _buildLoadingState(),
-      loaded: (items, hasMore, currentPage, isLoadingMore) => _buildLoadedState(
+      loaded: (items, hasMore, currentPage, isLoadingMore, loadType) => _buildLoadedState(
         items: items,
         hasMore: hasMore,
         isLoadingMore: isLoadingMore,
@@ -461,7 +478,7 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
     );
   }
 
-  /// 🎴 랭킹 카드 위젯 (이미지 수정 포함)
+  /// 🎴 랭킹 카드 위젯 (별점 제거된 버전)
   Widget _buildRankingCard({
     required int rank,
     required TestRankingItem item,
@@ -568,13 +585,14 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${_formatParticipantCount(item.participantCount)}명 참여',
+                          '${_formatParticipantCount(item.viewCount)}명 참여',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textTertiary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        // 별점 부분 삭제하고 조회수 또는 공유수로 대체
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
@@ -582,7 +600,7 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '⭐ ${item.popularityScore.toStringAsFixed(1)}',
+                            '👁️ ${_formatParticipantCount(item.viewCount)}',
                             style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.primaryBlue,
@@ -645,14 +663,25 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
       decoration: BoxDecoration(
         color: Colors.grey[100],
       ),
-      child: item.imagePath.isNotEmpty
-          ? Image.asset(
-        item.imagePath,
+      child: item.imagePath.isNotEmpty  // 또는 item.thumbnailUrl
+          ? Image.network(  // ✅ 이게 핵심 변경!
+        item.imagePath,  // 또는 item.thumbnailUrl
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.high,
+        // 로딩 중 표시
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primaryBlue,
+            ),
+          );
+        },
         errorBuilder: (context, error, stackTrace) {
+          print('🖼️ 이미지 로드 실패: ${item.imagePath}');
           return _buildImagePlaceholder(item);
         },
       )
@@ -689,11 +718,11 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
   }
 }
 
-/// 🔍 랭킹 필터 열거형 (확장된 옵션)
+/// 🔍 랭킹 필터 열거형 (수정된 옵션 - 남성/여성 제거, 트렌딩 추가)
 enum RankingFilter {
-  popular('🏆', '인기순', '전체 사용자 기준 인기 랭킹'),
-  malePopular('👨', '남성 인기순', '남성 사용자 기준 인기 랭킹'),
-  femalePopular('👩', '여성 인기순', '여성 사용자 기준 인기 랭킹'),
+  popular('🔥', '인기순', '전체 사용자 기준 인기 랭킹'),
+  mostViewed('👁️', '조회순', '가장 많이 본 테스트 순'),
+  trending('📈', '트렌딩', '최근 7일간 급상승한 테스트'),
   recent('🆕', '최신순', '최근 출시된 테스트 순'),
   alphabetical('🔤', '가나다순', '테스트 이름 가나다 순');
 

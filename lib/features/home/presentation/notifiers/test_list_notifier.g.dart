@@ -6,9 +6,12 @@ part of 'test_list_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$testListNotifierHash() => r'ea529402e7c09bc5ee6c23252c18da377b33b520';
+String _$testListNotifierHash() => r'44cfb66063115a3822adc11222e69b1da8c025ac';
 
-/// 테스트 목록 상태 관리
+/// 🧠 테스트 목록 상태 관리 (전체 API 지원)
+///
+/// 서버의 모든 테스트 목록 API를 지원하는 통합 노티파이어
+/// 메모리 효율성을 위한 페이징 및 무한 스크롤 지원
 ///
 /// Copied from [TestListNotifier].
 @ProviderFor(TestListNotifier)

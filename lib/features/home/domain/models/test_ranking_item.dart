@@ -1,25 +1,23 @@
 
 /// 테스트 랭킹 아이템 모델 (Domain Model)
 class TestRankingItem {
-  final String id;
+  final int id;
   final String title;
   final String subtitle;
   final String imagePath;
-  final int participantCount;
-  final double popularityScore;
+  final int viewCount;
 
   const TestRankingItem({
     required this.id,
     required this.title,
     required this.subtitle,
     required this.imagePath,
-    required this.participantCount,
-    required this.popularityScore,
+    required this.viewCount,
   });
 
   @override
   String toString() {
-    return 'TestRankingItem(id: $id, title: $title, participantCount: $participantCount)';
+    return 'TestRankingItem(id: $id, title: $title, participantCount: $viewCount)';
   }
 
   @override

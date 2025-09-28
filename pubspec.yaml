@@ -11,6 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # 🖼️ 이미지 처리 (최적화된 조합) 캐시이미지 3.4.1에서 다운그레이드함 문제생기면여기일가능성 높음
+  cached_network_image: ^3.3.1
+  flutter_cache_manager: ^3.3.1
   # dio logger
   pretty_dio_logger: ^1.4.0
   # UI & Core
@@ -34,7 +37,6 @@ dependencies:
   # ETC
   flutter_screenutil: ^5.9.3
   gap: ^3.0.1
-  cached_network_image: ^3.4.1
   flutter_svg: ^2.0.10+1
   lottie: ^3.1.2
   audioplayers: ^6.1.0

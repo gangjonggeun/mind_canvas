@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.dart';
-// import 'package:mind_canvas/features/home/screen/popular_test_ranking_screen.dart';
 
 import '../../core/theme/app_assets.dart';
 import '../../core/theme/app_colors.dart';
@@ -13,12 +12,13 @@ import '../recommendation/presentation/recommendation_screen.dart';
 
 import '../recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
 // import 'widgets/home_viewpager.dart';
+import 'dart:math' as math;
+import '../home/presentation/notifiers/test_list_notifier.dart';
 
 
-
-
+import 'domain/models/test_ranking_item.dart';
 /// Mind Canvas 심리테스트 홈 화면
-/// 
+///
 /// 심리테스트 메인 대시보드
 /// - ViewPager (타로, 페르소나, HTP)
 /// - 테스트 랭킹 및 추천
@@ -39,6 +39,19 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final String _userMbti = 'INFP'; // 사용자 MBTI (실제로는 UserProvider에서 가져와야 함)
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    // 위젯 마운트 후 인기 테스트 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(testListNotifierProvider.notifier).loadPopularTests();
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,8 +87,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-      );
-}
+    );
+  }
 
   /// 네비게이션: 성격 기반 추천 화면으로 이동
   void _navigateToPersonalityRecommendations() {
@@ -327,7 +340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  /// 🏆 인기 테스트 랭킹 섹션 (반응형)
+  /// 🏆 인기 테스트 랭킹 섹션 (반응형) - Consumer 버전
   Widget _buildTestRanking() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,92 +348,271 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('🏆 인기 테스트 랭킹', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            TextButton(onPressed: () {
-              print("인기테스트 더보기 버튼 클릭 이동 예정");
-
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PopularTestRankingScreen(),
-                ),
-              );
-
-            }, child: const Text('더보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))),
+            const Text(
+                '🏆 인기 테스트 랭킹',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary
+                )
+            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PopularTestRankingScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                    '더보기',
+                    style: TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.w500
+                    )
+                )
+            ),
           ],
         ),
         const SizedBox(height: 16),
-        // 가로 스크롤 카드 형태 (반응형 높이)
-        SizedBox(
-          height: AppDimensions.getRankingCardTotalHeight(context),  // 반응형 높이
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            children: [
-              // 1위: MBTI 검사
-              _buildRankingCard(
-                rank: 1,
-                title: 'MBTI 검사',
-                subtitle: '성격 유형 분석',
-                imagePath: AppAssets.mbtiItemHigh,
-                participantCount: 12345,
-                onTap: () {
-                  print('MBTI 검사 선택됨');
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => InfoScreen(
-                        testId: 'mbti', // 또는 'mbti', 'persona'
-                      ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: AppDimensions.getRankingCardSpacing(context)),  // 반응형 간격
 
-              // 2위: 페르소나 테스트
-              _buildRankingCard(
-                rank: 2,
-                title: '페르소나 테스트',
-                subtitle: '내면의 페르소나',
-                imagePath: AppAssets.personaItemHigh,
-                participantCount: 9876,
-                onTap: () {
-                  print('페르소나 선택됨');
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => InfoScreen(
-                        testId: 'persona', // 또는 'mbti', 'persona'
-                      ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: AppDimensions.getRankingCardSpacing(context)),  // 반응형 간격
+        // Consumer로 안전한 상태 관리
+        Consumer(
+          builder: (context, ref, child) {
+            final testListState = ref.watch(testListNotifierProvider);
 
-              // 3위: HTP 심리검사
-              _buildRankingCard(
-                rank: 3,
-                title: 'HTP 심리검사',
-                subtitle: '집나무사람 그림검사',
-                imagePath: AppAssets.headspaceItemHigh,
-                participantCount: 7654,
-                onTap: () {
-                  print('HTP 심리검사  선택됨');
-                  // TODO: HTP 검사 화면으로 이동
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => InfoScreen(
-                        testId: 'htp', // 또는 'mbti', 'persona'
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+            return testListState.when(
+              initial: () {
+                // 초기 상태에서 자동 로드
+                Future.microtask(() {
+                  if (context.mounted) {
+                    print('🔄 HomeScreen: Loading popular tests from initial state');
+                    ref.read(testListNotifierProvider.notifier).loadPopularTests();
+                  }
+                });
+                return _buildRankingLoading();
+              },
+
+              loading: () {
+                print('⏳ HomeScreen: Loading popular tests...');
+                return _buildRankingLoading();
+              },
+
+              loaded: (items, hasMore, currentPage, isLoadingMore, loadType) {
+                print('✅ HomeScreen: Loaded ${items.length} items, loadType: $loadType');
+
+                // 데이터가 있으면 표시
+                if (items.isNotEmpty) {
+                  return _buildRankingList(items);
+                } else {
+                  // 빈 데이터면 다시 로드 시도
+                  print('⚠️ HomeScreen: Empty data, retrying...');
+                  Future.microtask(() {
+                    if (context.mounted) {
+                      ref.read(testListNotifierProvider.notifier).loadPopularTests();
+                    }
+                  });
+                  return _buildRankingLoading();
+                }
+              },
+
+              error: (message) {
+                print('❌ HomeScreen: Error loading popular tests: $message');
+                return _buildRankingError(message);
+              },
+            );
+          },
         ),
       ],
     );
   }
+// 에러 상태 UI (재시도 버튼 포함)
+  Widget _buildRankingError(String message) {
+    return Container(
+      height: AppDimensions.getRankingCardTotalHeight(context),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 32,
+              color: Colors.red[400],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '데이터 로드 실패',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                print('🔄 HomeScreen: Manual retry requested');
+                ref.read(testListNotifierProvider.notifier).loadPopularTests();
+              },
+              icon: Icon(Icons.refresh, size: 16),
+              label: Text('다시 시도'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                textStyle: TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+// 플레이스홀더 UI (개선)
+  Widget _buildRankingPlaceholder() {
+    return Container(
+      height: AppDimensions.getRankingCardTotalHeight(context),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.poll_outlined,
+              size: 32,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '인기 테스트 준비 중...',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// 실제 랭킹 리스트 UI
+  Widget _buildRankingList(List<TestRankingItem> items) {
+    return SizedBox(
+      height: AppDimensions.getRankingCardTotalHeight(context),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        itemCount: math.min(items.length, 5),
+        separatorBuilder: (context, index) => SizedBox(width: AppDimensions.getRankingCardSpacing(context)),
+        itemBuilder: (context, index) {
+          final test = items[index];
+          return _buildRankingCard(
+            rank: index + 1,
+            title: test.title,
+            subtitle: test.subtitle,
+            imagePath: test.imagePath ?? AppAssets.mbtiItemHigh,
+            participantCount: test.viewCount ?? 0,
+            onTap: () {
+              print("info Screen으로 이동 예정");
+              // 단순히 testId만 전달하여 InfoScreen으로 이동
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => InfoScreen(
+                    testId: test.id, // testId만 전달
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  //
+  // Future<void> _handleTestCardTap(int testId) async {
+  //   // 상세 정보 로드 시작
+  //   ref.read(testDetailNotifierProvider.notifier).loadTestDetail(testId);
+  //
+  //   // 상태 변화를 감시하는 다이얼로그 표시
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => Consumer(
+  //       builder: (context, ref, child) {
+  //         final state = ref.watch(testDetailNotifierProvider);
+  //
+  //         if (state.isLoading) {
+  //           return const Center(child: CircularProgressIndicator());
+  //         }
+  //
+  //         // 로딩 완료 시 자동으로 다이얼로그 닫고 화면 이동
+  //         WidgetsBinding.instance.addPostFrameCallback((_) {
+  //           Navigator.of(context).pop(); // 다이얼로그 닫기
+  //
+  //           if (state.testDetail != null) {
+  //             Navigator.of(context).push(
+  //               MaterialPageRoute(
+  //                 builder: (context) => InfoScreen(
+  //                   testId: testId.toString(),
+  //                   testDetail: state.testDetail,
+  //                 ),
+  //               ),
+  //             );
+  //           } else if (state.errorMessage != null) {
+  //             ScaffoldMessenger.of(context).showSnackBar(
+  //               SnackBar(content: Text(state.errorMessage!)),
+  //             );
+  //           }
+  //         });
+  //
+  //         return const SizedBox.shrink();
+  //       },
+  //     ),
+  //   );
+  // }
+
+// 로딩 상태 UI (개선)
+  Widget _buildRankingLoading() {
+    return Container(
+      height: AppDimensions.getRankingCardTotalHeight(context),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '인기 테스트 불러오는 중...',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildUserRecommendations() {
     return Column(
@@ -957,7 +1149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppDimensions.rankingCardBorderRadius)
         ),
-        child: Image.asset(
+        child: Image.network(
           imagePath,
           width: double.infinity,
           height: height,
