@@ -1,20 +1,42 @@
 // lib/features/psytest/presentation/screens/psy_test_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mind_canvas/features/psytest/presentation/notifiers/test_content_notifier.dart';
+import 'package:mind_canvas/features/psytest/presentation/notifiers/test_content_state.dart';
+import '../psy_result/data/mapper/test_result_mapper.dart';
+import '../psy_result/presentation/psy_result_screen.dart';
 import '../psy_result/psy_result_demo_screen.dart';
-import 'model/TestQuestion.dart'; // ✅ 실제 프로젝트 경로를 확인해주세요.
+import 'data/model/test_question.dart';
 
 /// [최종 버전] 데이터 기반의 유연한 심리 테스트 화면 (주관식 답변 기능 추가)
-class PsyTestScreen extends StatefulWidget {
-  const PsyTestScreen({super.key});
+class PsyTestScreen extends ConsumerStatefulWidget {
+  final int testId;
+
+  const PsyTestScreen({
+    super.key,
+    required this.testId,
+  });
 
   @override
-  State<PsyTestScreen> createState() => _PsyTestScreenState();
+  ConsumerState<PsyTestScreen> createState() => _PsyTestScreenState();
 }
 
-class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateMixin {
+class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProviderStateMixin {
   // 🎨 테스트 진행 상태
+
+  // ✅ Getter로 간결하게 접근
+  List<List<TestQuestion>> get _questionPages {
+    return ref.read(testContentNotifierProvider).questionPages ?? [];
+  }
   int _currentPage = 0;
+
+  int get _totalPages => _questionPages.length;
+
+  // ✅ [새로 추가] 스크롤 컨트롤러
+  late final ScrollController _scrollController;
+
+
   // ✅ [수정됨] 선택지 ID(String)와 주관식 답변(String)을 모두 저장하기 위해 dynamic 타입으로 변경
   final Map<String, dynamic> _answers = {};
   // ✅ [새로 추가] 주관식 답변의 TextEditingController를 관리하는 맵
@@ -24,94 +46,110 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
   late AnimationController _pageAnimationController;
   late Animation<double> _pageAnimation;
 
-  // ✅ [수정됨] '주관식' 질문이 포함된 새로운 데이터
-  final List<List<TestQuestion>> _questionPages = [
-    // 페이지 1: 기본 유형 (텍스트 라디오 + 주관식)
-    [
-      TestQuestion(id: 'q1', text: '주말에 주로 무엇을 하며 시간을 보내나요?', options: [
-        QuestionOption(id: 'a', text: '친구들과 만나서 활동한다', value: 'E'),
-        QuestionOption(id: 'b', text: '집에서 혼자만의 시간을 갖는다', value: 'I'),
-      ]),
-      TestQuestion(id: 'q2', text: '최근 당신을 가장 잘 표현하는 단어 하나를 적어주세요.', type: QuestionType.subjective),
-    ],
-    // 페이지 2: 이미지 선택 유형
-    [
-      TestQuestion(id: 'q3', text: '더 끌리는 풍경을 선택해주세요.', type: QuestionType.image, options: [
-        QuestionOption(id: 'a', value: 'J', imageUrl: 'assets/images/background/htp_background_1_high.webp', text: '잘 정돈된 집'),
-        QuestionOption(id: 'b', value: 'P', imageUrl: 'assets/images/background/htp_background_2_high.webp', text: '자유로운 숲길'),
-      ]),
-    ],
-    // 페이지 3: 질문에 이미지 + 답변은 라디오
-    [
-      TestQuestion(
-        id: 'q4',
-        text: '이 그림을 보고 어떤 감정이 드나요?',
-        imageUrl: 'assets/images/background/htp_background_2_high.webp', // ✅ 질문 자체에 이미지가 포함된 경우
-        options: [
-          QuestionOption(id: 'a', text: '평온하고 안정적이다', value: 'S'),
-          QuestionOption(id: 'b', text: '자유롭고 창의적이다', value: 'N'),
-          QuestionOption(id: 'c', text: '조금 외로워 보인다', value: 'F'),
-        ],
-      ),
-    ],
-    // 페이지 4: 질문에 이미지 + 답변은 주관식
-    [
-      TestQuestion(
-        id: 'q5',
-        text: '이 그림 속 장소에 제목을 붙여주세요.',
-        imageUrl: 'assets/images/background/htp_background_1_high.webp',
-        type: QuestionType.subjective,
-      ),
-    ],
-    // 페이지 5: 드롭다운(선택 박스) 유형
-    [
-      TestQuestion(
-        id: 'q6',
-        text: '당신의 업무 스타일과 가장 가까운 것을 선택해주세요.',
-        type: QuestionType.text, // ✅ 드롭다운 질문 타입
-        options: [
-          QuestionOption(id: 'a', text: '미리 계획하고 체계적으로 실행한다', value: 'J'),
-          QuestionOption(id: 'b', text: '상황에 맞춰 유연하게 대처한다', value: 'P'),
-          QuestionOption(id: 'c', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'P'),
-          QuestionOption(id: 'd', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'J'),
-        ],
-      ),
-    ],
-    // 페이지 6: 질문에 이미지 + 답변은 드롭다운
-    [
-      TestQuestion(
-        id: 'q7',
-        text: '이 캐릭터가 할 것 같은 말은 무엇인가요?',
-        imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        type: QuestionType.text,
-        options: [
-          QuestionOption(id: 'a', text: '"우리 같이 새로운거 해보자!"', value: 'E'),
-          QuestionOption(id: 'b', text: '"이 문제의 핵심은 말이야..."', value: 'T'),
-          QuestionOption(id: 'c', text: '"다들 괜찮아? 내가 도와줄까?"', value: 'F'),
-        ],
-      ),
-    ],
-    // 페이지 7: 모든 유형 혼합
-    [
-      TestQuestion(id: 'q8', text: '스트레스를 받을 때 어떻게 해소하나요?', options: [
-        QuestionOption(id: 'a', text: '친구들과 이야기를 나눈다', value: 'E'),
-        QuestionOption(id: 'b', text: '혼자서 조용히 생각한다', value: 'I'),
-      ]),
-      TestQuestion(id: 'q9', text: '가장 중요하게 생각하는 가치를 적어주세요.', type: QuestionType.subjective),
-    ],
-  ];
-
-  late final int _totalPages = _questionPages.length;
+  // // ✅ [수정됨] '주관식' 질문이 포함된 새로운 데이터
+  // final List<List<TestQuestion>> _questionPages = [
+  //   // 페이지 1: 기본 유형 (텍스트 라디오 + 주관식)
+  //   [
+  //     TestQuestion(id: 'q1', text: '주말에 주로 무엇을 하며 시간을 보내나요?', options: [
+  //       QuestionOption(id: 'a', text: '친구들과 만나서 활동한다', value: 'E'),
+  //       QuestionOption(id: 'b', text: '집에서 혼자만의 시간을 갖는다', value: 'I'),
+  //     ]),
+  //     TestQuestion(id: 'q2', text: '최근 당신을 가장 잘 표현하는 단어 하나를 적어주세요.', type: QuestionType.subjective),
+  //   ],
+  //   // 페이지 2: 이미지 선택 유형
+  //   [
+  //     TestQuestion(id: 'q3', text: '더 끌리는 풍경을 선택해주세요.', type: QuestionType.image, options: [
+  //       QuestionOption(id: 'a', value: 'J', imageUrl: 'assets/images/background/htp_background_1_high.webp', text: '잘 정돈된 집'),
+  //       QuestionOption(id: 'b', value: 'P', imageUrl: 'assets/images/background/htp_background_2_high.webp', text: '자유로운 숲길'),
+  //     ]),
+  //   ],
+  //   // 페이지 3: 질문에 이미지 + 답변은 라디오
+  //   [
+  //     TestQuestion(
+  //       id: 'q4',
+  //       text: '이 그림을 보고 어떤 감정이 드나요?',
+  //       imageUrl: 'assets/images/background/htp_background_2_high.webp', // ✅ 질문 자체에 이미지가 포함된 경우
+  //       options: [
+  //         QuestionOption(id: 'a', text: '평온하고 안정적이다', value: 'S'),
+  //         QuestionOption(id: 'b', text: '자유롭고 창의적이다', value: 'N'),
+  //         QuestionOption(id: 'c', text: '조금 외로워 보인다', value: 'F'),
+  //       ],
+  //     ),
+  //   ],
+  //   // 페이지 4: 질문에 이미지 + 답변은 주관식
+  //   [
+  //     TestQuestion(
+  //       id: 'q5',
+  //       text: '이 그림 속 장소에 제목을 붙여주세요.',
+  //       imageUrl: 'assets/images/background/htp_background_1_high.webp',
+  //       type: QuestionType.subjective,
+  //     ),
+  //   ],
+  //   // 페이지 5: 드롭다운(선택 박스) 유형
+  //   [
+  //     TestQuestion(
+  //       id: 'q6',
+  //       text: '당신의 업무 스타일과 가장 가까운 것을 선택해주세요.',
+  //       type: QuestionType.text, // ✅ 드롭다운 질문 타입
+  //       options: [
+  //         QuestionOption(id: 'a', text: '미리 계획하고 체계적으로 실행한다', value: 'J'),
+  //         QuestionOption(id: 'b', text: '상황에 맞춰 유연하게 대처한다', value: 'P'),
+  //         QuestionOption(id: 'c', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'P'),
+  //         QuestionOption(id: 'd', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'J'),
+  //       ],
+  //     ),
+  //   ],
+  //   // 페이지 6: 질문에 이미지 + 답변은 드롭다운
+  //   [
+  //     TestQuestion(
+  //       id: 'q7',
+  //       text: '이 캐릭터가 할 것 같은 말은 무엇인가요?',
+  //       imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
+  //       type: QuestionType.text,
+  //       options: [
+  //         QuestionOption(id: 'a', text: '"우리 같이 새로운거 해보자!"', value: 'E'),
+  //         QuestionOption(id: 'b', text: '"이 문제의 핵심은 말이야..."', value: 'T'),
+  //         QuestionOption(id: 'c', text: '"다들 괜찮아? 내가 도와줄까?"', value: 'F'),
+  //       ],
+  //     ),
+  //   ],
+  //   // 페이지 7: 모든 유형 혼합
+  //   [
+  //     TestQuestion(id: 'q8', text: '스트레스를 받을 때 어떻게 해소하나요?', options: [
+  //       QuestionOption(id: 'a', text: '친구들과 이야기를 나눈다', value: 'E'),
+  //       QuestionOption(id: 'b', text: '혼자서 조용히 생각한다', value: 'I'),
+  //     ]),
+  //     TestQuestion(id: 'q9', text: '가장 중요하게 생각하는 가치를 적어주세요.', type: QuestionType.subjective),
+  //   ],
+  // ];
+  //
+  // late final int _totalPages = _questionPages.length;
 
   @override
   void initState() {
     super.initState();
     _setupAnimations();
+
+
+    // ✅ [새로 추가] 스크롤 컨트롤러 초기화
+    _scrollController = ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTestContent();
+    });
   }
+// ✅ 수정 후 (간단하게)
+  Future<void> _loadTestContent() async {
+    await ref.read(testContentNotifierProvider.notifier)
+        .loadTestContent(widget.testId);
+  }
+
 
   @override
   void dispose() {
     _pageAnimationController.dispose();
+    _scrollController.dispose();
+
     // ✅ 화면이 사라질 때 모든 컨트롤러를 메모리에서 해제하여 누수를 방지합니다.
     for (var controller in _textControllers.values) {
       controller.dispose();
@@ -130,10 +168,88 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
+    // ✅ 추가: 상태 감시
+    final contentState = ref.watch(testContentNotifierProvider);
+
+
+    // ✅ 제출 완료/에러 감지
+    ref.listen<TestContentState>(
+      testContentNotifierProvider,
+          (previous, next) {
+        // 제출 완료 시
+        if (next.isCompleted && next.testResult != null) {
+          // 🔄 변환
+          final psyResult = TestResultMapper.toEntity(next.testResult!);
+
+          // 📱 결과 화면으로 이동
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PsyResultScreen(result: psyResult),
+            ),
+          );
+        }
+        // 에러 발생 시
+        else if (next.errorMessage != null &&
+            !next.isLoading &&
+            !next.isSubmitting) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.errorMessage!),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      },
+    );
+
+    // ✅ 추가: 로딩 처리
+    if (contentState.isLoading) {
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // ✅ 추가: 에러 처리
+    if (contentState.errorMessage != null) {
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('오류: ${contentState.errorMessage}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.read(testContentNotifierProvider.notifier)
+                    .loadTestContent(widget.testId),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ✅ 추가: 데이터 없음 처리
+    final questionPages = contentState.questionPages;
+    if (questionPages == null || questionPages.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        body: const Center(child: Text('테스트 콘텐츠가 없습니다')),
+      );
+    }
+
+
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: _buildAppBar(isDarkMode),
-      body: _buildBody(isDarkMode),
+      body: _buildBody(isDarkMode, contentState),
     );
   }
 
@@ -175,13 +291,13 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
   }
 
   /// 🎨 메인 바디
-  Widget _buildBody(bool isDarkMode) {
+  Widget _buildBody(bool isDarkMode, TestContentState contentState) {
     return SafeArea(
       child: Column(
         children: [
           _buildProgressIndicator(isDarkMode),
           Expanded(child: _buildQuestionContent(isDarkMode)),
-          _buildNavigationButtons(isDarkMode),
+          _buildNavigationButtons(isDarkMode, contentState), // ✅ 전달
         ],
       ),
     );
@@ -224,6 +340,8 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
     if (_currentPage >= _questionPages.length) {
       return _buildCompletionScreen(isDarkMode);
     }
+
+
     final currentQuestions = _questionPages[_currentPage];
     return AnimatedBuilder(
       animation: _pageAnimation,
@@ -231,6 +349,7 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
         return Opacity(
           opacity: _pageAnimation.value,
           child: ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: currentQuestions.length,
             itemBuilder: (context, index) {
@@ -350,9 +469,14 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
     );
   }
 
-  /// 🎨 네비게이션 버튼들
-  Widget _buildNavigationButtons(bool isDarkMode) {
+  // ✅ 수정: 제출 중 상태 확인
+  Widget _buildNavigationButtons(
+      bool isDarkMode,
+      TestContentState contentState,
+      ) {
     final canGoNext = _canGoToNextPage();
+    final isSubmitting = contentState.isSubmitting;
+
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -360,7 +484,7 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
           if (_currentPage > 0)
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _goToPreviousPage,
+                onPressed: isSubmitting ? null : _goToPreviousPage,
                 icon: const Icon(Icons.arrow_back_rounded, size: 20),
                 label: const Text('이전', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: OutlinedButton.styleFrom(
@@ -375,12 +499,35 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: canGoNext ? _goToNextPage : null,
-              icon: Icon(_currentPage == _totalPages - 1 ? Icons.check_rounded : Icons.arrow_forward_rounded, size: 20),
-              label: Text(_currentPage == _totalPages - 1 ? '완료' : '다음', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              onPressed: (canGoNext && !isSubmitting) ? _goToNextPage : null,
+              icon: isSubmitting
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : Icon(
+                _currentPage == _totalPages - 1
+                    ? Icons.check_rounded
+                    : Icons.arrow_forward_rounded,
+                size: 20,
+              ),
+              label: Text(
+                isSubmitting
+                    ? '제출 중...'
+                    : (_currentPage == _totalPages - 1 ? '완료' : '다음'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: canGoNext ? const Color(0xFF3182CE) : (isDarkMode ? Colors.white24 : Colors.black12),
-                foregroundColor: canGoNext ? Colors.white : (isDarkMode ? Colors.white38 : Colors.black38),
+                backgroundColor: (canGoNext && !isSubmitting)
+                    ? const Color(0xFF3182CE)
+                    : (isDarkMode ? Colors.white24 : Colors.black12),
+                foregroundColor: (canGoNext && !isSubmitting)
+                    ? Colors.white
+                    : (isDarkMode ? Colors.white38 : Colors.black38),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -445,6 +592,9 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
   void _goToNextPage() {
     if (_currentPage < _totalPages - 1) {
       setState(() => _currentPage++);
+
+      _scrollController.jumpTo(0);
+
       _pageAnimationController.reset();
       _pageAnimationController.forward();
     } else {
@@ -455,13 +605,24 @@ class _PsyTestScreenState extends State<PsyTestScreen> with TickerProviderStateM
   void _goToPreviousPage() {
     if (_currentPage > 0) {
       setState(() => _currentPage--);
+
+      _scrollController.jumpTo(0);
+
+
       _pageAnimationController.reset();
       _pageAnimationController.forward();
     }
   }
 
   void _submitTest() {
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PsyResultDemoScreen()));
+    print('📤 _submitTest 호출됨');
+    print('답변 데이터: $_answers');
+
+    // ✅ TestContentNotifier 사용
+    ref.read(testContentNotifierProvider.notifier).submitTest(
+      widget.testId,
+      _answers,
+    );
   }
 
   void _showExitDialog() {

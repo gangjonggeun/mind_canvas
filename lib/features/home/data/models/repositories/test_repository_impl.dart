@@ -7,6 +7,10 @@ import 'package:dio/dio.dart';
 import '../../../../../core/auth/token_manager.dart';
 import '../../../../../core/utils/result.dart';
 import '../../../../info/data/models/response/test_detail_response.dart';
+import '../../../../psy_result/data/model/request/submit_test_request.dart';
+import '../../../../psy_result/data/model/response/test_result_response.dart';
+import '../../../../psytest/data/mappers/test_content_mapper.dart';
+import '../../../../psytest/data/model/test_question.dart';
 import '../../../domain/models/test_ranking_item.dart';
 import '../../../domain/repositories/test_repository.dart';
 import '../datasources/test_api_data_source.dart';
@@ -24,6 +28,158 @@ class TestRepositoryImpl implements TestRepository {
   }) : _testApiDataSource = testApiDataSource,
         _tokenManager = tokenManager;
 
+  @override
+  Future<Result<TestResultResponse>> submitTest(
+      SubmitTestRequest request,
+      ) async {
+    try {
+      // 1️⃣ 클라이언트 측 검증
+      if (!request.isValid) {
+        return Result.failure(
+          'VALIDATION_ERROR',
+          '답변 데이터가 유효하지 않습니다',
+        );
+      }
+
+      // 2️⃣ 중복 검사
+      if (request.hasDuplicateAnswers) {
+        final duplicates = request.duplicateQuestionIds.join(', ');
+        return Result.failure(
+          'DUPLICATE_ANSWERS',
+          '중복된 답변이 있습니다: $duplicates',
+        );
+      }
+
+      // 3️⃣ 토큰 가져오기
+      final token = await _tokenManager.getValidAccessToken();
+      if (token == null) {
+        return Result.failure(
+          'AUTHENTICATION_ERROR',
+          '로그인이 필요합니다',
+        );
+      }
+
+      // 4️⃣ API 호출
+      final apiResponse = await _testApiDataSource.submitTest(request, token);
+
+      // 5️⃣ 응답 처리
+      if (apiResponse.success && apiResponse.data != null) {
+        return Result.success(
+          apiResponse.data!,
+          apiResponse.message ?? '테스트 제출이 완료되었습니다',
+        );
+      } else {
+        return Result.failure(
+          apiResponse.message ?? '알 수 없는 오류가 발생했습니다',
+           'UNKNOWN_ERROR',
+        );
+      }
+    } on DioException catch (e) {
+      // 6️⃣ 네트워크 오류 처리
+      if (e.response?.statusCode == 400) {
+        return Result.failure(
+          'VALIDATION_ERROR',
+          e.response?.data['message'] ?? '잘못된 요청입니다',
+        );
+      } else if (e.response?.statusCode == 401) {
+        return Result.failure(
+          'AUTHENTICATION_ERROR',
+          '인증이 만료되었습니다. 다시 로그인해주세요',
+        );
+      } else if (e.response?.statusCode == 404) {
+        return Result.failure(
+          'TEST_NOT_FOUND',
+          '요청하신 테스트를 찾을 수 없습니다',
+        );
+      } else {
+        return Result.failure(
+          'NETWORK_ERROR',
+          '네트워크 오류가 발생했습니다: ${e.message}',
+        );
+      }
+    } catch (e) {
+      // 7️⃣ 예상치 못한 오류
+      return Result.failure(
+        'UNKNOWN_ERROR',
+        '알 수 없는 오류가 발생했습니다: $e',
+      );
+    }
+  }
+
+  @override
+  Future<Result<List<List<TestQuestion>>>> getTestContent(int testId) async {
+    try {
+      // 유효한 토큰 확인
+      final validToken = await _tokenManager.getValidAccessToken();
+
+      if (validToken == null) {
+        print('인증이 필요합니다 - 로그인 페이지로 이동 필요');
+        return Result.failure('인증이 필요합니다', 'AUTHENTICATION_REQUIRED');
+      }
+
+      // API 호출
+      final apiResponse = await _testApiDataSource.getTestContent(testId, validToken);
+
+      // ApiResponse를 Result로 변환
+      if (apiResponse.success && apiResponse.data != null) {
+        // DTO → Domain Model 변환
+        final domainModel = TestContentMapper.toDomainModel(apiResponse.data!);
+
+        print('✅ 테스트 콘텐츠 조회 성공 - testId: $testId, pages: ${domainModel.length}');
+        return Result.success(domainModel, '테스트 콘텐츠를 성공적으로 불러왔습니다');
+      } else {
+        final errorMessage = apiResponse.error?.message ??
+            apiResponse.message ??
+            '테스트 콘텐츠를 불러오는데 실패했습니다';
+        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
+
+        print('❌ 테스트 콘텐츠 조회 실패 - $errorMessage');
+        return Result.failure(errorMessage, errorCode);
+      }
+    } on DioException catch (e) {
+      return _handleDioExceptionForContent(e);
+    } catch (e) {
+      print('예상치 못한 오류 발생: $e');
+      return Result.failure('알 수 없는 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    }
+  }
+
+  /// Dio 예외를 Result로 변환 (콘텐츠 조회용)
+  Result<List<List<TestQuestion>>> _handleDioExceptionForContent(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return Result.failure('연결 시간 초과입니다. 네트워크를 확인해주세요');
+      case DioExceptionType.receiveTimeout:
+        return Result.failure('응답 시간 초과입니다. 다시 시도해주세요');
+      case DioExceptionType.sendTimeout:
+        return Result.failure('요청 전송 시간이 초과되었습니다');
+
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        switch (statusCode) {
+          case 401:
+            return Result.failure('인증이 만료되었습니다', 'AUTHENTICATION_EXPIRED');
+          case 403:
+            return Result.failure('현재 공개되지 않은 테스트입니다', 'FORBIDDEN_ACCESS');
+          case 404:
+            return Result.failure('요청하신 테스트를 찾을 수 없습니다', 'TEST_NOT_FOUND');
+          case 500:
+            return Result.failure('서버 내부 오류가 발생했습니다', 'SERVER_ERROR');
+          default:
+            return Result.failure('서버 요청 중 오류가 발생했습니다', 'HTTP_ERROR');
+        }
+
+      case DioExceptionType.cancel:
+        return Result.failure('요청이 취소되었습니다', 'REQUEST_CANCELLED');
+
+      case DioExceptionType.unknown:
+      default:
+        if (e.error.toString().contains('SocketException')) {
+          return Result.failure('네트워크 연결을 확인해주세요', 'NETWORK_ERROR');
+        }
+        return Result.failure('네트워크 오류가 발생했습니다', 'NETWORK_ERROR');
+    }
+  }
 
   @override
   Future<Result<TestDetailResponse>> getTestDetail(int testId) async {

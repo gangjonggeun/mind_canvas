@@ -54,7 +54,7 @@ abstract class PsyFactory {
   ) {
     // 🧠 MBTI 전용 설정들
     // TODO: 실제로는 질문 데이터 로딩, 사용자 설정 적용 등
-    return const PsyTestScreen();
+    return const PsyTestScreen(testId: 1,);
   }
   
   /// 페르소나 화면 생성 (준비중)

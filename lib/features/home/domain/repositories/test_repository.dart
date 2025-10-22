@@ -4,11 +4,23 @@
 
 import '../../../../core/utils/result.dart';
 import '../../../info/data/models/response/test_detail_response.dart';
+import '../../../psy_result/data/model/request/submit_test_request.dart';
+import '../../../psy_result/data/model/response/test_result_response.dart';
+import '../../../psytest/data/model/test_question.dart';
 import '../models/test_ranking_item.dart';
 
 /// 🧠 테스트 Repository 인터페이스 (확장 버전)
 abstract class TestRepository {
 
+  /// 🎯 심리 테스트 제출
+  ///
+  /// @param request 테스트 제출 요청 (testId + answers)
+  /// @return 채점 결과 (resultKey, dimensionScores 등)
+  Future<Result<TestResultResponse>> submitTest(SubmitTestRequest request,);
+  /// 📋 테스트 콘텐츠 조회 (문제/선택지)
+  ///
+  /// 서버에서 받은 DTO를 Domain Model로 변환하여 반환
+  Future<Result<List<List<TestQuestion>>>> getTestContent(int testId);
 
   /// 🔍 테스트 상세 정보 조회
   ///

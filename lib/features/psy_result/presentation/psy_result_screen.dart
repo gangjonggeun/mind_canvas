@@ -22,7 +22,7 @@ class PsyResultScreen extends ConsumerStatefulWidget {
 class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
     with AutomaticKeepAliveClientMixin {
   late final ScrollController _scrollController;
-  late final PageController _pageController;
+  // late final PageController _pageController;
 
   @override
   bool get wantKeepAlive => true; // 메모리 효율성을 위한 위젯 생존 관리
@@ -31,13 +31,13 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _pageController = PageController();
+    // _pageController = PageController();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _pageController.dispose();
+    // _pageController.dispose();
     super.dispose();
   }
 
@@ -53,8 +53,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(int.parse(widget.result.bgGradientStart, radix: 16)),
-              Color(int.parse(widget.result.bgGradientEnd, radix: 16)),
+              _parseColor(widget.result.bgGradientStart),
+              _parseColor(widget.result.bgGradientEnd),
             ],
           ),
         ),
@@ -108,7 +108,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('결과가 공유되었습니다 💕'),
-        backgroundColor: Color(int.parse(widget.result.mainColor, radix: 16)),
+        backgroundColor: widget.result.mainColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -119,15 +119,32 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
 
   /// 북마크 처리
   void _handleBookmark() {
-    // TODO: 북마크 상태 관리 구현
-    setState(() {
-      // 임시 UI 업데이트
-    });
+    // TODO: 북마크 기능 구현 예정
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('북마크 기능은 곧 추가될 예정입니다 📌'),
+        backgroundColor: widget.result.mainColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
-
-  /// 다시 테스트하기
+  /// HEX 색상 파싱 헬퍼
+  Color _parseColor(String hexColor) {
+    try {
+      return Color(int.parse('FF$hexColor', radix: 16));
+    } catch (e) {
+      return const Color(0xFF6B73E6); // 기본값
+    }
+  }
+  /// 다시 테스트하기 -> 홈으로 이동
   void _handleRetry() {
-    Navigator.of(context).pop();
-    // TODO: 테스트 화면으로 이동
+    // 결과 화면 닫고 홈으로 이동
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    // 또는 Named Route 사용 시:
+    // Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
   }
 }

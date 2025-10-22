@@ -7,6 +7,9 @@ import 'package:retrofit/retrofit.dart';
 
 import '../../../../../core/network/api_response_dto.dart';
 import '../../../../info/data/models/response/test_detail_response.dart';
+import '../../../../psy_result/data/model/request/submit_test_request.dart';
+import '../../../../psy_result/data/model/response/test_result_response.dart';
+import '../../../../psytest/data/model/response/test_content_response.dart';
 import '../response/tests_response.dart';
 
 part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
@@ -19,6 +22,56 @@ part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
 abstract class TestApiDataSource {
   factory TestApiDataSource(Dio dio, {String baseUrl}) = _TestApiDataSource;
 
+  /// 🎯 심리 테스트 제출 및 결과 반환
+  ///
+  /// <p><strong>핵심 특징:</strong></p>
+  /// - ✅ 답변 유효성 검증 (클라이언트 + 서버)
+  /// - 🎯 테스트별 자동 채점 (GenericScorer)
+  /// - 📊 차원별 점수 계산 및 결과 결정
+  /// - 🏆 결과 즉시 반환
+  /// - 🔒 인증 필수 (로그인한 사용자만)
+  ///
+  /// <p><strong>요청 예시:</strong></p>
+  /// ```dart
+  /// final request = SubmitTestRequest(
+  ///   testId: 1,
+  ///   answers: [
+  ///     TestAnswer(
+  ///       questionId: 'q1',
+  ///       selectedValue: 'ACHIEVEMENT_A',
+  ///     ),
+  ///     TestAnswer(
+  ///       questionId: 'q30',
+  ///       selectedValue: '자유롭고 의미있는 삶',
+  ///     ),
+  ///   ],
+  /// );
+  ///
+  /// final result = await testApi.submitTest(
+  ///   request,
+  ///   'Bearer $accessToken',
+  /// );
+  /// ```
+  ///
+  /// 서버 엔드포인트: POST /api/v1/tests/submit
+  ///
+  /// @param request 테스트 제출 요청 (testId + answers)
+  /// @param authorization JWT 토큰 (Bearer {token})
+  /// @return 채점 결과 (resultKey, dimensionScores, resultDetails 등)
+  @POST('/tests/submit')
+  Future<ApiResponse<TestResultResponse>> submitTest(
+      @Body() SubmitTestRequest request,
+      @Header('Authorization') String authorization,
+      );
+
+  /// 📋 테스트 콘텐츠 조회 (문제/선택지)
+  ///
+  /// 서버 엔드포인트: GET /api/v1/tests/{testId}/content
+  /// 인증: 필수 (비회원도 게스트 토큰 사용)
+  @GET('/tests/{testId}/content')
+  Future<ApiResponse<TestContentResponse>> getTestContent(
+      @Path('testId') int testId,
+      @Header('Authorization') String authorization,);
 
   /// 🔍 테스트 상세 정보 조회
   ///

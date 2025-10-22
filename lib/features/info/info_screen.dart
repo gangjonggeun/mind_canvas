@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
 import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_notifier.dart';
 
+import '../psytest/psy_test_screen.dart';
 import 'data/models/response/test_detail_response.dart';
 
 /// 🔍 테스트 정보 화면
@@ -38,7 +39,12 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTestInfo();
+    print('🚀 InfoScreen initState - testId: ${widget.testId}, hasTestDetail: ${widget.testDetail != null}');
+
+    // 다음 프레임에서 실행 (위젯 트리 완성 후)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTestInfo();
+    });
   }
 
   @override
@@ -632,6 +638,13 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       ),
     );
 
-    // TODO: 실제 테스트 화면으로 이동 로직 추가
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PsyTestScreen(
+          testId: testDetail.testId,  // 🎯 핵심: testId 전달
+        ),
+      ),
+    );
   }
 }
