@@ -9,10 +9,12 @@ import 'widgets/psy_result_actions.dart';
 /// 통합형 적응형 레이아웃으로 모든 결과 타입 처리
 class PsyResultScreen extends ConsumerStatefulWidget {
   final PsyResult result;
+  final Map<String, String>? localImagePaths;
 
   const PsyResultScreen({
     super.key,
     required this.result,
+    this.localImagePaths,
   });
 
   @override

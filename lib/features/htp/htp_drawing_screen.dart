@@ -1,22 +1,35 @@
 // lib/features/htp/presentation/screens/htp_drawing_screen.dart
 
-import 'package:flutter/material.dart';
-import 'package:scribble/scribble.dart';
-import 'dart:ui';
 import 'dart:async';
-import 'model/HtpSessionData.dart'; // HtpDataCollector 임포트
-import 'htp_dashboard_screen.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mind_canvas/features/htp/presentation/providers/htp_session_provider.dart';
+import 'package:path_provider/path_provider.dart'; // ✅ 추가: getTemporaryDirectory용
+import 'package:scribble/scribble.dart';
+
+import '../home/domain/entities/recommended_content_entity.dart';
+import 'data/model/dto/htp_data_collector.dart';
+import 'domain/entities/htp_session_entity.dart';
+import 'htp_dashboard_screen.dart';
+import 'htp_dashboard_screen.dart';
 
 /// HTP 검사 그림 그리기 화면
 class HtpDrawingScreen extends StatefulWidget {
   final String drawingType;
   final String title;
+  final String? existingSketchJson;
 
   const HtpDrawingScreen({
     super.key,
     required this.drawingType,
     required this.title,
+    this.existingSketchJson,
   });
 
   @override
@@ -25,6 +38,7 @@ class HtpDrawingScreen extends StatefulWidget {
 
 class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     with TickerProviderStateMixin {
+  final GlobalKey _canvasKey = GlobalKey();
   // --------------------------------------------------
   // 멤버 변수 선언
   // --------------------------------------------------
@@ -78,8 +92,33 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     _initializeControllers();
     _setupAnimations();
     _initializeDataCollector();
+
+    // ✅ 기존 sketch 복원
+    _restoreExistingSketch();
+
     _scribbleNotifier.addListener(_onScribbleUpdate);
   }
+
+
+// ✅ 추가: 기존 sketch 복원 메서드
+  void _restoreExistingSketch() {
+    if (widget.existingSketchJson != null && widget.existingSketchJson!.isNotEmpty) {
+      try {
+        final sketchJson = jsonDecode(widget.existingSketchJson!);
+        final sketch = Sketch.fromJson(sketchJson);
+
+        _scribbleNotifier.setSketch(
+          sketch: sketch,
+          addToUndoHistory: false,
+        );
+
+        print('✅ 기존 그림 복원 완료 - 선 개수: ${sketch.lines.length}');
+      } catch (e) {
+        print('❌ Sketch 복원 실패: $e');
+      }
+    }
+  }
+
 
   @override
   void dispose() {
@@ -95,6 +134,13 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+
+
+    // ✅ 시스템 insets 가져오기
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.padding.bottom; // 네비게이션 바 높이
+    final topPadding = mediaQuery.padding.top; // 상태바 높이
+
 
     return Scaffold(
       // backgroundColor는 이제 배경 이미지에 가려지므로 그대로 두거나 제거해도 됩니다.
@@ -119,9 +165,9 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
           ),
 
           // --- 여기부터는 기존의 UI 위젯들입니다 (순서 변경 없음) ---
-          _buildDrawingInstruction(isDarkMode),
-          _buildDrawingArea(isDarkMode),
-          _buildModernToolbar(theme, isDarkMode),
+          _buildDrawingInstruction(isDarkMode, topPadding),
+          _buildDrawingArea(isDarkMode, topPadding, bottomPadding),
+          _buildModernToolbar(theme, isDarkMode, bottomPadding),
           _buildColorPaletteOverlay(theme, isDarkMode),
           _buildBrushToolOverlay(theme, isDarkMode),
         ],
@@ -371,41 +417,141 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     );
   }
 
-  void _saveDrawing() {
+  void _saveDrawing() async {
     final endTime = DateTime.now().millisecondsSinceEpoch;
     final htpType = _getHtpType(widget.drawingType);
-    final drawing = _dataCollector.createDrawing(
-      type: htpType,
-      startTime: _drawingStartTime,
-      endTime: endTime,
-    );
 
-    print('💾 그림 저장: ${widget.drawingType}');
-    print('   - 총 시간: ${drawing.durationSeconds}초');
-    print('   - 행동 횟수: ${drawing.strokeCount}회');
-    print('   - 수정: ${drawing.modificationCount}회');
-    print('   - 평균 필압: ${drawing.averagePressure.toStringAsFixed(2)}');
+    try {
+      print('💾 그림 저장 시작: ${widget.drawingType}');
 
+      // 1. ✅ Sketch JSON 생성
+      final currentSketch = _scribbleNotifier.currentSketch;
+      final sketchJson = jsonEncode(currentSketch.toJson());
+
+      // 2. HtpDrawingEntity 생성
+      final drawing = _dataCollector.createDrawing(
+        type: htpType,
+        startTime: _drawingStartTime,
+        endTime: endTime,
+        orderIndex: 0,
+      );
+
+      print('   - 총 시간: ${drawing.durationSeconds}초');
+      print('   - 행동 횟수: ${drawing.strokeCount}회');
+
+      // 3. 이미지 캡처
+      final boundary = _canvasKey.currentContext?.findRenderObject()
+      as RenderRepaintBoundary?;
+
+      if (boundary == null) {
+        throw Exception('캔버스를 찾을 수 없습니다');
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+
+      if (byteData == null) {
+        throw Exception('이미지 변환 실패');
+      }
+
+      final buffer = byteData.buffer.asUint8List();
+      print('✅ 이미지 크기: ${(buffer.length / 1024).toStringAsFixed(2)} KB');
+
+      // 4. 임시 파일로 저장
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final tempFile = File(
+        '${tempDir.path}/htp_${htpType.name}_$timestamp.png',
+      );
+      await tempFile.writeAsBytes(buffer);
+
+      print('✅ 이미지 파일 저장: ${tempFile.path}');
+
+      // 5. ✅ Sketch JSON과 함께 Provider에 저장
+      if (!mounted) return;
+
+      final container = ProviderScope.containerOf(context);
+      final drawingWithSketch = drawing.copyWith(sketchJson: sketchJson);
+
+      await container.read(htpSessionProvider.notifier).updateDrawing(
+        drawingWithSketch, // ✅ Sketch JSON 포함
+        tempFile,
+      );
+
+      // 6. 성공 다이얼로그
+      if (!mounted) return;
+      _showSaveSuccessDialog(drawing);
+
+    } catch (e, stackTrace) {
+      print('❌ 이미지 저장 실패: $e');
+      print('StackTrace: $stackTrace');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('저장 중 오류: ${e.toString()}'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+
+  // ✅ 다이얼로그를 별도 메서드로 분리 (가독성)
+  void _showSaveSuccessDialog(HtpDrawingEntity drawing) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 60, height: 60,
-              decoration: const BoxDecoration(color: Color(0xFF38A169), shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 30),
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Color(0xFF38A169),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_rounded,
+                color: Colors.white,
+                size: 30,
+              ),
             ),
             const SizedBox(height: 20),
-            const Text('저장되었습니다!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF2D3748))),
+            const Text(
+              '저장되었습니다!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2D3748),
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 children: [
                   Text('그리기 시간: ${drawing.durationSeconds}초'),
@@ -415,7 +561,15 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
                 ],
               ),
             ),
-            const Text('*완료시에도 수정가능합니다', style: TextStyle(fontSize: 14, color: Color(0xFF718096), fontWeight: FontWeight.w500)),
+            const Text(
+              '✅ 자동 저장되었습니다\n완료 시에도 수정 가능합니다',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF718096),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -424,27 +578,47 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      side: const BorderSide(color: Color(0xFF3182CE), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: const BorderSide(
+                        color: Color(0xFF3182CE),
+                        width: 1.5,
+                      ),
                     ),
-                    child: const Text('계속 그리기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF3182CE))),
+                    child: const Text(
+                      '계속 그리기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3182CE),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context, drawing);
+                      Navigator.pop(context); // 다이얼로그 닫기
+                      Navigator.pop(context); // 그리기 화면 닫기
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF38A169),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 2,
                     ),
-                    child: const Text('완료하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      '완료하기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -620,23 +794,47 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     );
   }
 
-  Widget _buildDrawingArea(bool isDarkMode) {
-    return SafeArea(
+  /* 캔버스 그리는곳
+  * // 캔버스를 더 크게 하고 싶으면 (여유 공간 줄이기):
+final topMargin = kToolbarHeight + topPadding + 68;  // 76 → 68
+final bottomMargin = bottomPadding + 88;              // 96 → 88
+
+// 캔버스를 약간 작게 하고 싶으면 (여유 공간 늘리기):
+final topMargin = kToolbarHeight + topPadding + 84;  // 76 → 84
+final bottomMargin = bottomPadding + 104;            // 96 → 104
+
+// 안내문과의 간격만 조정하고 싶으면:
+final topMargin = kToolbarHeight + topPadding + 80;  // +4 더 떨어짐
+
+// 툴바와의 간격만 조정하고 싶으면:
+final bottomMargin = bottomPadding + 100;            // +4 더 떨어짐
+  * */
+  Widget _buildDrawingArea(bool isDarkMode, double topPadding, double bottomPadding) {
+
+    final topMargin = kToolbarHeight + topPadding + 81;
+    final bottomMargin = bottomPadding + 101;
+
+    return Positioned(
+      top: topMargin,
+      bottom: bottomMargin,
+      left: 20,
+      right: 20,
       child: Container(
-        width: double.infinity,
-        height: double.infinity,
-        margin: const EdgeInsets.fromLTRB(20, 110, 20, 160),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: isDarkMode ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.1),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.8),
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.white.withOpacity(0.8),
               blurRadius: 1,
               offset: const Offset(0, 1),
             ),
@@ -645,11 +843,15 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: RepaintBoundary(
+            key: _canvasKey,
             child: Listener(
               onPointerDown: (event) {
                 _strokeStartTime = DateTime.now();
               },
-              child: Scribble(notifier: _scribbleNotifier, drawPen: true),
+              child: Scribble(
+                notifier: _scribbleNotifier,
+                drawPen: true,
+              ),
             ),
           ),
         ),
@@ -657,10 +859,14 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     );
   }
 
-  Widget _buildDrawingInstruction(bool isDarkMode) {
+  Widget _buildDrawingInstruction(bool isDarkMode, double topPadding) {
     String instruction = _getDrawingInstruction();
+
+    // ✅ AppBar 높이(56) + 상태바 + 여유 공간(24)
+    final topPosition = kToolbarHeight + topPadding + 24;
+
     return Positioned(
-      top: 80,
+      top: topPosition,
       left: 20,
       right: 20,
       child: Center(
@@ -713,9 +919,12 @@ class _HtpDrawingScreenState extends State<HtpDrawingScreen>
     );
   }
 
-  Widget _buildModernToolbar(ThemeData theme, bool isDarkMode) {
+  Widget _buildModernToolbar(ThemeData theme, bool isDarkMode, double bottomPadding) {
+    // ✅ 네비게이션 바 높이 + 여유 공간(20)
+    final bottomPosition = bottomPadding + 20;
+
     return Positioned(
-      bottom: 30,
+      bottom: bottomPosition,
       left: 20,
       right: 20,
       child: AnimatedBuilder(

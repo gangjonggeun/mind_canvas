@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
 import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_notifier.dart';
 
+import '../htp/htp_dashboard_screen.dart';
 import '../psytest/psy_test_screen.dart';
 import 'data/models/response/test_detail_response.dart';
 
@@ -626,6 +627,11 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     );
   }
 
+  bool _isHtpTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    return tag == 'HTP' || tag == 'htp';
+  }
+
   void _startTest(BuildContext context, TestDetailResponse testDetail) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -638,11 +644,23 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       ),
     );
 
+    if (_isHtpTest(testDetail)) {
+      // HTP 대시보드로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HtpDashboardScreen(),
+        ),
+      );
+      return;
+    }
+
+    // 일반 테스트 화면으로 이동
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PsyTestScreen(
-          testId: testDetail.testId,  // 🎯 핵심: testId 전달
+          testId: testDetail.testId,
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../info/domain/usecases/test_use_case.dart';
+import '../../../info/info_screen.dart';
 import '../../domain/models/test_ranking_item.dart';
 import '../notifiers/test_list_notifier.dart';
 
@@ -159,31 +161,33 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
           ],
         ),
       ),
-      itemBuilder: (context) => RankingFilter.values
-          .map((filter) => PopupMenuItem<RankingFilter>(
-        value: filter,
-        child: Row(
-          children: [
-            Text(
-              filter.emoji,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              filter.displayName,
-              style: TextStyle(
-                color: _selectedFilter == filter
-                    ? AppColors.primaryBlue
-                    : AppColors.textPrimary,
-                fontWeight: _selectedFilter == filter
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ))
-          .toList(),
+      itemBuilder: (context) =>
+          RankingFilter.values
+              .map((filter) =>
+              PopupMenuItem<RankingFilter>(
+                value: filter,
+                child: Row(
+                  children: [
+                    Text(
+                      filter.emoji,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      filter.displayName,
+                      style: TextStyle(
+                        color: _selectedFilter == filter
+                            ? AppColors.primaryBlue
+                            : AppColors.textPrimary,
+                        fontWeight: _selectedFilter == filter
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ))
+              .toList(),
     );
   }
 
@@ -194,11 +198,12 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
     return testListState.when(
       initial: () => const SizedBox(),
       loading: () => _buildLoadingState(),
-      loaded: (items, hasMore, currentPage, isLoadingMore, loadType) => _buildLoadedState(
-        items: items,
-        hasMore: hasMore,
-        isLoadingMore: isLoadingMore,
-      ),
+      loaded: (items, hasMore, currentPage, isLoadingMore, loadType) =>
+          _buildLoadedState(
+            items: items,
+            hasMore: hasMore,
+            isLoadingMore: isLoadingMore,
+          ),
       error: (message) => _buildErrorState(message),
     );
   }
@@ -319,7 +324,8 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
@@ -437,7 +443,8 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
@@ -506,7 +513,8 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
           children: [
             // 좌측 이미지 영역
             ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+              borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16)),
               child: Container(
                 width: 100,
                 height: double.infinity,
@@ -521,7 +529,8 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: rankColor,
                           borderRadius: BorderRadius.circular(8),
@@ -594,7 +603,8 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
                         ),
                         // 별점 부분 삭제하고 조회수 또는 공유수로 대체
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.primaryBlue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
@@ -663,9 +673,9 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
       decoration: BoxDecoration(
         color: Colors.grey[100],
       ),
-      child: item.imagePath.isNotEmpty  // 또는 item.thumbnailUrl
-          ? Image.network(  // ✅ 이게 핵심 변경!
-        item.imagePath,  // 또는 item.thumbnailUrl
+      child: item.imagePath.isNotEmpty // 또는 item.thumbnailUrl
+          ? Image.network( // ✅ 이게 핵심 변경!
+        item.imagePath, // 또는 item.thumbnailUrl
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
@@ -703,20 +713,55 @@ class _PopularTestRankingScreenState extends ConsumerState<PopularTestRankingScr
     );
   }
 
-  /// 테스트 아이템 클릭 처리
-  void _onTestItemTap(TestRankingItem item) {
+  void _onTestItemTap(TestRankingItem item) async {
     print('🎯 테스트 선택: ${item.title} (ID: ${item.id})');
 
-    // TODO: 실제 테스트 상세 화면으로 네비게이션
-    /*
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => TestDetailScreen(testId: item.id),
+    // ✅ 로딩 다이얼로그 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+      const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryBlue),
       ),
     );
-    */
+
+    // ✅ UseCase를 통한 상세 정보 조회
+    final result = await ref.read(testUseCaseProvider).getTestDetail(item.id);
+
+    // 로딩 다이얼로그 닫기
+    if (mounted) Navigator.of(context).pop();
+
+    // ✅ Result 패턴으로 성공/실패 처리
+    result.fold(
+      onSuccess: (testDetail) {
+        // 성공 시 InfoScreen으로 이동 (수정됨)
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) =>
+                InfoScreen(
+                  testId: item.id,
+                  testDetail: testDetail, // ← 받아온 데이터 전달
+                ),
+          ),
+        );
+      },
+      onFailure: (message, errorCode) {
+        // 실패 시 에러 스낵바 표시
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: AppColors.statusError,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+    );
   }
 }
+
 
 /// 🔍 랭킹 필터 열거형 (수정된 옵션 - 남성/여성 제거, 트렌딩 추가)
 enum RankingFilter {

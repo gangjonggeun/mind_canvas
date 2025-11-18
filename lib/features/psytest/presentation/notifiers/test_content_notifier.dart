@@ -35,7 +35,7 @@ class TestContentNotifier extends _$TestContentNotifier {
       result.fold(
         onSuccess: (testResult) {
           print('✅ Notifier: 제출 성공 - ${testResult.resultKey}');
-          print('📊 차원별 점수: ${testResult.dimensionScores}');
+          // print('📊 차원별 점수: ${testResult.dimensionScores}');
 
           state = state.copyWith(
             isSubmitting: false,

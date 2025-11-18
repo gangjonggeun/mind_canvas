@@ -1,5 +1,7 @@
 // lib/features/psytest/presentation/screens/psy_result/widgets/psy_result_content.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../../domain/entities/psy_result.dart';
 
@@ -7,11 +9,13 @@ import '../../domain/entities/psy_result.dart';
 class PsyResultContent extends StatelessWidget {
   final PsyResult result;
   final ScrollController scrollController;
+  final Map<String, String>? localImagePaths;
 
   const PsyResultContent({
     super.key,
     required this.result,
     required this.scrollController,
+    this.localImagePaths,
   });
 
   @override
@@ -24,102 +28,142 @@ class PsyResultContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. 메인 카드
-          _buildMainCard(),
+          _buildMainCard2(),
 
-          // 2. 차원별 점수 (있으면)
-          if (result.hasDimensionScores) _buildDimensionScoresCard(),
 
-          // 3. 섹션 카드들
-          ...result.sections.map((section) => _buildSectionCard(section)),
 
-          // 4. 주관식 답변 (있으면)
-          if (result.hasSubjectiveAnswer) _buildSubjectiveAnswerCard(),
+          // 3. ✅ 각 섹션 (이미지 포함)
+          ...result.sections.asMap().entries.map((entry) {
+            final index = entry.key;
+            final section = entry.value;
+            return _buildSectionCard(section, index);
+          }).toList(),
         ],
       ),
     );
   }
 
-  /// 메인 카드
+  /// 메인 카드 (resultTag + briefDescription)
   Widget _buildMainCard() {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 이미지 (있으면)
-          if (result.hasImage)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: Image.network(
-                result.imageUrl!,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 200,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.broken_image, size: 48),
-                ),
-              ),
-            ),
-
-          // 텍스트 영역
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 아이콘 + 제목 (resultTag)
+            Row(
               children: [
-                // 아이콘 + 제목
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: result.mainColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        result.iconEmoji,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        result.title,
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3748),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 설명
-                Text(
-                  result.description,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Color(0xFF4A5568),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: result.mainColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    result.iconEmoji,
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
-
-                // 태그들
-                if (result.tags.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildTags(result.tags),
-                ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    result.title, // resultTag
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+
+            // ✅ briefDescription 표시 (HtpResponse에서 온 경우)
+            if (result.sections.isNotEmpty &&
+                result.sections.first.title.contains('총평')) ...[
+              const SizedBox(height: 16),
+              Text(
+                result.sections.first.content,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Color(0xFF4A5568),
+                ),
+              ),
+            ],
+
+            // 태그들
+            if (result.tags.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildTags(result.tags),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 메인 카드 (resultTag + briefDescription)
+  Widget _buildMainCard2() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: _cardDecoration(),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 아이콘 + 제목 (resultTag)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: result.mainColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    result.iconEmoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    result.title, // resultTag
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // ✅ briefDescription 표시 (subtitle 사용)
+            if (result.subtitle.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                result.subtitle, // ✅ briefDescription
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Color(0xFF4A5568),
+                ),
+              ),
+            ],
+
+            // 태그들
+            if (result.tags.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildTags(result.tags),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -162,77 +206,301 @@ class PsyResultContent extends StatelessWidget {
       ),
     );
   }
-
   /// 섹션 카드
-  Widget _buildSectionCard(PsyResultSection section) {
+  /// 섹션 카드
+  Widget _buildSectionCard(PsyResultSection section, int index) {
+    // ✅ 디버깅 로그 추가
+    print('📍 섹션 $index: ${section.title}');
+    print('   - localImagePaths: ${localImagePaths?.keys.toList()}');
+
+    // ✅ 이미지 타입 결정
+    String? localImageType;
+    if (localImagePaths != null) {
+      print('   - 이미지 체크 시작...');
+
+      if (index == 2) {
+        print('   - index==2, title="${section.title}"');
+        if (section.title.contains('집')) {
+          localImageType = 'house';
+          print('   ✅ house 매칭!');
+        }
+      } else if (index == 3) {
+        print('   - index==3, title="${section.title}"');
+        if (section.title.contains('나무')) {
+          localImageType = 'tree';
+          print('   ✅ tree 매칭!');
+        }
+      } else if (index == 4) {
+        print('   - index==4, title="${section.title}"');
+        if (section.title.contains('사람')) {
+          localImageType = 'person';
+          print('   ✅ person 매칭!');
+        }
+      }
+
+      if (localImageType != null) {
+        print('   - localImageType: $localImageType');
+        print('   - 해당 키 존재? ${localImagePaths!.containsKey(localImageType)}');
+        if (localImagePaths!.containsKey(localImageType)) {
+          print('   - 이미지 경로: ${localImagePaths![localImageType]}');
+        }
+      }
+    } else {
+      print('   ⚠️ localImagePaths가 null');
+    }
+
+    // ✅ 서버 이미지 우선 체크
+    bool hasServerImage = section.hasImage;
+    print('   - hasServerImage: $hasServerImage');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 섹션 이미지 (있으면)
-          if (section.hasImage)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: Image.network(
-                section.imageUrl!,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(),
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 섹션 제목
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: result.mainColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        section.iconEmoji,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        section.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3748),
-                        ),
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: result.mainColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    section.iconEmoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  section.content,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Color(0xFF4A5568),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    section.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3748),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+
+            // ✅ 이미지 표시 (서버 이미지 우선, 로컬 이미지 대체)
+            if (hasServerImage) ...[
+              const SizedBox(height: 16),
+              _buildServerImage(section.imageUrl!),
+              const SizedBox(height: 16),
+            ] else if (localImageType != null && localImagePaths!.containsKey(localImageType)) ...[
+              const SizedBox(height: 16),
+              _buildLocalImage(localImageType),
+              const SizedBox(height: 16),
+            ] else ...[
+              const SizedBox(height: 12),
+            ],
+
+            // 섹션 내용
+            Text(
+              section.content,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Color(0xFF4A5568),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+
+  /// 🌐 서버 이미지 (기존 로직)
+  Widget _buildServerImage(String imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        imageUrl,
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 150,
+          color: Colors.grey[200],
+          child: const Icon(Icons.broken_image, size: 48),
+        ),
+      ),
+    );
+  }
+
+  /// 📱 로컬 이미지 (HTP 전용)
+  Widget _buildLocalImage(String type) {
+    final imagePath = localImagePaths![type]!;
+    final imageFile = File(imagePath);
+
+    if (!imageFile.existsSync()) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 그림 라벨
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: result.mainColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: result.mainColor.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getIconByType(type),
+                color: result.mainColor,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${_getTitleByType(type)} 그림',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: result.mainColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // 이미지
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 280),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: result.mainColor.withOpacity(0.2),
+                width: 2,
+              ),
+            ),
+            child: Image.file(
+              imageFile,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 🎨 섹션 내 이미지
+  Widget _buildSectionImage(String type) {
+    final imagePath = localImagePaths![type]!;
+    final imageFile = File(imagePath);
+
+    if (!imageFile.existsSync()) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 그림 라벨
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: result.mainColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: result.mainColor.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getIconByType(type),
+                color: result.mainColor,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${_getTitleByType(type)} 그림',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: result.mainColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // 이미지
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 280),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: result.mainColor.withOpacity(0.2),
+                width: 2,
+              ),
+            ),
+            child: Image.file(
+              imageFile,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  /// 타입별 아이콘
+  IconData _getIconByType(String type) {
+    switch (type) {
+      case 'house':
+        return Icons.home_rounded;
+      case 'tree':
+        return Icons.park_rounded;
+      case 'person':
+        return Icons.person_rounded;
+      default:
+        return Icons.image_rounded;
+    }
+  }
+
+  /// 타입별 제목
+  String _getTitleByType(String type) {
+    switch (type) {
+      case 'house':
+        return '집';
+      case 'tree':
+        return '나무';
+      case 'person':
+        return '사람';
+      default:
+        return '그림';
+    }
+  }
+
 
   /// 주관식 답변 카드
   Widget _buildSubjectiveAnswerCard() {

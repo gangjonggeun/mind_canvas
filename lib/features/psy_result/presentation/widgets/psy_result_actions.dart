@@ -32,7 +32,7 @@ class _PsyResultActionsState extends State<PsyResultActions>
   @override
   void initState() {
     super.initState();
-    _isBookmarked = widget.result.isBookmarked;
+    // _isBookmarked = widget.result.isBookmarked;
 
     _heartController = AnimationController(
       duration: const Duration(milliseconds: 300),

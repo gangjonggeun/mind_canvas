@@ -6,9 +6,11 @@ part of 'dio_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioHash() => r'cd14ff2b4ce01ac46df6bfa136ac963bb8cd855d';
+String _$dioHash() => r'91d77f3d50114b6e88163e7912476bd22bde577a';
 
-/// See also [dio].
+/// 🌐 Dio HTTP 클라이언트 Provider
+///
+/// Copied from [dio].
 @ProviderFor(dio)
 final dioProvider = AutoDisposeProvider<Dio>.internal(
   dio,
