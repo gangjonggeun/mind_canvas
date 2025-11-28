@@ -1,231 +1,93 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
-import '../../domain/models/taro_card.dart';
+// lib/features/taro/presentation/providers/taro_consultation_provider.dart
+
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../data/dto/request/submit_taro_request.dart';
 import '../../domain/models/taro_spread_type.dart';
+import 'taro_analysis_notifier.dart'; // 아까 만든 API 호출용 노티파이어
 import 'taro_consultation_state.dart';
 
-/// 타로 상담 상태 관리 StateNotifier
-class TaroConsultationNotifier extends StateNotifier<TaroConsultationState> {
-  final Logger _logger = Logger();
+part 'taro_consultation_provider.g.dart';
 
-  TaroConsultationNotifier() : super(const TaroConsultationState()) {
-    _logger.d('TaroConsultationNotifier initialized');
+@riverpod
+class TaroConsultationNotifier extends _$TaroConsultationNotifier {
+  @override
+  TaroConsultationState build() {
+    return const TaroConsultationState();
   }
 
-  /// 테마 변경
   void updateTheme(String theme) {
-    _logger.d('Theme updated: $theme');
-    
-    state = state.copyWith(
-      theme: theme,
-      status: theme.trim().isEmpty 
-          ? TaroStatus.initial 
-          : TaroStatus.themeInput,
-      errorMessage: null,
-    );
+    state = state.copyWith(theme: theme);
   }
 
-  /// 스프레드 타입 선택
-  void selectSpreadType(TaroSpreadType spreadType) {
-    _logger.d('Spread type selected: ${spreadType.name}');
-    
-    // 새로운 스프레드 타입에 맞게 카드 배열 초기화
-    final newSelectedCards = List<String?>.filled(spreadType.cardCount, null);
-    
-    state = state.copyWith(
-      selectedSpreadType: spreadType,
-      selectedCards: newSelectedCards,
-      status: TaroStatus.spreadSelection,
-      errorMessage: null,
-    );
+  void selectSpreadType(TaroSpreadType type) {
+    state = state.copyWith(selectedSpreadType: type);
   }
 
-  /// 상담 시작 (카드 선택 단계로 이동)
+  /// 1단계: 설정 완료 후 카드 선택 화면으로 이동
   void startConsultation() {
-    if (!state.canProceedToCardSelection) {
-      _logger.w('Cannot proceed to card selection: theme or spread type missing');
+    if (state.canProceedToCardSelection) {
+      state = state.copyWith(status: TaroStatus.cardSelection);
+    }
+  }
+
+  void removeCard(int positionIndex) {
+    final currentCards = List<TaroCardInput>.from(state.selectedCards);
+    currentCards.removeWhere((card) => card.positionIndex == positionIndex);
+    state = state.copyWith(selectedCards: currentCards);
+  }
+
+  // ✅ [추가] 카드 선택/해제 로직 (카드 선택 페이지에서 사용)
+  void toggleCardSelection(TaroCardInput card) {
+    final currentCards = List<TaroCardInput>.from(state.selectedCards);
+
+    // 이미 선택된 위치인지 확인 (같은 위치면 교체, 아니면 추가)
+    final index = currentCards.indexWhere((c) => c.positionIndex == card.positionIndex);
+
+    if (index != -1) {
+      currentCards[index] = card; // 교체
+    } else {
+      currentCards.add(card); // 추가
+    }
+
+    state = state.copyWith(selectedCards: currentCards);
+  }
+
+  // ✅ [핵심] 최종 분석 요청 (카드 선택 완료 후 호출)
+  Future<void> submitAnalysis() async {
+    if (!state.canAnalyze) return;
+
+    // 1. 상태를 '분석 중'으로 변경
+    state = state.copyWith(status: TaroStatus.analyzing);
+
+    // 2. Request DTO 생성
+    final request = SubmitTaroRequest(
+      theme: state.theme,
+      spreadType: state.selectedSpreadType!.name, // 예: "3", "CELTIC"
+      cards: state.selectedCards,
+    );
+
+    // 3. API 호출 노티파이어(TaroAnalysis) 실행
+    // ref.read를 통해 다른 프로바이더의 함수를 실행합니다.
+    final resultEntity = await ref
+        .read(taroAnalysisProvider.notifier)
+        .analyzeTaro(request);
+
+    // 4. 결과에 따른 상태 업데이트
+    if (resultEntity != null) {
+      state = state.copyWith(status: TaroStatus.completed);
+    } else {
+      // 에러 메시지는 TaroAnalysis 상태에서 가져오거나 별도로 처리
       state = state.copyWith(
         status: TaroStatus.error,
-        errorMessage: '테마와 스프레드를 모두 선택해주세요.',
-      );
-      return;
-    }
-
-    _logger.i('Starting consultation: ${state.theme} with ${state.selectedSpreadType?.name}');
-    state = state.copyWith(
-      status: TaroStatus.cardSelection,
-      errorMessage: null,
-    );
-  }
-
-  /// 카드 선택
-  void selectCard(String cardId, int position) {
-    if (state.selectedSpreadType == null) {
-      _logger.w('No spread type selected');
-      return;
-    }
-
-    if (position < 0 || position >= state.selectedSpreadType!.cardCount) {
-      _logger.w('Invalid position: $position');
-      return;
-    }
-
-    // 같은 카드가 이미 다른 위치에 있는지 확인 (선택사항, 중복 허용 시 이 부분 제거)
-    if (state.selectedCards.contains(cardId)) {
-      _logger.w('Card $cardId already selected');
-      // 중복 선택을 막고 싶지 않다면, 이 return 문을 주석 처리하거나 제거하세요.
-      return;
-    }
-
-    // ★★★ 상태 업데이트 최적화 ★★★
-    final newSelectedCards = List<String?>.from(state.selectedCards);
-    newSelectedCards[position] = cardId;
-
-    _logger.d('Card selected: $cardId at position $position');
-
-    // 깜빡임 방지를 위해 상태 업데이트를 한 번에 처리
-    state = state.copyWith(
-      selectedCards: newSelectedCards,
-      status: TaroStatus.cardSelection,
-      errorMessage: null,
-    );
-  }
-
-  /// 카드 제거
-  void removeCard(int position) {
-    if (position < 0 || position >= state.selectedCards.length) {
-      _logger.w('Invalid position for removal: $position');
-      return;
-    }
-
-    final newSelectedCards = List<String?>.from(state.selectedCards);
-    final removedCard = newSelectedCards[position];
-    newSelectedCards[position] = null;
-
-    _logger.d('Card removed: $removedCard from position $position');
-    
-    // 깜빡임 방지를 위해 상태 업데이트를 한 번에 처리
-    state = state.copyWith(
-      selectedCards: newSelectedCards,
-      status: TaroStatus.cardSelection,
-      errorMessage: null,
-    );
-  }
-
-  /// 카드 교체
-  void replaceCard(int fromPosition, int toPosition) {
-    if (fromPosition < 0 || 
-        fromPosition >= state.selectedCards.length ||
-        toPosition < 0 || 
-        toPosition >= state.selectedCards.length) {
-      _logger.w('Invalid positions for replacement: $fromPosition -> $toPosition');
-      return;
-    }
-
-    final newSelectedCards = List<String?>.from(state.selectedCards);
-    final fromCard = newSelectedCards[fromPosition];
-    final toCard = newSelectedCards[toPosition];
-    
-    newSelectedCards[fromPosition] = toCard;
-    newSelectedCards[toPosition] = fromCard;
-
-    _logger.d('Cards replaced: position $fromPosition <-> $toPosition');
-    
-    state = state.copyWith(
-      selectedCards: newSelectedCards,
-      status: TaroStatus.cardSelection,
-      errorMessage: null,
-    );
-  }
-
-  /// 결과 요청
-  Future<void> requestResult() async {
-    if (!state.canRequestResult) {
-      _logger.w('Cannot request result: cards not fully selected');
-      state = state.copyWith(
-        status: TaroStatus.error,
-        errorMessage: '모든 카드를 선택해주세요.',
-      );
-      return;
-    }
-
-    _logger.i('Requesting result for consultation');
-    state = state.copyWith(status: TaroStatus.loading);
-    
-    try {
-      // 임시 딜레이 (실제로는 서버 API 호출)
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // 임시 해석 결과 생성
-      final interpretation = _generateMockInterpretation();
-      
-      state = state.copyWith(
-        status: TaroStatus.completed,
-        interpretation: interpretation,
-      );
-      
-    } catch (error, stackTrace) {
-      _logger.e('Error requesting result', error: error, stackTrace: stackTrace);
-      state = state.copyWith(
-        status: TaroStatus.error,
-        errorMessage: '결과를 가져오는 중 오류가 발생했습니다.',
+        errorMessage: '분석에 실패했습니다. 다시 시도해주세요.',
       );
     }
   }
 
-  /// 임시 해석 결과 생성 (실제로는 AI API 호출)
-  String _generateMockInterpretation() {
-    final selectedCardNames = state.selectedCards
-        .where((cardId) => cardId != null)
-        .map((cardId) => TaroCards.findById(cardId!)?.name ?? '알 수 없는 카드')
-        .join(', ');
-    
-    return '선택하신 카드들($selectedCardNames)은 현재 당신의 상황에서 '
-           '새로운 변화와 기회가 다가오고 있음을 의미합니다. '
-           '과거의 경험을 바탕으로 현재의 선택을 신중히 하시고, '
-           '미래에 대한 희망을 가지시기 바랍니다. '
-           '주제: "${state.theme}"에 대한 답변이 곧 명확해질 것입니다.';
-  }
-
-  /// 상담 리셋
+  // 초기화
   void reset() {
-    _logger.i('Resetting consultation');
     state = const TaroConsultationState();
-  }
-
-  /// 에러 클리어
-  void clearError() {
-    if (state.status == TaroStatus.error) {
-      state = state.copyWith(
-        status: state.theme.trim().isEmpty 
-            ? TaroStatus.initial 
-            : TaroStatus.themeInput,
-        errorMessage: null,
-      );
-    }
+    // API 상태도 초기화
+    ref.read(taroAnalysisProvider.notifier).reset();
   }
 }
-
-/// 메인 Provider
-// StateNotifierProvider 뒤에 .autoDispose를 추가합니다.
-final taroConsultationNotifierProvider = StateNotifierProvider.autoDispose<
-    TaroConsultationNotifier, TaroConsultationState>((ref) {
-  return TaroConsultationNotifier();
-});
-
-/// 편의 Provider들
-
-/// 현재 선택된 스프레드 타입
-final selectedSpreadTypeProvider = Provider<TaroSpreadType?>((ref) {
-  return ref.watch(taroConsultationNotifierProvider).selectedSpreadType;
-});
-
-/// 카드 선택 완료 여부
-final isCardSelectionCompleteProvider = Provider<bool>((ref) {
-  return ref.watch(taroConsultationNotifierProvider).isCardSelectionComplete;
-});
-
-/// 다음 단계 진행 가능 여부
-final canProceedToCardSelectionProvider = Provider<bool>((ref) {
-  return ref.watch(taroConsultationNotifierProvider).canProceedToCardSelection;
-});

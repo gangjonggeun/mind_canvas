@@ -20,6 +20,12 @@ class PsyResultContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 디버깅 로그 (제일 먼저!)
+    print('🎨 PsyResultContent build');
+    print('   - localImagePaths: ${localImagePaths?.keys.toList()}');
+    print('   - localImagePaths == null? ${localImagePaths == null}');
+    print('   - result.sections: ${result.sections.length}개');
+
     return SingleChildScrollView(
       controller: scrollController,
       physics: const BouncingScrollPhysics(),
@@ -34,7 +40,7 @@ class PsyResultContent extends StatelessWidget {
 
           // 3. ✅ 각 섹션 (이미지 포함)
           ...result.sections.asMap().entries.map((entry) {
-            final index = entry.key;
+            final index = entry.key+1;
             final section = entry.value;
             return _buildSectionCard(section, index);
           }).toList(),
@@ -207,35 +213,26 @@ class PsyResultContent extends StatelessWidget {
     );
   }
   /// 섹션 카드
-  /// 섹션 카드
   Widget _buildSectionCard(PsyResultSection section, int index) {
-    // ✅ 디버깅 로그 추가
     print('📍 섹션 $index: ${section.title}');
     print('   - localImagePaths: ${localImagePaths?.keys.toList()}');
 
-    // ✅ 이미지 타입 결정
+    // ✅ 인덱스 대신 제목으로 매칭 (더 안전!)
     String? localImageType;
     if (localImagePaths != null) {
       print('   - 이미지 체크 시작...');
+      print('   - title="${section.title}"');
 
-      if (index == 2) {
-        print('   - index==2, title="${section.title}"');
-        if (section.title.contains('집')) {
-          localImageType = 'house';
-          print('   ✅ house 매칭!');
-        }
-      } else if (index == 3) {
-        print('   - index==3, title="${section.title}"');
-        if (section.title.contains('나무')) {
-          localImageType = 'tree';
-          print('   ✅ tree 매칭!');
-        }
-      } else if (index == 4) {
-        print('   - index==4, title="${section.title}"');
-        if (section.title.contains('사람')) {
-          localImageType = 'person';
-          print('   ✅ person 매칭!');
-        }
+      // ✅ 제목에 키워드가 있으면 매칭
+      if (section.title.contains('집') || section.title.toUpperCase().contains('HOUSE')) {
+        localImageType = 'house';
+        print('   ✅ house 매칭! (제목 기준)');
+      } else if (section.title.contains('나무') || section.title.toUpperCase().contains('TREE')) {
+        localImageType = 'tree';
+        print('   ✅ tree 매칭! (제목 기준)');
+      } else if (section.title.contains('사람') || section.title.toUpperCase().contains('PERSON')) {
+        localImageType = 'person';
+        print('   ✅ person 매칭! (제목 기준)');
       }
 
       if (localImageType != null) {
@@ -249,7 +246,7 @@ class PsyResultContent extends StatelessWidget {
       print('   ⚠️ localImagePaths가 null');
     }
 
-    // ✅ 서버 이미지 우선 체크
+    // 서버 이미지 체크
     bool hasServerImage = section.hasImage;
     print('   - hasServerImage: $hasServerImage');
 
@@ -289,12 +286,13 @@ class PsyResultContent extends StatelessWidget {
               ],
             ),
 
-            // ✅ 이미지 표시 (서버 이미지 우선, 로컬 이미지 대체)
+            // ✅ 이미지 표시
             if (hasServerImage) ...[
               const SizedBox(height: 16),
               _buildServerImage(section.imageUrl!),
               const SizedBox(height: 16),
-            ] else if (localImageType != null && localImagePaths!.containsKey(localImageType)) ...[
+            ] else if (localImageType != null &&
+                localImagePaths!.containsKey(localImageType)) ...[
               const SizedBox(height: 16),
               _buildLocalImage(localImageType),
               const SizedBox(height: 16),
@@ -338,8 +336,24 @@ class PsyResultContent extends StatelessWidget {
 
   /// 📱 로컬 이미지 (HTP 전용)
   Widget _buildLocalImage(String type) {
+
+    print('🖼️ _buildLocalImage 호출: type=$type');
+
     final imagePath = localImagePaths![type]!;
+    print('   - imagePath: $imagePath');
+
     final imageFile = File(imagePath);
+    print('   - 파일 생성 완료');
+
+    final exists = imageFile.existsSync();
+    print('   - 파일 존재? $exists');
+
+    if (!exists) {
+      print('   ❌ 파일이 존재하지 않아 SizedBox.shrink() 반환');
+      return const SizedBox.shrink();
+    }
+    print('   ✅ 이미지 위젯 생성 시작');
+
 
     if (!imageFile.existsSync()) {
       return const SizedBox.shrink();

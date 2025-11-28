@@ -46,7 +46,12 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context); // AutomaticKeepAliveClientMixin 필수
-    
+
+    // ✅ 디버깅 로그 추가
+    print('🖼️ PsyResultScreen build');
+    print('   - widget.localImagePaths: ${widget.localImagePaths?.keys.toList()}');
+    print('   - widget.localImagePaths == null? ${widget.localImagePaths == null}');
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
@@ -67,9 +72,13 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
             slivers: [
               // 감성적인 헤더
               SliverToBoxAdapter(
-                child: PsyResultHeader(
-                  result: widget.result,
-                  onClose: () => Navigator.of(context).pop(),
+                // ✅ [수정 1] RepaintBoundary 추가
+                // 헤더는 정적인 콘텐츠이므로 이미지처럼 캐싱하여 스크롤 시 재렌더링 방지
+                child: RepaintBoundary(
+                  child: PsyResultHeader(
+                    result: widget.result,
+                    onClose: () => Navigator.of(context).pop(),
+                  ),
                 ),
               ),
               
@@ -79,6 +88,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen>
                   child: PsyResultContent(
                     result: widget.result,
                     scrollController: _scrollController,
+                    localImagePaths: widget.localImagePaths,
                   ),
                 ),
               ),

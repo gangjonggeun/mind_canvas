@@ -1052,6 +1052,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
   }
 
   /// 🎨 실제 제출 처리 (Notifier 사용)
+  /// 🎨 실제 제출 처리 (Notifier 사용)
   Future<void> _performSubmit() async {
     // 로딩 다이얼로그 표시
     showDialog(
@@ -1096,7 +1097,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
           throw Exception('${type.name} 이미지를 찾을 수 없습니다');
         }
         imageFiles.add(File(drawing.imagePath!));
-        imagePaths[type.name] = drawing.imagePath!;
+        imagePaths[type.name] = drawing.imagePath!; // ✅ 원본 경로 그대로
       }
 
       print('📤 서버 전송 시작 - 이미지 ${imageFiles.length}개');
@@ -1124,7 +1125,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
       Navigator.pop(context);
       print('✅ 로딩 다이얼로그 닫힘');
 
-      // 4. ✅ 결과 처리 (상태 확인 없이 직접 result 사용!)
+      // 4. ✅ 결과 처리
       if (result != null) {
         print('✅ 서버 전송 성공!');
         print('📄 resultTag: ${result.resultTag}');
@@ -1137,10 +1138,9 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
         print('📌 psyResult.title: ${psyResult.title}');
         print('📌 psyResult.sections: ${psyResult.sections.length}개');
 
-        // 세션 완료 처리
-        await ref.read(htpSessionProvider.notifier).completeSession();
-        await ref.read(htpSessionProvider.notifier).clearSession();
-        print('✅ 세션 정리 완료');
+        // ❌ 여기서 세션 정리하지 않음! (이미지 유지)
+        // await ref.read(htpSessionProvider.notifier).completeSession();
+        // await ref.read(htpSessionProvider.notifier).clearSession();
 
         if (!mounted) {
           print('⚠️ Widget dispose됨 - Navigator 호출 불가');
@@ -1151,7 +1151,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
         print('🚀 결과 화면으로 이동 시작...');
         print('📍 localImagePaths: ${imagePaths.keys.toList()}');
 
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) {
@@ -1162,11 +1162,14 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
               );
             },
           ),
-        ).then((_) {
-          print('✅ 결과 화면 이동 완료');
-        }).catchError((error) {
-          print('❌ Navigator 오류: $error');
-        });
+        );
+
+        // ✅ 결과 화면에서 돌아온 후 세션 정리
+        print('🗑️ 결과 화면 종료, 세션 정리 시작...');
+        await ref.read(htpSessionProvider.notifier).completeSession();
+        await ref.read(htpSessionProvider.notifier).clearSession();
+        print('✅ 세션 정리 완료');
+
       } else {
         print('❌ 결과가 null입니다');
         if (mounted) {
