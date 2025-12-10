@@ -42,6 +42,16 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
     super.dispose();
   }
 
+  /// 🧹 상태 및 입력 초기화 함수 (Clean Slate)
+  void _resetState() {
+    // 텍스트 필드 비우기
+    _themeController.clear();
+    // 포커스 해제
+    _themeFocusNode.unfocus();
+    // 프로바이더 상태 초기화 (reset 메서드가 없다면 invalidate 사용)
+    ref.read(taroConsultationNotifierProvider.notifier).reset();
+  }
+
   // /// 앱 생명주기 변화 감지
   // @override
   // void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -104,12 +114,17 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
                   }
 
                   // 카드 선택 단계로 이동
-                  if (next.status == TaroStatus.cardSelection) {
+                  if (previous?.status != next.status &&
+                      next.status == TaroStatus.cardSelection) {
+
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const TaroCardSelectionPage(),
                       ),
-                    );
+                    ).then((_) {
+                      // 🚨 [수정 2] 돌아왔을 때 상태 초기화 (Clean Slate)
+                      _resetState();
+                    });
                   }
 
                   // 🎯 결과 화면으로 이동
@@ -407,19 +422,21 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
   /// 시작 버튼
   Widget _buildStartButton(TaroConsultationState state, TaroConsultationNotifier notifier) {
     final canProceed = state.canProceedToCardSelection;
-    
+
     return SizedBox(
       width: double.infinity,
       height: 56.h,
       child: ElevatedButton(
         onPressed: canProceed
             ? () {
-                notifier.startConsultation();
-              }
+          // 키보드 내리기
+          FocusScope.of(context).unfocus();
+          notifier.startConsultation();
+        }
             : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: canProceed 
-              ? TaroColors.accentGold 
+          backgroundColor: canProceed
+              ? TaroColors.accentGold
               : TaroColors.cardDisabled,
           disabledBackgroundColor: TaroColors.cardDisabled,
           shape: RoundedRectangleBorder(

@@ -97,10 +97,10 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                   
                   const SizedBox(height: 32),
                   
-                  // 추천 컨텐츠
-                  _buildRecommendedContent(),
-                  
-                  const SizedBox(height: 20),
+                  // // 추천 컨텐츠
+                  // _buildRecommendedContent(),
+                  //
+                  // const SizedBox(height: 20),
                 ]),
               ),
             ),

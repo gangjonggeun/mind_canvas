@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import '../../domain/models/taro_card.dart';
 import '../../domain/models/TaroResultEntity.dart';
 import '../../domain/models/taro_spread_type.dart';
+import '../providers/taro_analysis_notifier.dart';
 import '../providers/taro_consultation_provider.dart';
 import '../providers/taro_consultation_state.dart';
 import '../widgets/taro_background.dart';
@@ -21,25 +22,31 @@ class TaroResultPage extends ConsumerWidget {
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
-              final state = ref.watch(taroConsultationNotifierProvider);
+              // ✅ 수정 1: ConsultationNotifier 대신 AnalysisNotifier 구독
+              // AsyncValue<TaroResultEntity?> 타입입니다.
+              final analysisState = ref.watch(taroAnalysisProvider);
 
-              // 임시 데이터 생성 (실제로는 AI 서버에서 받아올 데이터)
-              final result = _generateMockResult(state);
+              return analysisState.when(
+                // 1. 데이터가 있을 때 (성공)
+                data: (result) {
+                  if (result == null) return _buildErrorState(context, '분석 결과가 없습니다.');
 
-              if (result == null) {
-                return _buildErrorState(context);
-              }
-
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader(context, result)),
-                  SliverToBoxAdapter(child: _buildCardSpread(result)),
-                  SliverToBoxAdapter(child: _buildOverallInterpretation(result)),
-                  SliverToBoxAdapter(child: _buildDetailedInterpretations(result)),
-                  SliverToBoxAdapter(child: _buildBottomActions(context, result)),
-                  SliverToBoxAdapter(child: SizedBox(height: 32.h)),
-                ],
+                  return CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(child: _buildHeader(context, result)),
+                      SliverToBoxAdapter(child: _buildCardSpread(result)),
+                      SliverToBoxAdapter(child: _buildOverallInterpretation(result)),
+                      SliverToBoxAdapter(child: _buildDetailedInterpretations(result)),
+                      SliverToBoxAdapter(child: _buildBottomActions(context, result)),
+                      SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+                    ],
+                  );
+                },
+                // 2. 에러 발생 시
+                error: (err, stack) => _buildErrorState(context, err.toString()),
+                // 3. 로딩 중일 때 (사실 이 페이지 들어오기 전에 로딩이 끝나지만 안전장치)
+                loading: () => const Center(child: CircularProgressIndicator()),
               );
             },
           ),
@@ -47,54 +54,54 @@ class TaroResultPage extends ConsumerWidget {
       ),
     );
   }
-
-  /// 임시 결과 데이터 생성 (실제로는 AI 서버에서 받아올 데이터)
-  TaroResultEntity? _generateMockResult(TaroConsultationState state) {
-    if (state.selectedSpreadType == null ||
-        state.selectedCards.every((c) => c == null)) {
-      return null;
-    }
-
-    final selectedCards = state.selectedCards
-        .where((id) => id != null)
-        .map((id) => TaroCards.findById(id!))
-        .whereType<TaroCard>()
-        .toList();
-
-    if (selectedCards.isEmpty) return null;
-
-    // 위치별 의미 매핑
-    final positionNames = _getPositionNames(state.selectedSpreadType!);
-
-    final cardInterpretations = selectedCards.asMap().entries.map((entry) {
-      final index = entry.key;
-      final card = entry.value;
-      final positionName = index < positionNames.length
-          ? positionNames[index]
-          : '카드 ${index + 1}';
-
-      // 역카드 확률 50% (실제 타로처럼)
-      final isReversed = (index.hashCode % 2 == 0); // 50% 확률로 역카드
-
-      return InterpretedCard(
-        cardId: card.id,
-        cardName: card.name,
-        positionName: positionName,
-        isReversed: isReversed,
-        subtitle: _generateSubtitle(card, positionName, isReversed),
-        detailedText: _generateDetailedText(card, positionName, isReversed),
-      );
-    }).toList();
-
-    return TaroResultEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      date: DateTime.now(),
-      theme: state.theme,
-      spreadName: state.selectedSpreadType!.name,
-      overallInterpretation: _generateOverallInterpretation(selectedCards, state.selectedSpreadType!),
-      cardInterpretations: cardInterpretations,
-    );
-  }
+  //
+  // /// 임시 결과 데이터 생성 (실제로는 AI 서버에서 받아올 데이터)
+  // TaroResultEntity? _generateMockResult(TaroConsultationState state) {
+  //   if (state.selectedSpreadType == null ||
+  //       state.selectedCards.every((c) => c == null)) {
+  //     return null;
+  //   }
+  //
+  //   final selectedCards = state.selectedCards
+  //       .where((id) => id != null)
+  //       .map((id) => TaroCards.findById(id!))
+  //       .whereType<TaroCard>()
+  //       .toList();
+  //
+  //   if (selectedCards.isEmpty) return null;
+  //
+  //   // 위치별 의미 매핑
+  //   final positionNames = _getPositionNames(state.selectedSpreadType!);
+  //
+  //   final cardInterpretations = selectedCards.asMap().entries.map((entry) {
+  //     final index = entry.key;
+  //     final card = entry.value;
+  //     final positionName = index < positionNames.length
+  //         ? positionNames[index]
+  //         : '카드 ${index + 1}';
+  //
+  //     // 역카드 확률 50% (실제 타로처럼)
+  //     final isReversed = (index.hashCode % 2 == 0); // 50% 확률로 역카드
+  //
+  //     return InterpretedCard(
+  //       cardId: card.id,
+  //       cardName: card.name,
+  //       positionName: positionName,
+  //       isReversed: isReversed,
+  //       subtitle: _generateSubtitle(card, positionName, isReversed),
+  //       detailedText: _generateDetailedText(card, positionName, isReversed),
+  //     );
+  //   }).toList();
+  //
+  //   return TaroResultEntity(
+  //     id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //     date: DateTime.now(),
+  //     theme: state.theme,
+  //     spreadName: state.selectedSpreadType!.name,
+  //     overallInterpretation: _generateOverallInterpretation(selectedCards, state.selectedSpreadType!),
+  //     cardInterpretations: cardInterpretations,
+  //   );
+  // }
 
   /// 스프레드 타입별 위치 이름 반환
   List<String> _getPositionNames(TaroSpreadType spreadType) {
@@ -133,89 +140,94 @@ class TaroResultPage extends ConsumerWidget {
 
     return baseSubtitle;
   }
-
-  /// AI 생성 상세 텍스트 (실제로는 AI 서버에서 생성)
-  String _generateDetailedText(TaroCard card, String positionName, bool isReversed) {
-    final baseText = card.description;
-
-    final contextualText = {
-      '과거': '과거에 당신이 경험했던 일들이 현재 상황에 중요한 영향을 미치고 있습니다.',
-      '현재': '현재 당신이 처해있는 상황을 명확히 보여주며, 이를 통해 앞으로의 방향성을 제시합니다.',
-      '미래': '앞으로 다가올 가능성과 기회를 암시하며, 당신이 준비해야 할 것들을 알려줍니다.',
-      '목표': '당신이 추구하는 목표와 관련된 에너지와 방향성을 나타냅니다.',
-      '결과': '현재의 상황과 노력이 가져다줄 최종적인 결과를 예시합니다.',
-      '장애물': '앞으로 마주할 수 있는 어려움과 이를 극복하기 위한 준비사항을 제시합니다.',
-      '문제해결 방법': '현재 상황을 개선하고 발전시키기 위한 구체적인 방법을 제안합니다.',
-    };
-
-    final contextText = contextualText[positionName] ?? '이 카드는 당신의 여정에서 중요한 의미를 지니고 있습니다.';
-
-    // 역카드인 경우 해석 수정
-    if (isReversed) {
-      final reversedMeaning = _getReversedMeaning(card);
-      return '$reversedMeaning\n\n$contextText\n\n역방향 카드는 내면의 변화나 잠재된 가능성을 나타냅니다. 현재 상황에서 다른 관점으로 접근해보거나, 내적 성장에 집중할 때임을 의미할 수 있습니다.';
-    }
-
-    return '$baseText\n\n$contextText\n\n주의깊게 살펴보고 내면의 목소리에 귀를 기울여보세요. 카드가 전하는 메시지는 당신의 직관과 만나 더욱 깊은 통찰을 가져다줄 것입니다.';
-  }
-
-  /// 역카드 의미 생성
-  String _getReversedMeaning(TaroCard card) {
-    // 실제로는 각 카드별로 정의된 역방향 의미를 사용
-    final reversedMeanings = {
-      'major_00': '무모함, 경솔함, 준비 부족',
-      'major_01': '조작, 속임수, 집중력 부족',
-      'major_02': '직감 무시, 내면의 목소리 차단',
-      'major_03': '창조성 부족, 과잉보호, 의존성',
-      'major_04': '독재, 경직성, 권위 남용',
-      'major_05': '전통 거부, 독립적 사고, 새로운 방법',
-      'major_06': '불화, 잘못된 선택, 관계 문제',
-      'major_07': '통제력 상실, 방향성 부족',
-      'major_08': '내적 갈등, 자신감 부족, 억압',
-      'major_09': '고립, 외로움, 조언 거부',
-      'major_10': '불운, 좌절, 변화 저항',
-      'major_11': '불공정, 편견, 균형 상실',
-      'major_12': '정체, 희생 거부, 이기심',
-      'major_13': '변화 거부, 정체성 위기',
-      'major_14': '불균형, 극단, 조화 부족',
-      'major_15': '해방, 자유, 속박에서 벗어남',
-      'major_16': '변화 저항, 내적 파괴',
-      'major_17': '실망, 절망, 희망 상실',
-      'major_18': '진실 공개, 명확성, 착각에서 벗어남',
-      'major_19': '과도함, 자만, 에너지 부족',
-      'major_20': '자기 비판, 과거에 얽매임',
-      'major_21': '미완성, 지연, 목표 달성 어려움',
-    };
-
-    return reversedMeanings[card.id] ?? '${card.description}의 반대되는 에너지나 내면의 측면';
-  }
+  //
+  // /// AI 생성 상세 텍스트 (실제로는 AI 서버에서 생성)
+  // String _generateDetailedText(TaroCard card, String positionName, bool isReversed) {
+  //   final baseText = card.description;
+  //
+  //   final contextualText = {
+  //     '과거': '과거에 당신이 경험했던 일들이 현재 상황에 중요한 영향을 미치고 있습니다.',
+  //     '현재': '현재 당신이 처해있는 상황을 명확히 보여주며, 이를 통해 앞으로의 방향성을 제시합니다.',
+  //     '미래': '앞으로 다가올 가능성과 기회를 암시하며, 당신이 준비해야 할 것들을 알려줍니다.',
+  //     '목표': '당신이 추구하는 목표와 관련된 에너지와 방향성을 나타냅니다.',
+  //     '결과': '현재의 상황과 노력이 가져다줄 최종적인 결과를 예시합니다.',
+  //     '장애물': '앞으로 마주할 수 있는 어려움과 이를 극복하기 위한 준비사항을 제시합니다.',
+  //     '문제해결 방법': '현재 상황을 개선하고 발전시키기 위한 구체적인 방법을 제안합니다.',
+  //   };
+  //
+  //   final contextText = contextualText[positionName] ?? '이 카드는 당신의 여정에서 중요한 의미를 지니고 있습니다.';
+  //
+  //   // 역카드인 경우 해석 수정
+  //   if (isReversed) {
+  //     final reversedMeaning = _getReversedMeaning(card);
+  //     return '$reversedMeaning\n\n$contextText\n\n역방향 카드는 내면의 변화나 잠재된 가능성을 나타냅니다. 현재 상황에서 다른 관점으로 접근해보거나, 내적 성장에 집중할 때임을 의미할 수 있습니다.';
+  //   }
+  //
+  //   return '$baseText\n\n$contextText\n\n주의깊게 살펴보고 내면의 목소리에 귀를 기울여보세요. 카드가 전하는 메시지는 당신의 직관과 만나 더욱 깊은 통찰을 가져다줄 것입니다.';
+  // }
+  //
+  // /// 역카드 의미 생성
+  // String _getReversedMeaning(TaroCard card) {
+  //   // 실제로는 각 카드별로 정의된 역방향 의미를 사용
+  //   final reversedMeanings = {
+  //     'major_00': '무모함, 경솔함, 준비 부족',
+  //     'major_01': '조작, 속임수, 집중력 부족',
+  //     'major_02': '직감 무시, 내면의 목소리 차단',
+  //     'major_03': '창조성 부족, 과잉보호, 의존성',
+  //     'major_04': '독재, 경직성, 권위 남용',
+  //     'major_05': '전통 거부, 독립적 사고, 새로운 방법',
+  //     'major_06': '불화, 잘못된 선택, 관계 문제',
+  //     'major_07': '통제력 상실, 방향성 부족',
+  //     'major_08': '내적 갈등, 자신감 부족, 억압',
+  //     'major_09': '고립, 외로움, 조언 거부',
+  //     'major_10': '불운, 좌절, 변화 저항',
+  //     'major_11': '불공정, 편견, 균형 상실',
+  //     'major_12': '정체, 희생 거부, 이기심',
+  //     'major_13': '변화 거부, 정체성 위기',
+  //     'major_14': '불균형, 극단, 조화 부족',
+  //     'major_15': '해방, 자유, 속박에서 벗어남',
+  //     'major_16': '변화 저항, 내적 파괴',
+  //     'major_17': '실망, 절망, 희망 상실',
+  //     'major_18': '진실 공개, 명확성, 착각에서 벗어남',
+  //     'major_19': '과도함, 자만, 에너지 부족',
+  //     'major_20': '자기 비판, 과거에 얽매임',
+  //     'major_21': '미완성, 지연, 목표 달성 어려움',
+  //   };
+  //
+  //   return reversedMeanings[card.id] ?? '${card.description}의 반대되는 에너지나 내면의 측면';
+  // }
 
   /// AI 생성 종합 해석 (실제로는 AI 서버에서 생성)
-  String _generateOverallInterpretation(List<TaroCard> cards, TaroSpreadType spreadType) {
-    final cardNames = cards.map((c) => c.name).join(', ');
-    return '''선택된 카드들(${cardNames})은 현재 당신의 상황에서 새로운 변화와 기회가 다가오고 있음을 의미합니다. 과거의 경험들이 현재 상황의 기반이 되고 있으며, 미래에 대한 희망적인 전망을 보여줍니다.
+//   String _generateOverallInterpretation(List<TaroCard> cards, TaroSpreadType spreadType) {
+//     final cardNames = cards.map((c) => c.name).join(', ');
+//     return '''선택된 카드들(${cardNames})은 현재 당신의 상황에서 새로운 변화와 기회가 다가오고 있음을 의미합니다. 과거의 경험들이 현재 상황의 기반이 되고 있으며, 미래에 대한 희망적인 전망을 보여줍니다.
+//
+// ${spreadType.name} 스프레드를 통해 볼 때, 당신은 지금 중요한 전환점에 서 있습니다. 카드가 전하는 메시지를 바탕으로 균형잡힌 시각으로 상황을 바라보고, 미래를 위한 실질적인 계획을 세워보시길 권합니다.
+//
+// 주제: "${cards.first.description}"에 대한 답변이 곧 명확해질 것입니다. 인내심을 갖고 기다리며, 직감에 따라 행동하시기 바랍니다.''';
+//   }
 
-${spreadType.name} 스프레드를 통해 볼 때, 당신은 지금 중요한 전환점에 서 있습니다. 카드가 전하는 메시지를 바탕으로 균형잡힌 시각으로 상황을 바라보고, 미래를 위한 실질적인 계획을 세워보시길 권합니다.
-
-주제: "${cards.first.description}"에 대한 답변이 곧 명확해질 것입니다. 인내심을 갖고 기다리며, 직감에 따라 행동하시기 바랍니다.''';
-  }
-
-  Widget _buildErrorState(BuildContext context) {
+  // ✅ 수정 2: 에러 화면 메시지 파라미터 추가
+  Widget _buildErrorState(BuildContext context, String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
           Gap(16.h),
-          Text('결과를 표시할 수 없습니다',
+          Text('결과를 불러올 수 없습니다',
               style: TextStyle(fontSize: 18.sp, color: Colors.white)),
           Gap(8.h),
-          Text('카드가 선택되지 않았습니다',
-              style: TextStyle(fontSize: 14.sp, color: Colors.white.withOpacity(0.7))),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.sp, color: Colors.white.withOpacity(0.7))),
+          ),
           Gap(24.h),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('돌아가기'),
+            child: const Text('돌아가기'),
           ),
         ],
       ),
@@ -286,13 +298,14 @@ ${spreadType.name} 스프레드를 통해 볼 때, 당신은 지금 중요한 �
             spacing: 12.w,
             runSpacing: 16.h,
             alignment: WrapAlignment.center,
+            // result.cardInterpretations 리스트를 그대로 사용
             children: result.cardInterpretations.map((interpretation) {
               final card = TaroCards.findById(interpretation.cardId);
-              if (card == null) return SizedBox.shrink();
+              if (card == null) return const SizedBox.shrink();
 
               return _buildRevealedCard(
                 card: card,
-                interpretation: interpretation,
+                interpretation: interpretation, // 이미 해석된 정보(역방향, 위치이름 등) 포함
               );
             }).toList(),
           ),

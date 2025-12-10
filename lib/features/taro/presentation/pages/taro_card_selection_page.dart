@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,6 +27,7 @@ class TaroCardSelectionPage extends ConsumerStatefulWidget {
 class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
   // 스크롤 컨트롤러는 UI를 위한 것이므로 유지합니다.
   final ScrollController _scrollController = ScrollController();
+  final Random _random = Random();
 
   @override
   void dispose() {
@@ -36,8 +39,10 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
   // 뒤로가기 처리가 훨씬 간단해집니다.
   void _handleBackNavigation() {
     if (mounted) {
-      // ✅ 뒤로 갈 때 상태 초기화 (필요하다면)
-      // ref.read(taroConsultationNotifierProvider.notifier).reset();
+      // 🚀 핵심: 뒤로 갈 때 상태를 싹 비웁니다.
+      // 이러면 다시 Setup 페이지로 갔을 때 입력창이 깨끗해집니다.
+      ref.read(taroConsultationNotifierProvider.notifier).reset();
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const TaroConsultationSetupPage(),
@@ -56,31 +61,32 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
     // ✅ 더미 카드 (드래그용)
     final List<TaroCard> displayCards = List.generate(
       35,
-          (i) =>
-          TaroCard(
-            id: "dummy_$i",
-            // ID 고유하게
-            name: 'dummy',
-            imagePath: '',
-            type: TaroCardType.majorArcana,
-            nameEn: '',
-            description: '',
-          ),
+      (i) => TaroCard(
+        id: "dummy_$i",
+        // ID 고유하게
+        name: 'dummy',
+        imagePath: '',
+        type: TaroCardType.majorArcana,
+        nameEn: '',
+        description: '',
+      ),
     );
 
     // availableCards 로직은 실제 카드 선택에 필요하므로 유지합니다.
     final availableCards = TaroCards.getShuffledDeck()
       ..removeWhere((card) => state.selectedCards.contains(card.id));
 
-    ref.listen<TaroConsultationState>(
-        taroConsultationNotifierProvider, (previous,
-        next,) {
+    ref.listen<TaroConsultationState>(taroConsultationNotifierProvider, (
+      previous,
+      next,
+    ) {
       if (next.status == TaroStatus.error && next.errorMessage != null) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
-        // notifier.clearError();
       }
+
+      // 결과 완료 시 이동
       if (next.status == TaroStatus.completed) {
         Navigator.of(
           context,
@@ -90,7 +96,8 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) { // API 변경 대응
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        // API 변경 대응
         if (!didPop) {
           _handleBackNavigation();
         }
@@ -132,9 +139,7 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
                 Column(
                   children: [
                     _buildHeader(context, state),
-                    Padding(
-                      padding: EdgeInsets.only(top: 140.h),
-                    ),
+                    Padding(padding: EdgeInsets.only(top: 140.h)),
                     Expanded(
                       child: SingleChildScrollView(
                         controller: _scrollController,
@@ -157,10 +162,12 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
 
   // _handleCardPlacement, _buildHeader, _buildSpreadArea, _buildBottomActions 메소드들은
   // 수정할 필요 없이 그대로 두시면 됩니다.
-  void _handleCardPlacement(TaroCard draggedCard,
-      int position,
-      TaroConsultationState state,
-      TaroConsultationNotifier notifier,) {
+  void _handleCardPlacement(
+    TaroCard draggedCard,
+    int position,
+    TaroConsultationState state,
+    TaroConsultationNotifier notifier,
+  ) {
     // 1. 이미 선택된 카드 ID들 추출
     final selectedIds = state.selectedCards.map((e) => e.cardId).toSet();
 
@@ -172,18 +179,22 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
 
     // 3. 랜덤으로 하나 뽑아서 해당 위치에 배치
     if (availableRealCards.isNotEmpty) {
-      availableRealCards.shuffle();
+      availableRealCards.shuffle(_random); // 셔플할 때도 넣으면 더 좋음
       final selectedCard = availableRealCards.first;
 
+      // 2️⃣ 아까 만든 객체 재사용 -> 이러면 아주 빠르게 실행돼도 완벽한 랜덤 보장
+      final bool isRandomReversed = _random.nextBool();
+
       // ✅ Notifier 호출 (객체 생성해서 전달)
-      notifier.toggleCardSelection(TaroCardInput(
-        cardId: selectedCard.id,
-        positionIndex: position,
-        isReversed: false, // 일단 정방향 (추후 랜덤 or 사용자 선택)
-      ));
+      notifier.toggleCardSelection(
+        TaroCardInput(
+          cardId: selectedCard.id,
+          positionIndex: position,
+          isReversed: isRandomReversed, // 일단 정방향 (추후 랜덤 or 사용자 선택)
+        ),
+      );
     }
   }
-
 
   Widget _buildHeader(BuildContext context, TaroConsultationState state) {
     final totalCount = state.selectedSpreadType?.cardCount ?? 0;
@@ -205,7 +216,9 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
                     Text(
                       '카드 선택',
                       style: TextStyle(
-                          color: TaroColors.textMystic, fontSize: 20.sp),
+                        color: TaroColors.textMystic,
+                        fontSize: 20.sp,
+                      ),
                     ),
                     Text(
                       state.selectedSpreadType?.name ?? '',
@@ -247,8 +260,10 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
     );
   }
 
-  Widget _buildSpreadArea(TaroConsultationState state,
-      TaroConsultationNotifier notifier,) {
+  Widget _buildSpreadArea(
+    TaroConsultationState state,
+    TaroConsultationNotifier notifier,
+  ) {
     final spread = state.selectedSpreadType;
     if (spread == null) return const SizedBox.shrink();
 
@@ -281,9 +296,11 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
     );
   }
 
-  Widget _buildBottomActions(TaroConsultationState state,
-      TaroConsultationNotifier notifier,
-      BuildContext context,) {
+  Widget _buildBottomActions(
+    TaroConsultationState state,
+    TaroConsultationNotifier notifier,
+    BuildContext context,
+  ) {
     // ✅ canRequestResult -> canAnalyze로 변경 (Notifier getter 이름 확인)
     final canRequestResult = state.canAnalyze;
     final isLoading = state.status == TaroStatus.analyzing; // ✅ analyzing 확인
@@ -299,17 +316,20 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
             child: OutlinedButton.icon(
               onPressed: () {
                 // TODO: 셔플 로직 구현 (Notifier에 clearCards 같은거 만들어서 호출)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('카드를 다시 섞었습니다.')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('카드를 다시 섞었습니다.')));
               },
               icon: Icon(Icons.shuffle, color: TaroColors.textMystic),
               label: Text(
-                  '카드 다시 섞기', style: TextStyle(color: TaroColors.textMystic)),
+                '카드 다시 섞기',
+                style: TextStyle(color: TaroColors.textMystic),
+              ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: TaroColors.cardBorder),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
               ),
             ),
           ),
@@ -326,18 +346,19 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
                 backgroundColor: TaroColors.accentGold,
                 disabledBackgroundColor: TaroColors.cardDisabled,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r)),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
               ),
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
-                canRequestResult ? '타로 결과 보기' : '모든 카드를 선택해주세요',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  color: TaroColors.backgroundDark,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                      canRequestResult ? '타로 결과 보기' : '모든 카드를 선택해주세요',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        color: TaroColors.backgroundDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -345,7 +366,6 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
     );
   }
 }
-
 
 //
 // Widget _buildBottomActions(TaroConsultationState state,

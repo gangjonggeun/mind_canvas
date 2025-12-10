@@ -15,7 +15,7 @@ part 'taro_analysis_notifier.g.dart';
 /// 🔮 타로 분석 상태 관리 Notifier
 ///
 /// UI 상태(로딩, 에러, 데이터)를 관리하고 UseCase를 실행합니다.
-@riverpod
+@Riverpod(keepAlive: true)
 class TaroAnalysis extends _$TaroAnalysis {
   @override
   FutureOr<TaroResultEntity?> build() async {

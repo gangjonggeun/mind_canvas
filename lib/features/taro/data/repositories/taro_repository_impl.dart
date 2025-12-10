@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,6 +9,7 @@ import '../../domain/models/TaroResultEntity.dart';
 import '../../domain/repositories/taro_repository.dart';
 import '../datasources/taro_api_data_source.dart';
 import '../dto/request/submit_taro_request.dart';
+import '../dto/response/taro_result_response.dart';
 
 part 'taro_repository_impl.g.dart'; // build_runner 생성 파일
 
@@ -28,8 +28,6 @@ TaroRepository taroRepository(TaroRepositoryRef ref) {
   );
 }
 
-
-
 // =============================================================
 // 🏭 Repository Implementation
 // =============================================================
@@ -41,52 +39,56 @@ class TaroRepositoryImpl implements TaroRepository {
   const TaroRepositoryImpl({
     required TaroApiDataSource taroApiDataSource,
     required TokenManager tokenManager,
-  })  : _taroApiDataSource = taroApiDataSource,
-        _tokenManager = tokenManager;
+  }) : _taroApiDataSource = taroApiDataSource,
+       _tokenManager = tokenManager;
 
   @override
   Future<Result<TaroResultEntity>> analyzeTaro(
-      SubmitTaroRequest request,
-      ) async {
+    SubmitTaroRequest request,
+  ) async {
     try {
-      // 1️⃣ 토큰 가져오기 (필수)
-      final token = await _tokenManager.getValidAccessToken();
-      if (token == null) {
-        return Result.failure(
-          '로그인이 필요합니다',
-          'AUTHENTICATION_REQUIRED',
-        );
+      // 1. 유효한 토큰 확인 (예시 코드와 동일 로직)
+      final validToken = await _tokenManager.getValidAccessToken();
+
+      if (validToken == null) {
+        // print('인증이 필요합니다 - 로그인 페이지로 이동 필요'); // 필요 시 주석 해제
+        return Result.failure('인증이 필요합니다', 'AUTHENTICATION_REQUIRED');
       }
 
-      // 2️⃣ API 호출
-      final apiResponse = await _taroApiDataSource.analyzeTaro(request, token);
+      // 2. API 호출
 
-      // 3️⃣ 응답 처리
+      final apiResponse = await _taroApiDataSource.analyzeTaro(
+        request,
+        validToken,
+      );
+
+      // 3. ApiResponse를 Result로 변환 (예시 코드와 동일 구조)
       if (apiResponse.success && apiResponse.data != null) {
-        // DTO -> Entity 변환
+        // ✅ DTO -> Entity 변환
+        // 예시의 TestContentMapper 대신, DTO 내부의 toEntity() 메서드 사용
         final entity = apiResponse.data!.toEntity();
 
-        return Result.success(
-          entity,
-          apiResponse.message ?? '타로 상담이 완료되었습니다',
-        );
+        // print('✅ 타로 분석 성공 - ID: ${entity.id}'); // 필요 시 주석 해제
+        return Result.success(entity, apiResponse.message ?? '타로 상담이 완료되었습니다');
       } else {
-        return Result.failure(
-          apiResponse.message ?? '타로 상담 결과를 받아오지 못했습니다',
-          apiResponse.error?.code ?? 'UNKNOWN_ERROR',
-        );
+        final errorMessage =
+            apiResponse.error?.message ??
+            apiResponse.message ??
+            '타로 상담 결과를 받아오지 못했습니다';
+        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
+
+        // print('❌ 타로 분석 실패 - $errorMessage'); // 필요 시 주석 해제
+        return Result.failure(errorMessage, errorCode);
       }
     } on DioException catch (e) {
-      // 4️⃣ 네트워크 오류 처리
       return _handleDioException(e);
     } catch (e) {
-      // 5️⃣ 예상치 못한 오류
-      return Result.failure(
-        '알 수 없는 오류가 발생했습니다: $e',
-        'UNKNOWN_ERROR',
-      );
+      // print('예상치 못한 오류 발생: $e'); // 필요 시 주석 해제
+      return Result.failure('알 수 없는 오류가 발생했습니다: $e', 'UNKNOWN_ERROR');
     }
   }
+
+
 
   /// 🔧 DioException 핸들링 (공통 로직)
   Result<TaroResultEntity> _handleDioException(DioException e) {
@@ -107,28 +109,31 @@ class TaroRepositoryImpl implements TaroRepository {
           case 400:
             return Result.failure(errorMsg, 'BAD_REQUEST');
           case 401:
-            return Result.failure('인증이 만료되었습니다. 다시 로그인해주세요', 'AUTHENTICATION_EXPIRED');
+            return Result.failure(
+              '인증이 만료되었습니다. 다시 로그인해주세요',
+              'AUTHENTICATION_EXPIRED',
+            );
           case 403:
             return Result.failure('접근 권한이 없습니다', 'ACCESS_DENIED');
           case 429:
-            return Result.failure('잠시 후 다시 시도해주세요 (요청 과다)', 'TOO_MANY_REQUESTS');
+            return Result.failure(
+              '잠시 후 다시 시도해주세요 (요청 과다)',
+              'TOO_MANY_REQUESTS',
+            );
           case 500:
-            return Result.failure('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요', 'SERVER_ERROR');
+            return Result.failure(
+              '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요',
+              'SERVER_ERROR',
+            );
           default:
             return Result.failure(errorMsg, 'HTTP_ERROR_$statusCode');
         }
 
       case DioExceptionType.connectionError:
-        return Result.failure(
-          '인터넷 연결을 확인해주세요',
-          'NETWORK_DISCONNECTED',
-        );
+        return Result.failure('인터넷 연결을 확인해주세요', 'NETWORK_DISCONNECTED');
 
       default:
-        return Result.failure(
-          '네트워크 오류가 발생했습니다',
-          'NETWORK_ERROR',
-        );
+        return Result.failure('네트워크 오류가 발생했습니다', 'NETWORK_ERROR');
     }
   }
 }

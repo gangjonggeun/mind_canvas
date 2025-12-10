@@ -6,6 +6,7 @@ import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_not
 
 import '../htp/htp_dashboard_screen.dart';
 import '../psytest/psy_test_screen.dart';
+import '../taro/presentation/pages/taro_consultation_setup_page.dart';
 import 'data/models/response/test_detail_response.dart';
 
 /// 🔍 테스트 정보 화면
@@ -627,11 +628,21 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     );
   }
 
+
+
+// ✅ 1. 타로 테스트 여부 확인 함수 추가
+  bool _isTaroTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    // JSON 데이터의 psychologyTag: "TAROT" 과 일치하는지 확인
+    return tag == 'TAROT' || tag == 'TARO';
+  }
+
   bool _isHtpTest(TestDetailResponse testDetail) {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
     return tag == 'HTP' || tag == 'htp';
   }
 
+  // ✅ 2. _startTest 함수 수정
   void _startTest(BuildContext context, TestDetailResponse testDetail) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -641,11 +652,12 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        duration: const Duration(seconds: 1), // 스낵바 짧게
       ),
     );
 
+    // 1️⃣ HTP 테스트인 경우
     if (_isHtpTest(testDetail)) {
-      // HTP 대시보드로 이동
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -655,7 +667,19 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       return;
     }
 
-    // 일반 테스트 화면으로 이동
+    // 2️⃣ [추가] 타로 테스트인 경우 -> TaroConsultationSetupPage로 이동
+    if (_isTaroTest(testDetail)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          // 타로 상담 설정 페이지 (주제 입력 -> 스프레드 선택)
+          builder: (context) => const TaroConsultationSetupPage(),
+        ),
+      );
+      return;
+    }
+
+    // 3️⃣ 그 외 일반 객관식 심리 테스트
     Navigator.push(
       context,
       MaterialPageRoute(

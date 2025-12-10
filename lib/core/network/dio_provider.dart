@@ -57,6 +57,12 @@ Dio dio(DioRef ref) {
           print('⏱️ HTP API 타임아웃 연장: 수신 5분, 전송 3분');
         }
 
+        else if (options.path.contains('/taro/')) {
+          options.receiveTimeout = const Duration(minutes: 5);
+          options.sendTimeout = const Duration(minutes: 3);
+          // Multipart는 자동으로 Content-Type 설정됨
+          print('⏱️ taro API 타임아웃 연장: 수신 5분, 전송 3분');
+        }
         // 🧠 기타 AI 분석 API → 타임아웃 3분
         else if (options.path.contains('/analysis') ||
             options.path.contains('/ai/')) {

@@ -26,9 +26,19 @@ class TaroConsultationNotifier extends _$TaroConsultationNotifier {
   /// 1단계: 설정 완료 후 카드 선택 화면으로 이동
   void startConsultation() {
     if (state.canProceedToCardSelection) {
-      state = state.copyWith(status: TaroStatus.cardSelection);
+      state = state.copyWith(
+        status: TaroStatus.cardSelection,
+        selectedCards: [], // 🚀 핵심: 진입 시 카드 선택 내역 초기화
+      );
     }
   }
+
+  void reset() {
+    state = const TaroConsultationState(); // 🚀 수정됨
+    // 필요하다면 API 상태도 초기화
+    ref.read(taroAnalysisProvider.notifier).reset();
+  }
+
 
   void removeCard(int positionIndex) {
     final currentCards = List<TaroCardInput>.from(state.selectedCards);
@@ -84,10 +94,5 @@ class TaroConsultationNotifier extends _$TaroConsultationNotifier {
     }
   }
 
-  // 초기화
-  void reset() {
-    state = const TaroConsultationState();
-    // API 상태도 초기화
-    ref.read(taroAnalysisProvider.notifier).reset();
-  }
+
 }
