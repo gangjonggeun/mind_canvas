@@ -129,8 +129,13 @@ class TokenManager {
 
   /// 유효한 Access Token 반환 (자동 갱신 포함)
   Future<String?> getValidAccessToken() async {
-    // 토큰이 없으면 null
-    if (_currentAuth == null) return null;
+
+
+    if (_currentAuth == null) {
+      print('❌ 스토리지 확인 결과 토큰 없음 -> null 반환');
+      return null;
+    }
+
 
     // 리프레시 토큰이 만료되었으면 재로그인 필요
     if (isRefreshTokenExpired) {

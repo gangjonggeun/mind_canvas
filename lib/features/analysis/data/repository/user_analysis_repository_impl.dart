@@ -24,7 +24,7 @@ class UserAnalysisRepositoryImpl implements UserAnalysisRepository {
 
       // 2. API 호출 ('Bearer ' 접두어는 DataSource나 여기서 처리, 보통 여기서 붙여주는 것이 명확함)
       // 만약 DataSource의 @Header에 이미 포함된 로직이 없다면 'Bearer $validToken'으로 보냅니다.
-      final apiResponse = await _dataSource.getMyPsychologicalProfile('Bearer $validToken');
+      final apiResponse = await _dataSource.getMyPsychologicalProfile(validToken);
 
       // 3. 응답 처리
       if (apiResponse.success && apiResponse.data != null) {

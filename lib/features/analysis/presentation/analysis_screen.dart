@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/dto/psychological_profile_response.dart';
 import '../domain/entities/analysis_data.dart';
 import '../analysis_sample_data.dart';
+import 'notifier/user_analysis_notifier.dart';
 
 /// 트렌디하고 깔끔한 분석 화면
 /// 완전히 새로운 디자인으로 개선
-class AnalysisScreen extends StatefulWidget {
+class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
 
   @override
-  State<AnalysisScreen> createState() => _AnalysisScreenState();
+  ConsumerState<AnalysisScreen> createState() => _AnalysisScreenState();
 }
 
-class _AnalysisScreenState extends State<AnalysisScreen>
+class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     with TickerProviderStateMixin {
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
@@ -21,21 +24,30 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
-    
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
+
     _fadeController.forward();
+
+    // 🚀 [해결책] 화면 진입 시 강제로 Provider를 초기화하여
+    // 1. 상태를 초기 상태(isLoading: false, profile: null)로 돌리고
+    // 2. 자동으로 build()가 실행되며 로딩바가 돌고
+    // 3. 데이터를 새로 가져오게 합니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 기존 데이터를 날리고 초기 상태로 리셋
+      ref.invalidate(userAnalysisNotifierProvider);
+
+      // 그 다음 데이터 요청 실행
+      ref.read(userAnalysisNotifierProvider.notifier).loadMyProfile();
+    });
   }
 
   @override
@@ -44,64 +56,405 @@ class _AnalysisScreenState extends State<AnalysisScreen>
     super.dispose();
   }
 
+  //
+  // @override
+  // Widget build(BuildContext context) {
+  //   // 3. 상태 구독 (State Watching)
+  //   final state = ref.watch(userAnalysisNotifierProvider);
+  //
+  //   return Scaffold(
+  //     backgroundColor: const Color(0xFFF8FAFC),
+  //     body: FadeTransition(
+  //       opacity: _fadeAnimation,
+  //       child: CustomScrollView(
+  //         physics: const BouncingScrollPhysics(),
+  //         slivers: [
+  //           // 트렌디한 앱바
+  //           _buildTrendyAppBar(),
+  //
+  //           // 메인 컨텐츠
+  //           SliverPadding(
+  //             padding: const EdgeInsets.all(20),
+  //             sliver: SliverList(
+  //               delegate: SliverChildListDelegate([
+  //                 // 상단: 트렌디 요약 카드
+  //                 _buildTrendyPersonalityCard(),
+  //
+  //                 const SizedBox(height: 20),
+  //
+  //                 // 성격 태그들 (더 작게)
+  //                 _buildCompactTags(),
+  //
+  //                 const SizedBox(height: 32),
+  //
+  //                 // MBTI 슬라이더 (4개)
+  //                 if (_analysisData.mbtiType != null)
+  //                   _buildMbtiSliderSection(),
+  //
+  //                 const SizedBox(height: 24),
+  //
+  //                 // 인지기능 상위 3개
+  //                 _buildTopCognitiveFunctions(),
+  //
+  //                 const SizedBox(height: 24),
+  //
+  //                 // Big 5 성격지표 (5개)
+  //                 _buildBigFiveSliders(),
+  //
+  //                 const SizedBox(height: 24),
+  //
+  //                 // 에니어그램 상위 3개
+  //                 _buildTopEnneagramTypes(),
+  //
+  //                 const SizedBox(height: 24),
+  //
+  //                 // 핵심 성격 지표
+  //                 _buildCorePersonalityIndicator(),
+  //
+  //                 const SizedBox(height: 32),
+  //
+  //                 // // 추천 컨텐츠
+  //                 // _buildRecommendedContent(),
+  //                 //
+  //                 // const SizedBox(height: 20),
+  //               ]),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
+    // 3. 상태 구독 (State Watching)
+    final state = ref.watch(userAnalysisNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: FadeTransition(
+      // 4. 상태에 따른 화면 분기
+      body: _buildBody(state),
+    );
+  }
+  Widget _buildBody(UserAnalysisState state) {
+    // 1. 로딩 중 (데이터가 아예 없을 때만 로딩 표시)
+    if (state.isLoading && state.profile == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF667EEA)),
+      );
+    }
+
+    // 2. 에러 발생
+    if (state.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            Text(state.errorMessage!),
+            TextButton(
+              onPressed: () => ref.read(userAnalysisNotifierProvider.notifier).loadMyProfile(),
+              child: const Text('다시 시도'),
+            )
+          ],
+        ),
+      );
+    }
+
+    final profile = state.profile;
+
+    // 🚀 [수정] RefreshIndicator로 감싸서 당겨서 새로고침 구현
+    return RefreshIndicator(
+      color: const Color(0xFF667EEA),
+      backgroundColor: Colors.white,
+      onRefresh: () async {
+        // 새로고침 시 실행될 로직
+        await ref.read(userAnalysisNotifierProvider.notifier).loadMyProfile();
+      },
+      child: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          // 🚀 [중요] 내용이 짧아도 당겨서 새로고침이 되도록 물리 효과 설정 필수
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
-            // 트렌디한 앱바
             _buildTrendyAppBar(),
-            
-            // 메인 컨텐츠
+
             SliverPadding(
               padding: const EdgeInsets.all(20),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // 상단: 트렌디 요약 카드
-                  _buildTrendyPersonalityCard(),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // 성격 태그들 (더 작게)
-                  _buildCompactTags(),
-                  
+                  // 1️⃣ MBTI 섹션
+                  _buildMbtiTypeSection(profile),
+
                   const SizedBox(height: 32),
-                  
-                  // MBTI 슬라이더 (4개)
-                  if (_analysisData.mbtiType != null)
-                    _buildMbtiSliderSection(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // 인지기능 상위 3개
-                  _buildTopCognitiveFunctions(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Big 5 성격지표 (5개)
-                  _buildBigFiveSliders(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // 에니어그램 상위 3개
-                  _buildTopEnneagramTypes(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // 핵심 성격 지표
-                  _buildCorePersonalityIndicator(),
-                  
+
+                  // 2️⃣ 8기능 섹션
+                  _buildCognitiveSection(profile),
+
                   const SizedBox(height: 32),
-                  
-                  // // 추천 컨텐츠
-                  // _buildRecommendedContent(),
-                  //
-                  // const SizedBox(height: 20),
+
+                  // 3️⃣ Big5 섹션
+                  _buildBig5Section(profile),
+
+                  const SizedBox(height: 32),
+
+                  // 4️⃣ Enneagram 섹션
+                  _buildEnneagramSection(profile),
+
+                  const SizedBox(height: 40),
                 ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 1️⃣ MBTI 성향 분석 섹션 (4글자 결과)
+  Widget _buildMbtiTypeSection(PsychologicalProfileResponse? profile) {
+    // hasMbti 체크: resultType이 있는지 확인
+    if (profile != null && profile.hasMbti) {
+      return _buildMbtiSliderSection(profile.mbti!);
+    }
+    // 데이터 없음 -> 검사 유도
+    else {
+      return _buildEmptyStateCard(
+        title: "MBTI 성향 분석",
+        description: "나의 에너지는 어디로 향할까요?\n4가지 지표를 통해 나의 성격 유형을 알아보세요.",
+        icon: Icons.psychology_outlined,
+        buttonText: "성향 분석 하러가기",
+        colors: [const Color(0xFF667EEA), Color(0xFF764BA2)],
+        onTap: () {
+          print("MBTI 성향 검사 이동");
+        },
+      );
+    }
+  }
+
+  /// 2️⃣ 8기능(인지기능) 분석 섹션 (Se, Si, Ne...)
+  Widget _buildCognitiveSection(PsychologicalProfileResponse? profile) {
+    // hasCognitiveFunctions 체크: 8기능 점수 합이 0보다 큰지 확인
+    if (profile != null && profile.hasCognitiveFunctions) {
+      return _buildTopCognitiveFunctions(profile.mbti!);
+    }
+    // 데이터 없음 -> 검사 유도
+    else {
+      return _buildEmptyStateCard(
+        title: "8기능 정밀 분석",
+        description: "내가 무의식적으로 사용하는 기능은 무엇일까요?\n나의 사고 방식과 행동 패턴의 원인을 찾아보세요.",
+        icon: Icons.lightbulb_outline,
+        buttonText: "8기능 검사 하러가기",
+        colors: [const Color(0xFF9C27B0), Color(0xFF673AB7)],
+        // 보라색 계열
+        onTap: () {
+          print("8기능 검사 이동");
+        },
+      );
+    }
+  }
+
+  /// Big5 섹션
+  Widget _buildBig5Section(PsychologicalProfileResponse? profile) {
+    // 데이터가 있고 유효한 경우
+    if (profile != null && profile.hasBig5) {
+      return _buildBigFiveSliders(profile.big5!);
+    }
+    // 데이터가 없는 경우
+    else {
+      return _buildEmptyStateCard(
+        title: "Big 5 성격 분석",
+        description: "심리학계에서 가장 신뢰받는 5가지 성격 요인을 통해\n나의 본질적인 성향을 파악해보세요.",
+        icon: Icons.pie_chart_outline,
+        buttonText: "Big 5 검사하기",
+        colors: [const Color(0xFFFF7043), Color(0xFFE64A19)],
+        onTap: () {
+          // TODO: Big5 검사 페이지로 이동
+          print("Big5 검사 이동");
+        },
+      );
+    }
+  }
+
+  /// Enneagram 섹션
+  Widget _buildEnneagramSection(PsychologicalProfileResponse? profile) {
+    if (profile != null && profile.hasEnneagram) {
+      return _buildTopEnneagramTypes(); // 기존 함수 (인자 수정 필요시 수정)
+    } else {
+      return _buildEmptyStateCard(
+        title: "에니어그램 유형",
+        description: "9가지 성격 유형 중 나는 어디에 속할까요?\n나의 무의식적인 동기와 행동 패턴을 발견하세요.",
+        icon: Icons.people_outline,
+        buttonText: "에니어그램 검사하기",
+        colors: [const Color(0xFF4CAF50), Color(0xFF388E3C)],
+        onTap: () {
+          // TODO: 에니어그램 검사 페이지로 이동
+          print("에니어그램 검사 이동");
+        },
+      );
+    }
+  }
+
+  // =================================================================
+  // 🎨 공통 검사 유도 카드 디자인 (빈 상태 UI)
+  // =================================================================
+  Widget _buildEmptyStateCard({
+    required String title,
+    required String description,
+    required IconData icon,
+    required String buttonText,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: colors),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF64748B),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: colors.first),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                foregroundColor: colors.first,
+              ),
+              child: Text(
+                buttonText,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =================================================================
+  // ➕ 추가된 부분: 데이터가 없을 때 보여줄 Empty State UI
+  // =================================================================
+  Widget _buildEmptyView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667EEA).withOpacity(0.2),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.person_search_rounded,
+                size: 64,
+                color: Color(0xFF667EEA),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              '아직 분석 데이터가 없어요',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '심리 검사를 진행하고 나만의\n정밀한 분석 리포트를 받아보세요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            // 검사 하러 가기 버튼
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  // TODO: 검사 화면으로 이동하는 네비게이션 로직 추가
+                  print('검사 화면으로 이동');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF667EEA),
+                  foregroundColor: Colors.white,
+                  elevation: 8,
+                  shadowColor: const Color(0xFF667EEA).withOpacity(0.4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  '지금 검사하러 가기',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],
@@ -125,10 +478,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFF8FAFC),
-                Color(0xFFF1F5F9),
-              ],
+              colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
             ),
           ),
           child: Padding(
@@ -208,10 +558,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF667EEA),
-            Color(0xFF764BA2),
-          ],
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -270,9 +617,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 18),
-          
+
           // 평가 텍스트
           Container(
             padding: const EdgeInsets.all(18),
@@ -313,7 +660,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   /// 더 작은 태그들
   Widget _buildCompactTags() {
     final topTags = _analysisData.personalityTags.take(5).toList();
-    
+
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -340,10 +687,8 @@ class _AnalysisScreenState extends State<AnalysisScreen>
     );
   }
 
-
-
   /// MBTI 슬라이더 섹션 (이미지와 같은 디자인)
-  Widget _buildMbtiSliderSection() {
+  Widget _buildMbtiSliderSection(MbtiStats mbti) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -400,73 +745,75 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
-          // 4차원 슬라이더들 (이미지와 동일한 스타일)
-          ...(_analysisData.mbtiScores.map((score) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              child: _buildImageStyleSlider(score),
-            );
-          }).toList()),
+
+          // 4가지 지표 수동 호출 (DTO 필드 -> 슬라이더)
+          // 점수(0~100)를 그대로 전달
+          _buildImageStyleSlider('E', 'I', mbti.energyScore, 'E/I'),
+          const SizedBox(height: 24),
+          _buildImageStyleSlider('N', 'S', mbti.informationScore, 'S/N'),
+          const SizedBox(height: 24),
+          _buildImageStyleSlider('F', 'T', mbti.decisionScore, 'T/F'),
+          const SizedBox(height: 24),
+          _buildImageStyleSlider('P', 'J', mbti.lifestyleScore, 'J/P'),
         ],
       ),
     );
   }
 
-  Widget _buildMbtiSlider(MbtiScore score) {
-    // 기존 함수를 새로운 스타일로 대체
-    return _buildImageStyleSlider(score);
-  }
+  // Widget _buildMbtiSlider(MbtiScore score) {
+  //   // 기존 함수를 새로운 스타일로 대체
+  //   return _buildImageStyleSlider(score);
+  // }
 
   /// 이미지와 같은 스타일의 슬라이더
-  Widget _buildImageStyleSlider(MbtiScore score) {
-    final isRightDominant = score.score > 0;
-    final percentage = score.percentage;
-    
-    // 색상 정의 (이미지에서 참조)
+  Widget _buildImageStyleSlider(
+    String left,
+    String right,
+    int score,
+    String dimension,
+  ) {
+    // 점수가 50보다 크면 오른쪽 성향이 우세하다고 판단
+    final isRightDominant = score > 50;
+    // 시각적 퍼센트 (오른쪽 우세면 점수 그대로, 왼쪽 우세면 100-점수)
+    final percentage = isRightDominant
+        ? score.toDouble()
+        : (100 - score).toDouble();
+
+    // 색상 정의
     Color getSliderColor() {
-      switch (score.dimension) {
-        case 'E/I': return const Color(0xFFE91E63); // 핀크
-        case 'S/N': return const Color(0xFF2196F3); // 블루
-        case 'T/F': return const Color(0xFFFFC107); // 오렌지/노랑
-        case 'J/P': return const Color(0xFF4CAF50); // 그린
-        default: return const Color(0xFF667EEA);
-      }
-    }
-    
-    // 각 타입별 설명
-    Map<String, String> getTypeDescriptions() {
-      switch (score.dimension) {
+      switch (dimension) {
         case 'E/I':
-          return {
-            'E': '외향적인',
-            'I': '내향적인'
-          };
+          return const Color(0xFFE91E63); // 핑크
         case 'S/N':
-          return {
-            'S': '현실적인',
-            'N': '직관적인'
-          };
+          return const Color(0xFF2196F3); // 블루
         case 'T/F':
-          return {
-            'T': '논리적인',
-            'F': '감정적인'
-          };
+          return const Color(0xFFFFC107); // 옐로우
         case 'J/P':
-          return {
-            'J': '계획적인',
-            'P': '유연한'
-          };
+          return const Color(0xFF4CAF50); // 그린
         default:
-          return {'': '', '': ''};
+          return const Color(0xFF667EEA);
       }
     }
-    
+
+    // 타입 설명 맵핑
+    String getTypeDesc(String type) {
+      const map = {
+        'E': '외향형',
+        'I': '내향형',
+        'S': '감각형',
+        'N': '직관형',
+        'T': '사고형',
+        'F': '감정형',
+        'J': '판단형',
+        'P': '인식형',
+      };
+      return map[type] ?? '';
+    }
+
     final sliderColor = getSliderColor();
-    final descriptions = getTypeDescriptions();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -480,19 +827,23 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    score.leftType,
+                    left,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: !isRightDominant ? sliderColor : const Color(0xFF94A3B8),
+                      color: !isRightDominant
+                          ? sliderColor
+                          : const Color(0xFF94A3B8),
                     ),
                   ),
                   Text(
-                    descriptions[score.leftType] ?? '',
+                    getTypeDesc(left),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: !isRightDominant ? sliderColor.withOpacity(0.8) : const Color(0xFF94A3B8),
+                      color: !isRightDominant
+                          ? sliderColor.withOpacity(0.8)
+                          : const Color(0xFF94A3B8),
                     ),
                   ),
                 ],
@@ -504,19 +855,23 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    score.rightType,
+                    right,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: isRightDominant ? sliderColor : const Color(0xFF94A3B8),
+                      color: isRightDominant
+                          ? sliderColor
+                          : const Color(0xFF94A3B8),
                     ),
                   ),
                   Text(
-                    descriptions[score.rightType] ?? '',
+                    getTypeDesc(right),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isRightDominant ? sliderColor.withOpacity(0.8) : const Color(0xFF94A3B8),
+                      color: isRightDominant
+                          ? sliderColor.withOpacity(0.8)
+                          : const Color(0xFF94A3B8),
                     ),
                   ),
                 ],
@@ -524,9 +879,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // 슬라이더 트랙
         Container(
           height: 6,
@@ -538,7 +893,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             children: [
               // 진행 바
               FractionallySizedBox(
-                alignment: isRightDominant ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: isRightDominant
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 widthFactor: percentage / 100,
                 child: Container(
                   height: 6,
@@ -550,12 +907,17 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
               // 슬라이더 노브 (점)
               Positioned(
-                left: isRightDominant 
-                  ? null
-                  : (percentage / 100) * (MediaQuery.of(context).size.width - 88) - 4,
-                right: isRightDominant 
-                  ? (100 - percentage) / 100 * (MediaQuery.of(context).size.width - 88) - 4
-                  : null,
+                left: isRightDominant
+                    ? null
+                    : (percentage / 100) *
+                              (MediaQuery.of(context).size.width - 88) -
+                          4,
+                right: isRightDominant
+                    ? (100 - percentage) /
+                              100 *
+                              (MediaQuery.of(context).size.width - 88) -
+                          4
+                    : null,
                 top: -2,
                 child: Container(
                   width: 10,
@@ -577,9 +939,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ],
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // 퍼센트 표시
         Center(
           child: Text(
@@ -595,30 +957,193 @@ class _AnalysisScreenState extends State<AnalysisScreen>
     );
   }
 
-  /// 인지기능 상위 3개
-  Widget _buildTopCognitiveFunctions() {
-    final topFunctions = _analysisData.cognitiveFunctions
-        .where((f) => f.strength > 50)
-        .toList()
-        ..sort((a, b) => b.strength.compareTo(a.strength));
-    
-    final displayFunctions = topFunctions.take(3).toList();
-    
+  // /// 인지기능 상위 3개
+  // Widget _buildTopCognitiveFunctions() {
+  //   final topFunctions = _analysisData.cognitiveFunctions
+  //       .where((f) => f.strength > 50)
+  //       .toList()
+  //       ..sort((a, b) => b.strength.compareTo(a.strength));
+  //
+  //   final displayFunctions = topFunctions.take(3).toList();
+  //
+  //   // 인지기능 설명 맵
+  //   Map<String, String> getFunctionDescription(String shortName) {
+  //     switch (shortName) {
+  //       case 'Te': return {'name': '외향 사고', 'desc': '효율적 조직화'};
+  //       case 'Ti': return {'name': '내향 사고', 'desc': '논리적 분석'};
+  //       case 'Fe': return {'name': '외향 감정', 'desc': '타인 배려'};
+  //       case 'Fi': return {'name': '내향 감정', 'desc': '개인적 가치'};
+  //       case 'Se': return {'name': '외향 감각', 'desc': '현재 경험'};
+  //       case 'Si': return {'name': '내향 감각', 'desc': '과거 기억'};
+  //       case 'Ne': return {'name': '외향 직관', 'desc': '가능성 탐색'};
+  //       case 'Ni': return {'name': '내향 직관', 'desc': '미래 통찰'};
+  //       default: return {'name': '알 수 없음', 'desc': ''};
+  //     }
+  //   }
+  //
+  //   return Container(
+  //     padding: const EdgeInsets.all(24),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.04),
+  //           blurRadius: 20,
+  //           offset: const Offset(0, 8),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Container(
+  //               padding: const EdgeInsets.all(10),
+  //               decoration: BoxDecoration(
+  //                 gradient: const LinearGradient(
+  //                   colors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
+  //                 ),
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //               child: const Icon(
+  //                 Icons.lightbulb_outline,
+  //                 color: Colors.white,
+  //                 size: 20,
+  //               ),
+  //             ),
+  //             const SizedBox(width: 12),
+  //             const Text(
+  //               '인지기능 패턴',
+  //               style: TextStyle(
+  //                 fontSize: 18,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: Color(0xFF1E293B),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //
+  //         const SizedBox(height: 4),
+  //         const Text(
+  //           '당신이 가장 자주 사용하는 사고 방식입니다',
+  //           style: TextStyle(
+  //             fontSize: 12,
+  //             color: Color(0xFF64748B),
+  //           ),
+  //         ),
+  //
+  //         const SizedBox(height: 20),
+  //
+  //         // 상위 3개 기능 (설명 추가)
+  //         Row(
+  //           children: displayFunctions.map((function) {
+  //             final color = Color(int.parse(function.color, radix: 16));
+  //             final functionInfo = getFunctionDescription(function.shortName);
+  //
+  //             return Expanded(
+  //               child: Column(
+  //                 children: [
+  //                   Container(
+  //                     width: 60,
+  //                     height: 60,
+  //                     decoration: BoxDecoration(
+  //                       color: color.withOpacity(0.1),
+  //                       shape: BoxShape.circle,
+  //                       border: Border.all(color: color, width: 3),
+  //                     ),
+  //                     child: Center(
+  //                       child: Text(
+  //                         function.shortName,
+  //                         style: TextStyle(
+  //                           fontSize: 16,
+  //                           fontWeight: FontWeight.w700,
+  //                           color: color,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 8),
+  //                   Text(
+  //                     functionInfo['name']!,
+  //                     style: TextStyle(
+  //                       fontSize: 12,
+  //                       fontWeight: FontWeight.w600,
+  //                       color: color,
+  //                     ),
+  //                     textAlign: TextAlign.center,
+  //                   ),
+  //                   Text(
+  //                     functionInfo['desc']!,
+  //                     style: const TextStyle(
+  //                       fontSize: 10,
+  //                       color: Color(0xFF64748B),
+  //                     ),
+  //                     textAlign: TextAlign.center,
+  //                   ),
+  //                   const SizedBox(height: 4),
+  //                   Text(
+  //                     '${function.strength.toInt()}%',
+  //                     style: TextStyle(
+  //                       fontSize: 12,
+  //                       fontWeight: FontWeight.w700,
+  //                       color: color,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             );
+  //           }).toList(),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildTopCognitiveFunctions(MbtiStats mbti) {
+    // 1. DTO 필드를 리스트로 변환
+    final allFunctions = [
+      {'code': 'Se', 'score': mbti.se, 'color': '0xFFF44336'},
+      {'code': 'Si', 'score': mbti.si, 'color': '0xFFE91E63'},
+      {'code': 'Ne', 'score': mbti.ne, 'color': '0xFF9C27B0'},
+      {'code': 'Ni', 'score': mbti.ni, 'color': '0xFF673AB7'},
+      {'code': 'Te', 'score': mbti.te, 'color': '0xFF3F51B5'},
+      {'code': 'Ti', 'score': mbti.ti, 'color': '0xFF2196F3'},
+      {'code': 'Fe', 'score': mbti.fe, 'color': '0xFF009688'},
+      {'code': 'Fi', 'score': mbti.fi, 'color': '0xFF4CAF50'},
+    ];
+
+    // 2. 점수 기준 내림차순 정렬 후 상위 3개 추출
+    allFunctions.sort(
+      (a, b) => (b['score'] as int).compareTo(a['score'] as int),
+    );
+    final topFunctions = allFunctions.take(3).toList();
+
     // 인지기능 설명 맵
     Map<String, String> getFunctionDescription(String shortName) {
       switch (shortName) {
-        case 'Te': return {'name': '외향 사고', 'desc': '효율적 조직화'};
-        case 'Ti': return {'name': '내향 사고', 'desc': '논리적 분석'};
-        case 'Fe': return {'name': '외향 감정', 'desc': '타인 배려'};
-        case 'Fi': return {'name': '내향 감정', 'desc': '개인적 가치'};
-        case 'Se': return {'name': '외향 감각', 'desc': '현재 경험'};
-        case 'Si': return {'name': '내향 감각', 'desc': '과거 기억'};
-        case 'Ne': return {'name': '외향 직관', 'desc': '가능성 탐색'};
-        case 'Ni': return {'name': '내향 직관', 'desc': '미래 통찰'};
-        default: return {'name': '알 수 없음', 'desc': ''};
+        case 'Te':
+          return {'name': '외향 사고', 'desc': '효율적 실행'};
+        case 'Ti':
+          return {'name': '내향 사고', 'desc': '논리적 분석'};
+        case 'Fe':
+          return {'name': '외향 감정', 'desc': '타인 공감'};
+        case 'Fi':
+          return {'name': '내향 감정', 'desc': '내면 가치'};
+        case 'Se':
+          return {'name': '외향 감각', 'desc': '현재 경험'};
+        case 'Si':
+          return {'name': '내향 감각', 'desc': '과거 경험'};
+        case 'Ne':
+          return {'name': '외향 직관', 'desc': '다양한 가능성'};
+        case 'Ni':
+          return {'name': '내향 직관', 'desc': '미래 통찰'};
+        default:
+          return {'name': '-', 'desc': '-'};
       }
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -653,7 +1178,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
               const SizedBox(width: 12),
               const Text(
-                '인지기능 패턴',
+                '핵심 인지기능',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -662,24 +1187,23 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 4),
           const Text(
-            '당신이 가장 자주 사용하는 사고 방식입니다',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF64748B),
-            ),
+            '당신이 무의식적으로 가장 잘 쓰는 기능들입니다',
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
-          
+
           const SizedBox(height: 20),
-          
-          // 상위 3개 기능 (설명 추가)
+
+          // 상위 3개 기능 렌더링
           Row(
-            children: displayFunctions.map((function) {
-              final color = Color(int.parse(function.color, radix: 16));
-              final functionInfo = getFunctionDescription(function.shortName);
-              
+            children: topFunctions.map((function) {
+              final color = Color(int.parse(function['color'] as String));
+              final code = function['code'] as String;
+              final score = function['score'] as int;
+              final info = getFunctionDescription(code);
+
               return Expanded(
                 child: Column(
                   children: [
@@ -693,7 +1217,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                       ),
                       child: Center(
                         child: Text(
-                          function.shortName,
+                          code,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -704,7 +1228,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      functionInfo['name']!,
+                      info['name']!,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -713,7 +1237,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      functionInfo['desc']!,
+                      info['desc']!,
                       style: const TextStyle(
                         fontSize: 10,
                         color: Color(0xFF64748B),
@@ -722,7 +1246,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${function.strength.toInt()}%',
+                      '$score%',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -740,46 +1264,46 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   }
 
   /// Big 5 성격지표 슬라이더
-  Widget _buildBigFiveSliders() {
+  Widget _buildBigFiveSliders(Big5Stats big5) {
     // Big 5를 위한 더미 데이터 (기존 personalityDimensions를 변환)
     final bigFiveData = [
       {
-        'name': '신경성',
+        'name': '신경성 (Neuroticism)',
         'leftLabel': '안정적인',
-        'rightLabel': '불안한',
-        'score': 35.0, // 안정적
+        'rightLabel': '민감한',
+        'score': big5.neuroticism.toDouble(),
         'color': const Color(0xFFEF5350),
       },
       {
-        'name': '외향성',
+        'name': '외향성 (Extraversion)',
         'leftLabel': '내향적인',
         'rightLabel': '외향적인',
-        'score': 32.0, // 내향적
+        'score': big5.extraversion.toDouble(),
         'color': const Color(0xFF42A5F5),
       },
       {
-        'name': '개방성',
+        'name': '개방성 (Openness)',
         'leftLabel': '보수적인',
         'rightLabel': '개방적인',
-        'score': 85.0, // 개방적
+        'score': big5.openness.toDouble(),
         'color': const Color(0xFFAB47BC),
       },
       {
-        'name': '친화성',
+        'name': '친화성 (Agreeableness)',
         'leftLabel': '경쟁적인',
         'rightLabel': '협력적인',
-        'score': 70.0, // 협력적
+        'score': big5.agreeableness.toDouble(),
         'color': const Color(0xFF66BB6A),
       },
       {
-        'name': '성실성',
-        'leftLabel': '자유분방',
-        'rightLabel': '책임감 있는',
-        'score': 55.0, // 보통
+        'name': '성실성 (Conscientiousness)',
+        'leftLabel': '즉흥적인',
+        'rightLabel': '계획적인',
+        'score': big5.conscientiousness.toDouble(),
         'color': const Color(0xFFFF7043),
       },
     ];
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -823,9 +1347,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Big 5 슬라이더들
           ...bigFiveData.map((data) {
             return Container(
@@ -853,7 +1377,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   ) {
     final isRightDominant = score > 50;
     final percentage = isRightDominant ? score : (100 - score);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -866,9 +1390,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             color: Color(0xFF1E293B),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // 라벨들
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -891,9 +1415,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ),
           ],
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // 슬라이더
         Container(
           height: 4,
@@ -904,7 +1428,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
           child: Stack(
             children: [
               FractionallySizedBox(
-                alignment: isRightDominant ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: isRightDominant
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 widthFactor: percentage / 100,
                 child: Container(
                   height: 4,
@@ -917,9 +1443,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ],
           ),
         ),
-        
+
         const SizedBox(height: 4),
-        
+
         // 퍼센트
         Text(
           '${score.toInt()}%',
@@ -936,7 +1462,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   /// 에니어그램 상위 3개
   Widget _buildTopEnneagramTypes() {
     final topTypes = _analysisData.enneagramTypes.take(3).toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -980,9 +1506,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // 상위 3개 유형
           Row(
             children: topTypes.map((type) {
@@ -1051,9 +1577,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
     final strongestDimension = _analysisData.personalityDimensions.reduce(
       (a, b) => a.score > b.score ? a : b,
     );
-    
+
     final color = Color(int.parse(strongestDimension.color, radix: 16));
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1096,9 +1622,9 @@ class _AnalysisScreenState extends State<AnalysisScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // 메인 지표
           Container(
             padding: const EdgeInsets.all(20),
@@ -1193,15 +1719,19 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // 원형 차트 스타일로 8기능 표시
           Row(
             children: [
               Expanded(
-                child: _buildCognitiveFunctionCircle(_analysisData.cognitiveFunctions[0]),
+                child: _buildCognitiveFunctionCircle(
+                  _analysisData.cognitiveFunctions[0],
+                ),
               ),
               Expanded(
-                child: _buildCognitiveFunctionCircle(_analysisData.cognitiveFunctions[1]),
+                child: _buildCognitiveFunctionCircle(
+                  _analysisData.cognitiveFunctions[1],
+                ),
               ),
             ],
           ),
@@ -1209,10 +1739,14 @@ class _AnalysisScreenState extends State<AnalysisScreen>
           Row(
             children: [
               Expanded(
-                child: _buildCognitiveFunctionCircle(_analysisData.cognitiveFunctions[2]),
+                child: _buildCognitiveFunctionCircle(
+                  _analysisData.cognitiveFunctions[2],
+                ),
               ),
               Expanded(
-                child: _buildCognitiveFunctionCircle(_analysisData.cognitiveFunctions[3]),
+                child: _buildCognitiveFunctionCircle(
+                  _analysisData.cognitiveFunctions[3],
+                ),
               ),
             ],
           ),
@@ -1223,7 +1757,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
 
   Widget _buildCognitiveFunctionCircle(CognitiveFunction function) {
     final color = Color(int.parse(function.color, radix: 16));
-    
+
     return Column(
       children: [
         Container(
@@ -1232,10 +1766,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: color,
-              width: 3,
-            ),
+            border: Border.all(color: color, width: 3),
           ),
           child: Center(
             child: Text(
@@ -1259,10 +1790,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
         ),
         Text(
           function.type.displayName,
-          style: const TextStyle(
-            fontSize: 10,
-            color: Color(0xFF64748B),
-          ),
+          style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
         ),
       ],
     );
@@ -1271,7 +1799,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
   /// 에니어그램 차트
   Widget _buildEnneagramChart() {
     final topTypes = _analysisData.enneagramTypes.take(3).toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1297,7 +1825,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // 상위 3개 타입을 도넛 차트 스타일로
           Row(
             children: topTypes.map((type) {
@@ -1394,7 +1922,7 @@ class _AnalysisScreenState extends State<AnalysisScreen>
             ],
           ),
           const SizedBox(height: 20),
-          
+
           SizedBox(
             height: 120,
             child: ListView.builder(
@@ -1432,7 +1960,10 @@ class _AnalysisScreenState extends State<AnalysisScreen>
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),

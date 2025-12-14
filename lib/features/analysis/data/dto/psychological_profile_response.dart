@@ -136,3 +136,32 @@ class EnneagramStats {
 
   Map<String, dynamic> toJson() => _$EnneagramStatsToJson(this);
 }
+
+extension ProfileValidation on PsychologicalProfileResponse {
+  /// 전체 데이터가 하나도 없는지 확인 (메인 Empty View 판별용)
+  bool get isAllEmpty => !hasMbti && !hasBig5 && !hasEnneagram;
+
+  /// MBTI 데이터가 유효한지 (결과 타입이 있고, 4지표 점수 합이 0보다 큰지)
+  bool get hasMbti => mbti != null && mbti!.resultType != null;
+
+  /// 8기능 데이터가 유효한지 (MBTI 데이터가 있고, 8기능 점수 중 하나라도 0보다 큰지)
+  /// MBTI와 같은 객체(MbtiStats)를 쓰지만, UI 분리를 위해 별도 getter 생성
+  bool get hasCognitiveFunctions {
+    if (mbti == null) return false;
+    // 8기능 점수의 합이 0이면 데이터 없는 것으로 간주
+    final sum = mbti!.se + mbti!.si + mbti!.ne + mbti!.ni +
+        mbti!.te + mbti!.ti + mbti!.fe + mbti!.fi;
+    return sum > 0;
+  }
+
+  /// Big5 데이터 유효성
+  bool get hasBig5 {
+    if (big5 == null) return false;
+    // 모든 수치가 0이면 검사 안한 것으로 간주
+    return big5!.openness + big5!.conscientiousness + big5!.extraversion +
+        big5!.agreeableness + big5!.neuroticism > 0;
+  }
+
+  /// 에니어그램 데이터 유효성
+  bool get hasEnneagram => enneagram != null && enneagram!.resultType != null;
+}

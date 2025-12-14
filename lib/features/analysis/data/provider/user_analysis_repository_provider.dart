@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dio/dio.dart';
 
-import '../../../../core/auth/token_manager.dart'; // 경로 확인 필요
+import '../../../../core/auth/token_manager_provider.dart';
 import '../../../../core/network/dio_provider.dart'; // Dio Provider 경로 확인 필요
 import '../../domain/repository/user_analysis_repository.dart';
 import '../data_source/user_analysis_data_source.dart';
@@ -24,7 +24,7 @@ UserAnalysisDataSource userAnalysisDataSource(UserAnalysisDataSourceRef ref) {
 @riverpod
 UserAnalysisRepository userAnalysisRepository(UserAnalysisRepositoryRef ref) {
   final dataSource = ref.watch(userAnalysisDataSourceProvider);
-  final tokenManager = TokenManager(); // 싱글톤이거나 별도 Provider라면 ref.watch로 변경
+  final tokenManager = ref.read(tokenManagerProvider);
 
   return UserAnalysisRepositoryImpl(dataSource, tokenManager);
 }

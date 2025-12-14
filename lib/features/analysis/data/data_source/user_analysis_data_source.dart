@@ -19,7 +19,7 @@ abstract class UserAnalysisDataSource {
   /// - 엔드포인트: GET /api/v1/users/me/profile
   /// - 기능: DB에 저장된 MBTI, Big5, Enneagram 누적 결과를 반환함.
   /// - 인증: 필수 (AccessToken)
-  @GET('/users/me/profile')
+  @GET('/analysis/profile')
   Future<ApiResponse<PsychologicalProfileResponse>> getMyPsychologicalProfile(
       @Header('Authorization') String authorization,
       );
