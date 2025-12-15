@@ -240,7 +240,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   Widget _buildCognitiveSection(PsychologicalProfileResponse? profile) {
     // hasCognitiveFunctions 체크: 8기능 점수 합이 0보다 큰지 확인
     if (profile != null && profile.hasCognitiveFunctions) {
-      return _buildTopCognitiveFunctions(profile.mbti!);
+      // ⚠️ 변경점: mbti 객체가 아닌 cognitiveFunctions 객체를 전달
+      return _buildTopCognitiveFunctions(profile.cognitiveFunctions!);
     }
     // 데이터 없음 -> 검사 유도
     else {
@@ -1101,17 +1102,17 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   //   );
   // }
 
-  Widget _buildTopCognitiveFunctions(MbtiStats mbti) {
+  Widget _buildTopCognitiveFunctions(CognitiveStats cognitive) {
     // 1. DTO 필드를 리스트로 변환
     final allFunctions = [
-      {'code': 'Se', 'score': mbti.se, 'color': '0xFFF44336'},
-      {'code': 'Si', 'score': mbti.si, 'color': '0xFFE91E63'},
-      {'code': 'Ne', 'score': mbti.ne, 'color': '0xFF9C27B0'},
-      {'code': 'Ni', 'score': mbti.ni, 'color': '0xFF673AB7'},
-      {'code': 'Te', 'score': mbti.te, 'color': '0xFF3F51B5'},
-      {'code': 'Ti', 'score': mbti.ti, 'color': '0xFF2196F3'},
-      {'code': 'Fe', 'score': mbti.fe, 'color': '0xFF009688'},
-      {'code': 'Fi', 'score': mbti.fi, 'color': '0xFF4CAF50'},
+      {'code': 'Se', 'score': cognitive.se, 'color': '0xFFF44336'},
+      {'code': 'Si', 'score': cognitive.si, 'color': '0xFFE91E63'},
+      {'code': 'Ne', 'score': cognitive.ne, 'color': '0xFF9C27B0'},
+      {'code': 'Ni', 'score': cognitive.ni, 'color': '0xFF673AB7'},
+      {'code': 'Te', 'score': cognitive.te, 'color': '0xFF3F51B5'},
+      {'code': 'Ti', 'score': cognitive.ti, 'color': '0xFF2196F3'},
+      {'code': 'Fe', 'score': cognitive.fe, 'color': '0xFF009688'},
+      {'code': 'Fi', 'score': cognitive.fi, 'color': '0xFF4CAF50'},
     ];
 
     // 2. 점수 기준 내림차순 정렬 후 상위 3개 추출
