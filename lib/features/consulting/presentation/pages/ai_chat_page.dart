@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/therapy_notifier.dart';
 
 /// 💬 AI 상담 채팅 페이지
-/// 
+///
 /// 실시간 AI 상담사와의 채팅 인터페이스
 /// - 카카오톡 스타일 채팅 UI
 /// - 타이핑 애니메이션
 /// - 메모리 효율적인 메시지 관리
 /// - 감정 분석 기반 맞춤 응답
-class AiChatPage extends StatefulWidget {
+class AiChatPage extends ConsumerStatefulWidget {
   const AiChatPage({super.key});
 
   @override
-  State<AiChatPage> createState() => _AiChatPageState();
+  ConsumerState<AiChatPage> createState() => _AiChatPageState();
 }
 
-class _AiChatPageState extends State<AiChatPage>
+class _AiChatPageState extends ConsumerState<AiChatPage>
     with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
-  bool _isAiTyping = false;
+
   late AnimationController _typingAnimationController;
 
   @override
   void initState() {
     super.initState();
-    _initializeChat();
     _initAnimations();
   }
 
@@ -45,73 +46,87 @@ class _AiChatPageState extends State<AiChatPage>
     )..repeat();
   }
 
-  /// 💬 채팅 초기화
-  void _initializeChat() {
-    // 웰컴 메시지
-    _messages.add(
-      ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: '안녕하세요! 저는 마인드 캔버스의 AI 상담사입니다. 🤗\n\n오늘 어떤 이야기를 나누고 싶으신가요?',
-        isFromAi: true,
-        timestamp: DateTime.now(),
-        messageType: MessageType.text,
-      ),
-    );
-
-    // 추천 질문들
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (mounted) {
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              content: '',
-              isFromAi: true,
-              timestamp: DateTime.now(),
-              messageType: MessageType.suggestions,
-              suggestions: [
-                '😊 오늘 기분이 어때요?',
-                '💭 고민이 있어요',
-                '😴 스트레스를 받고 있어요',
-                '🎯 목표를 세우고 싶어요',
-              ],
-            ),
-          );
-        });
-      }
-    });
-  }
+  //
+  // /// 💬 채팅 초기화
+  // void _initializeChat() {
+  //   // 웰컴 메시지
+  //   _messages.add(
+  //     ChatMessage(
+  //       id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //       content: '안녕하세요! 저는 마인드 캔버스의 AI 상담사입니다. 🤗\n\n오늘 어떤 이야기를 나누고 싶으신가요?',
+  //       isFromAi: true,
+  //       timestamp: DateTime.now(),
+  //       messageType: MessageType.text,
+  //     ),
+  //   );
+  //
+  //   // 추천 질문들
+  //   Future.delayed(const Duration(milliseconds: 1000), () {
+  //     if (mounted) {
+  //       setState(() {
+  //         _messages.add(
+  //           ChatMessage(
+  //             id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //             content: '',
+  //             isFromAi: true,
+  //             timestamp: DateTime.now(),
+  //             messageType: MessageType.suggestions,
+  //             suggestions: [
+  //               '😊 오늘 기분이 어때요?',
+  //               '💭 고민이 있어요',
+  //               '😴 스트레스를 받고 있어요',
+  //               '🎯 목표를 세우고 싶어요',
+  //             ],
+  //           ),
+  //         );
+  //       });
+  //     }
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
+    // 🔍 Provider 상태 구독
+    final therapyState = ref.watch(therapyNotifierProvider);
+
+    // 👂 상태 리스너: 에러 처리 및 스크롤 이동
+    ref.listen(therapyNotifierProvider, (previous, next) {
+      // 에러 발생 시 스낵바 표시
+      if (next.errorMessage != null && !next.isLoading) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('⚠️ ${next.errorMessage}')));
+      }
+
+      // 메시지가 추가되면 스크롤 아래로 이동
+      if (next.chatHistory.length > (previous?.chatHistory.length ?? 0)) {
+        _scrollToBottom();
+      }
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(therapyState.isLoading), // 로딩 상태 전달
       body: Column(
         children: [
-          // 채팅 메시지 영역
           Expanded(
-            child: _buildMessageList(),
+            child: _buildMessageList(therapyState), // 상태 전달
           ),
-          // 입력 영역
-          _buildInputArea(),
+          _buildInputArea(therapyState.isLoading), // 로딩 중 입력 방지
         ],
       ),
     );
   }
 
   /// 🎯 앱바 구성
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(bool isLoading) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 1,
       shadowColor: Colors.black.withOpacity(0.1),
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
-        icon: const Icon(
-          Icons.arrow_back_ios,
-          color: Color(0xFF2D3748),
-        ),
+        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
       ),
       title: Row(
         children: [
@@ -125,11 +140,7 @@ class _AiChatPageState extends State<AiChatPage>
               ),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Icon(
-              Icons.psychology,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: const Icon(Icons.psychology, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Column(
@@ -144,9 +155,11 @@ class _AiChatPageState extends State<AiChatPage>
                 ),
               ),
               Text(
-                _isAiTyping ? '입력 중...' : '온라인',
+                isLoading ? '입력 중...' : '온라인', // ✅ 상태에 따라 변경
                 style: TextStyle(
-                  color: _isAiTyping ? const Color(0xFF6B73FF) : const Color(0xFF4ECDC4),
+                  color: isLoading
+                      ? const Color(0xFF6B73FF)
+                      : const Color(0xFF4ECDC4),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -158,67 +171,86 @@ class _AiChatPageState extends State<AiChatPage>
       actions: [
         IconButton(
           onPressed: _showChatOptions,
-          icon: const Icon(
-            Icons.more_vert,
-            color: Color(0xFF64748B),
-          ),
+          icon: const Icon(Icons.more_vert, color: Color(0xFF64748B)),
         ),
       ],
     );
   }
 
   /// 📜 메시지 리스트
-  Widget _buildMessageList() {
-    return ListView.builder(
+  /// 📜 메시지 리스트 빌더 (수정됨)
+  Widget _buildMessageList(TherapyState state) {
+    // 1. 고정 웰컴 메시지 + 추천 질문
+    final List<Widget> uiMessages = [
+      _buildMessageBubble(
+        isFromAi: true,
+        content: '안녕하세요! 저는 마인드 캔버스의 AI 상담사입니다. 🤗\n\n오늘 어떤 이야기를 나누고 싶으신가요?',
+        type: MessageType.text,
+      ),
+      _buildMessageBubble(
+        isFromAi: true,
+        content: '',
+        type: MessageType.suggestions,
+        suggestions: ['😊 오늘 기분이 어때요?', '💭 고민이 있어요', '😴 스트레스를 받고 있어요'],
+      ),
+    ];
+
+    // 2. Provider의 ChatHistory를 Widget으로 변환하여 추가
+    // (ChatHistory 객체 -> UI 위젯)
+    for (var chat in state.chatHistory) {
+      uiMessages.add(
+        _buildMessageBubble(
+          isFromAi: chat.role == 'AI',
+          content: chat.content,
+          type: MessageType.text,
+        ),
+      );
+    }
+
+    // 3. 로딩 인디케이터 추가
+    if (state.isLoading) {
+      uiMessages.add(_buildTypingIndicator());
+    }
+
+    return ListView(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: _messages.length + (_isAiTyping ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _messages.length && _isAiTyping) {
-          return _buildTypingIndicator();
-        }
-        return _buildMessageBubble(_messages[index]);
-      },
+      children: uiMessages,
     );
   }
 
   /// 💬 메시지 버블
-  Widget _buildMessageBubble(ChatMessage message) {
+  Widget _buildMessageBubble({
+    required bool isFromAi,
+    required String content,
+    required MessageType type,
+    List<String>? suggestions,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
-        crossAxisAlignment: message.isFromAi 
-          ? CrossAxisAlignment.start 
-          : CrossAxisAlignment.end,
+        crossAxisAlignment: isFromAi
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.end,
         children: [
-          // 메시지 버블
-          if (message.messageType == MessageType.text)
-            _buildTextMessage(message)
-          else if (message.messageType == MessageType.suggestions)
-            _buildSuggestionsMessage(message),
-          
-          // 타임스탬프
-          const SizedBox(height: 4),
-          Text(
-            _formatTime(message.timestamp),
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF94A3B8),
-            ),
-          ),
+          if (type == MessageType.text)
+            _buildTextMessage(isFromAi, content) // 매개변수 변경
+          else if (type == MessageType.suggestions)
+            _buildSuggestionsMessage(suggestions ?? []), // 매개변수 변경
+          // 타임스탬프는 DTO에 없으므로 일단 제거하거나 현재 시간으로 대체
         ],
       ),
     );
   }
 
   /// 📝 텍스트 메시지
-  Widget _buildTextMessage(ChatMessage message) {
+  Widget _buildTextMessage(bool isFromAi, String content) {
     return Row(
-      mainAxisAlignment: message.isFromAi 
-        ? MainAxisAlignment.start 
-        : MainAxisAlignment.end,
+      mainAxisAlignment: isFromAi
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.end,
       children: [
-        if (message.isFromAi) ...[
+        if (isFromAi) ...[
           // AI 아바타
           Container(
             width: 32,
@@ -229,33 +261,24 @@ class _AiChatPageState extends State<AiChatPage>
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.psychology,
-              color: Colors.white,
-              size: 16,
-            ),
+            child: const Icon(Icons.psychology, color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),
         ],
-        
+
         // 메시지 버블
         Flexible(
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: message.isFromAi 
-                ? Colors.white 
-                : const Color(0xFF6B73FF),
+              color: isFromAi ? Colors.white : const Color(0xFF6B73FF),
               borderRadius: BorderRadius.circular(20).copyWith(
-                bottomLeft: message.isFromAi 
-                  ? const Radius.circular(4) 
-                  : const Radius.circular(20),
-                bottomRight: message.isFromAi 
-                  ? const Radius.circular(20) 
-                  : const Radius.circular(4),
+                bottomLeft: isFromAi
+                    ? const Radius.circular(4)
+                    : const Radius.circular(20),
+                bottomRight: isFromAi
+                    ? const Radius.circular(20)
+                    : const Radius.circular(4),
               ),
               boxShadow: [
                 BoxShadow(
@@ -266,12 +289,10 @@ class _AiChatPageState extends State<AiChatPage>
               ],
             ),
             child: Text(
-              message.content,
+              content,
               style: TextStyle(
                 fontSize: 15,
-                color: message.isFromAi 
-                  ? const Color(0xFF2D3748) 
-                  : Colors.white,
+                color: isFromAi ? const Color(0xFF2D3748) : Colors.white,
                 height: 1.4,
               ),
             ),
@@ -282,7 +303,7 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   /// 💡 추천 질문 메시지
-  Widget _buildSuggestionsMessage(ChatMessage message) {
+  Widget _buildSuggestionsMessage(List<String> suggestions) {
     return Row(
       children: [
         // AI 아바타
@@ -295,14 +316,10 @@ class _AiChatPageState extends State<AiChatPage>
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(
-            Icons.psychology,
-            color: Colors.white,
-            size: 16,
-          ),
+          child: const Icon(Icons.psychology, color: Colors.white, size: 16),
         ),
         const SizedBox(width: 8),
-        
+
         // 추천 질문들
         Expanded(
           child: Column(
@@ -320,7 +337,7 @@ class _AiChatPageState extends State<AiChatPage>
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: message.suggestions!.map((suggestion) {
+                children: suggestions.map((suggestion) {
                   return GestureDetector(
                     onTap: () => _sendMessage(suggestion),
                     child: Container(
@@ -370,25 +387,18 @@ class _AiChatPageState extends State<AiChatPage>
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.psychology,
-              color: Colors.white,
-              size: 16,
-            ),
+            child: const Icon(Icons.psychology, color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),
-          
+
           // 타이핑 애니메이션
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20).copyWith(
-                bottomLeft: const Radius.circular(4),
-              ),
+              borderRadius: BorderRadius.circular(
+                20,
+              ).copyWith(bottomLeft: const Radius.circular(4)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -404,11 +414,15 @@ class _AiChatPageState extends State<AiChatPage>
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(3, (index) {
                     final delay = index * 0.3;
-                    final animationValue = (_typingAnimationController.value - delay).clamp(0.0, 1.0);
-                    final opacity = (animationValue < 0.5) 
-                      ? animationValue * 2 
-                      : (1 - animationValue) * 2;
-                    
+                    final animationValue =
+                        (_typingAnimationController.value - delay).clamp(
+                          0.0,
+                          1.0,
+                        );
+                    final opacity = (animationValue < 0.5)
+                        ? animationValue * 2
+                        : (1 - animationValue) * 2;
+
                     return Padding(
                       padding: EdgeInsets.only(right: index < 2 ? 4 : 0),
                       child: Container(
@@ -431,7 +445,7 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   /// ⌨️ 입력 영역
-  Widget _buildInputArea() {
+  Widget _buildInputArea(bool isLoading) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -454,12 +468,11 @@ class _AiChatPageState extends State<AiChatPage>
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                  ),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: TextField(
                   controller: _messageController,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     hintText: '메시지를 입력하세요...',
                     hintStyle: TextStyle(
@@ -484,28 +497,27 @@ class _AiChatPageState extends State<AiChatPage>
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // 전송 버튼
             GestureDetector(
-              onTap: () {
-                final text = _messageController.text.trim();
-                if (text.isNotEmpty) {
-                  _sendMessage(text);
-                }
-              },
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6B73FF), Color(0xFF9F7AEA)],
+              onTap: isLoading
+                  ? null
+                  : () {
+                      final text = _messageController.text.trim();
+                      if (text.isNotEmpty) _sendMessage(text);
+                    },
+              child: Opacity(
+                opacity: isLoading ? 0.5 : 1.0,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6B73FF), Color(0xFF9F7AEA)],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: const Icon(
-                  Icons.send,
-                  color: Colors.white,
-                  size: 20,
+                  child: const Icon(Icons.send, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -519,71 +531,59 @@ class _AiChatPageState extends State<AiChatPage>
   void _sendMessage(String content) {
     if (content.trim().isEmpty) return;
 
-    // 사용자 메시지 추가
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          content: content,
-          isFromAi: false,
-          timestamp: DateTime.now(),
-          messageType: MessageType.text,
-        ),
-      );
-    });
+    // ✅ Provider 호출
+    ref.read(therapyNotifierProvider.notifier).sendMessage(content);
 
     _messageController.clear();
     _scrollToBottom();
-
-    // AI 응답 시뮬레이션
-    _simulateAiResponse(content);
   }
 
-  /// 🤖 AI 응답 시뮬레이션
-  void _simulateAiResponse(String userMessage) {
-    setState(() {
-      _isAiTyping = true;
-    });
-
-    // 응답 지연 시뮬레이션
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        final aiResponse = _generateAiResponse(userMessage);
-        
-        setState(() {
-          _isAiTyping = false;
-          _messages.add(
-            ChatMessage(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              content: aiResponse,
-              isFromAi: true,
-              timestamp: DateTime.now(),
-              messageType: MessageType.text,
-            ),
-          );
-        });
-
-        _scrollToBottom();
-      }
-    });
-  }
-
-  /// 🎯 AI 응답 생성 (간단한 패턴 매칭)
-  String _generateAiResponse(String userMessage) {
-    final message = userMessage.toLowerCase();
-    
-    if (message.contains('기분') || message.contains('어때')) {
-      return '기분에 대해 이야기해주셔서 감사합니다. 😊\n\n지금 느끼시는 감정을 조금 더 구체적으로 표현해주시면, 더 도움이 되는 대화를 나눌 수 있을 것 같아요. 예를 들어, 무엇이 그런 기분을 만들었는지 말씀해 주시겠어요?';
-    } else if (message.contains('고민') || message.contains('걱정')) {
-      return '고민이 있으시군요. 마음이 무거우실 것 같아요. 💭\n\n고민을 나누는 것만으로도 마음이 한결 가벼워질 수 있어요. 어떤 부분이 가장 신경 쓰이시는지 천천히 말씀해 주세요. 함께 해결 방법을 찾아보아요.';
-    } else if (message.contains('스트레스') || message.contains('힘들')) {
-      return '스트레스를 받고 계시는군요. 정말 수고 많으셨어요. 😴\n\n스트레스는 누구에게나 찾아오는 자연스러운 반응이에요. 지금 가장 큰 스트레스 요인이 무엇인지, 그리고 평소에 마음이 편해지는 활동이 있는지 알려주시겠어요?';
-    } else if (message.contains('목표') || message.contains('계획')) {
-      return '목표를 세우려고 하시는군요! 정말 멋진 마음가짐이에요. 🎯\n\n구체적으로 어떤 분야의 목표를 생각하고 계신가요? 작은 목표부터 시작해서 단계적으로 달성해 나가는 것이 좋답니다. 함께 실현 가능한 계획을 세워보아요!';
-    } else {
-      return '말씀해 주신 내용을 잘 들었습니다. 🤗\n\n더 깊이 있는 대화를 위해 조금 더 자세히 설명해 주시거나, 어떤 도움이 필요한지 구체적으로 말씀해 주시면 좋겠어요. 저는 언제나 여기서 당신의 이야기를 들을 준비가 되어 있답니다.';
-    }
-  }
+  //
+  // /// 🤖 AI 응답 시뮬레이션
+  // void _simulateAiResponse(String userMessage) {
+  //   setState(() {
+  //     _isAiTyping = true;
+  //   });
+  //
+  //   // 응답 지연 시뮬레이션
+  //   Future.delayed(const Duration(seconds: 2), () {
+  //     if (mounted) {
+  //       final aiResponse = _generateAiResponse(userMessage);
+  //
+  //       setState(() {
+  //         _isAiTyping = false;
+  //         _messages.add(
+  //           ChatMessage(
+  //             id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //             content: aiResponse,
+  //             isFromAi: true,
+  //             timestamp: DateTime.now(),
+  //             messageType: MessageType.text,
+  //           ),
+  //         );
+  //       });
+  //
+  //       _scrollToBottom();
+  //     }
+  //   });
+  // }
+  //
+  // /// 🎯 AI 응답 생성 (간단한 패턴 매칭)
+  // String _generateAiResponse(String userMessage) {
+  //   final message = userMessage.toLowerCase();
+  //
+  //   if (message.contains('기분') || message.contains('어때')) {
+  //     return '기분에 대해 이야기해주셔서 감사합니다. 😊\n\n지금 느끼시는 감정을 조금 더 구체적으로 표현해주시면, 더 도움이 되는 대화를 나눌 수 있을 것 같아요. 예를 들어, 무엇이 그런 기분을 만들었는지 말씀해 주시겠어요?';
+  //   } else if (message.contains('고민') || message.contains('걱정')) {
+  //     return '고민이 있으시군요. 마음이 무거우실 것 같아요. 💭\n\n고민을 나누는 것만으로도 마음이 한결 가벼워질 수 있어요. 어떤 부분이 가장 신경 쓰이시는지 천천히 말씀해 주세요. 함께 해결 방법을 찾아보아요.';
+  //   } else if (message.contains('스트레스') || message.contains('힘들')) {
+  //     return '스트레스를 받고 계시는군요. 정말 수고 많으셨어요. 😴\n\n스트레스는 누구에게나 찾아오는 자연스러운 반응이에요. 지금 가장 큰 스트레스 요인이 무엇인지, 그리고 평소에 마음이 편해지는 활동이 있는지 알려주시겠어요?';
+  //   } else if (message.contains('목표') || message.contains('계획')) {
+  //     return '목표를 세우려고 하시는군요! 정말 멋진 마음가짐이에요. 🎯\n\n구체적으로 어떤 분야의 목표를 생각하고 계신가요? 작은 목표부터 시작해서 단계적으로 달성해 나가는 것이 좋답니다. 함께 실현 가능한 계획을 세워보아요!';
+  //   } else {
+  //     return '말씀해 주신 내용을 잘 들었습니다. 🤗\n\n더 깊이 있는 대화를 위해 조금 더 자세히 설명해 주시거나, 어떤 도움이 필요한지 구체적으로 말씀해 주시면 좋겠어요. 저는 언제나 여기서 당신의 이야기를 들을 준비가 되어 있답니다.';
+  //   }
+  // }
 
   /// 📱 채팅 옵션 표시
   void _showChatOptions() {
@@ -648,10 +648,8 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   void _resetChat() {
-    setState(() {
-      _messages.clear();
-    });
-    _initializeChat();
+    // ✅ Provider 상태 초기화
+    ref.read(therapyNotifierProvider.notifier).clearChat();
   }
 
   void _saveChat() {
@@ -685,7 +683,4 @@ class ChatMessage {
 }
 
 /// 📝 메시지 타입
-enum MessageType {
-  text,
-  suggestions,
-}
+enum MessageType { text, suggestions }

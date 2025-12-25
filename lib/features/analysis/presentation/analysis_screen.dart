@@ -21,6 +21,27 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
 
   final AnalysisData _analysisData = AnalysisSampleData.sampleAnalysisData;
 
+  // 에니어그램 UI 메타데이터 (유형 1~9)
+  final Map<int, Map<String, dynamic>> _enneagramMetadata = {
+    1: {'name': '개혁가', 'emoji': '📏', 'color': Color(0xFFEF5350)}, // Red
+    2: {'name': '조력가', 'emoji': '❤️', 'color': Color(0xFFAB47BC)}, // Purple
+    3: {'name': '성취가', 'emoji': '🏆', 'color': Color(0xFFFFA726)}, // Orange
+    4: {
+      'name': '예술가',
+      'emoji': '🎨',
+      'color': Color(0xFF7E57C2),
+    }, // Deep Purple
+    5: {'name': '탐구자', 'emoji': '🔍', 'color': Color(0xFF42A5F5)}, // Blue
+    6: {'name': '충실가', 'emoji': '🛡️', 'color': Color(0xFF26C6DA)}, // Cyan
+    7: {'name': '열정가', 'emoji': '🎉', 'color': Color(0xFFD4E157)}, // Lime
+    8: {
+      'name': '도전가',
+      'emoji': '🔥',
+      'color': Color(0xFFFF7043),
+    }, // Deep Orange
+    9: {'name': '평화주의자', 'emoji': '🌿', 'color': Color(0xFF66BB6A)}, // Green
+  };
+
   @override
   void initState() {
     super.initState();
@@ -137,6 +158,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       body: _buildBody(state),
     );
   }
+
   Widget _buildBody(UserAnalysisState state) {
     // 1. 로딩 중 (데이터가 아예 없을 때만 로딩 표시)
     if (state.isLoading && state.profile == null) {
@@ -155,9 +177,11 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
             const SizedBox(height: 16),
             Text(state.errorMessage!),
             TextButton(
-              onPressed: () => ref.read(userAnalysisNotifierProvider.notifier).loadMyProfile(),
+              onPressed: () => ref
+                  .read(userAnalysisNotifierProvider.notifier)
+                  .loadMyProfile(),
               child: const Text('다시 시도'),
-            )
+            ),
           ],
         ),
       );
@@ -284,7 +308,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   /// Enneagram 섹션
   Widget _buildEnneagramSection(PsychologicalProfileResponse? profile) {
     if (profile != null && profile.hasEnneagram) {
-      return _buildTopEnneagramTypes(); // 기존 함수 (인자 수정 필요시 수정)
+      // ✅ 실제 데이터 연결
+      return _buildTopEnneagramTypes(profile.enneagram!);
     } else {
       return _buildEmptyStateCard(
         title: "에니어그램 유형",
@@ -1461,8 +1486,28 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   }
 
   /// 에니어그램 상위 3개
-  Widget _buildTopEnneagramTypes() {
-    final topTypes = _analysisData.enneagramTypes.take(3).toList();
+  Widget _buildTopEnneagramTypes(EnneagramStats stats) {
+    // ⚠️ 매개변수 변경
+
+    print("애니어 그램 프로필에 도착했음");
+    // 1. 데이터를 리스트로 변환 (번호, 점수)
+    List<Map<String, dynamic>> typeScores = [
+      {'num': 1, 'score': stats.type1},
+      {'num': 2, 'score': stats.type2},
+      {'num': 3, 'score': stats.type3},
+      {'num': 4, 'score': stats.type4},
+      {'num': 5, 'score': stats.type5},
+      {'num': 6, 'score': stats.type6},
+      {'num': 7, 'score': stats.type7},
+      {'num': 8, 'score': stats.type8},
+      {'num': 9, 'score': stats.type9},
+    ];
+
+    // 2. 점수 높은 순으로 정렬
+    typeScores.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+
+    // 3. 상위 3개 추출
+    final top3 = typeScores.take(3).toList();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1480,6 +1525,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 헤더 (기존 동일)
           Row(
             children: [
               Container(
@@ -1497,23 +1543,46 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                '에니어그램 유형',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '에니어그램 유형',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  // 결과 타입 표시 (예: 7w6)
+                  Text(
+                    "나의 유형: ${stats.mainType}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
 
           const SizedBox(height: 20),
 
-          // 상위 3개 유형
+          // 상위 3개 유형 렌더링
           Row(
-            children: topTypes.map((type) {
-              final color = Color(int.parse(type.color, radix: 16));
+            mainAxisAlignment: MainAxisAlignment.spaceAround, // 간격 균등 배치
+            children: top3.map((data) {
+              final int typeNum = data['num'];
+              final int score = data['score'];
+
+              // 메타데이터 가져오기
+              final meta = _enneagramMetadata[typeNum]!;
+              final Color color = meta['color'];
+              final String name = meta['name'];
+              final String emoji = meta['emoji'];
+
               return Expanded(
                 child: Column(
                   children: [
@@ -1523,22 +1592,29 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [color, color.withOpacity(0.7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Text(emoji, style: const TextStyle(fontSize: 22)),
+                            const SizedBox(height: 2),
                             Text(
-                              type.emoji,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                            Text(
-                              '${type.score.toInt()}%',
+                              '$score%',
                               style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
                             ),
@@ -1546,20 +1622,22 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
-                      '${type.number}번',
+                      '${typeNum}번',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: color,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      type.name,
+                      name,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.center,
                     ),

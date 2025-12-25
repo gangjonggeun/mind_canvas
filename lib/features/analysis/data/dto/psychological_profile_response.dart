@@ -159,5 +159,5 @@ extension ProfileValidation on PsychologicalProfileResponse {
   }
 
   /// 에니어그램 데이터 유효성
-  bool get hasEnneagram => enneagram != null && enneagram!.resultType != null;
+  bool get hasEnneagram => enneagram != null && enneagram!.mainType > 0;
 }
