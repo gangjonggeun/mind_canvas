@@ -9,6 +9,8 @@ import '../../../../core/network/dio_provider.dart'; // Dio 인스턴스 제공�
 import '../../../../core/utils/result.dart';
 import '../../data/data_source/therapy_data_source.dart';
 import '../../domain/repository/therapy_repository.dart';
+import '../dto/anger_vent_request.dart';
+import '../dto/anger_vent_response.dart';
 import '../dto/journal_response.dart';
 import '../dto/journal_submit_request.dart';
 import '../dto/therapy_chat_request.dart';
@@ -35,6 +37,48 @@ class TherapyRepositoryImpl implements TherapyRepository {
   final TokenManager _tokenManager;
 
   TherapyRepositoryImpl(this._dataSource, this._tokenManager);
+
+  // 👇 [신규 추가] AI 화풀기 메시지 전송 구현
+  @override
+  Future<Result<AngerVentResponse>> sendAngerVentMessage({
+    required String message,
+    required List<ChatHistory> history,
+  }) async {
+    try {
+      // 1. 토큰 확인
+      final validToken = await _tokenManager.getValidAccessToken();
+      if (validToken == null) {
+        return Result.failure('로그인이 필요한 서비스입니다.', 'AUTHENTICATION_REQUIRED');
+      }
+
+      // 2. 요청 DTO 생성 (AngerVentRequest)
+      final requestBody = AngerVentRequest(
+        message: message,
+        history: history,
+      );
+
+      // 3. API 호출
+      // DataSource에 새로 추가한 sendAngerVentMessage 호출
+      final apiResponse = await _dataSource.sendAngerVentMessage(
+        validToken,
+        requestBody,
+      );
+
+      // 4. 응답 처리
+      if (apiResponse.success && apiResponse.data != null) {
+        return Result.success(apiResponse.data!);
+      } else {
+        final errorMessage = apiResponse.message ?? '답변을 받아오지 못했습니다.';
+        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
+        return Result.failure(errorMessage, errorCode);
+      }
+
+    } on DioException catch (e) {
+      return _handleDioException(e); // 기존 에러 핸들러 재사용
+    } catch (e) {
+      return Result.failure('알 수 없는 오류가 발생했습니다.', 'UNKNOWN_ERROR');
+    }
+  }
 
   @override
   Future<Result<TherapyChatResponse>> sendChatMessage({

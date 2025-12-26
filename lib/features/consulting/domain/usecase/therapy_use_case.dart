@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 
 import '../../../../core/utils/result.dart';
+import '../../data/dto/anger_vent_response.dart';
 import '../../data/dto/journal_response.dart';
 import '../../data/dto/therapy_chat_request.dart';
 import '../../data/dto/therapy_chat_response.dart';
@@ -23,6 +24,36 @@ class TherapyUseCase {
   final TherapyRepository _repository;
 
   TherapyUseCase(this._repository);
+
+
+  /// AI 샌드백에게 화풀기 메시지를 보내고 맞장구 답변을 받음
+  Future<Result<AngerVentResponse>> sendAngerVentMessage({
+    required String message,
+    required List<ChatHistory> history,
+  }) async {
+    try {
+      print('🔥 TherapyUseCase - sendAngerVentMessage 호출: "$message"');
+      print('📜 전송할 히스토리 개수: ${history.length}');
+
+      // Repository의 화풀기 전용 메서드 호출
+      final result = await _repository.sendAngerVentMessage(
+        message: message,
+        history: history,
+      );
+
+      if (result.isSuccess) {
+        print('✅ TherapyUseCase - 화풀기 응답 성공');
+      } else {
+        print('❌ TherapyUseCase - 화풀기 응답 실패: ${result.errorCode}');
+      }
+
+      return result;
+    } catch (e) {
+      print('💥 TherapyUseCase - 예상치 못한 오류: $e');
+      return Result.failure('답변을 생성하는 중 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    }
+  }
+
 
   // =============================================================
   // 🗣️ 상담 메시지 전송

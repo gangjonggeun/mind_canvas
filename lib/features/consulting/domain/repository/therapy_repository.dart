@@ -2,6 +2,7 @@
 // 1️⃣ Repository Interface (Domain Layer)
 // ==========================================================
 import '../../../../core/utils/result.dart';
+import '../../data/dto/anger_vent_response.dart';
 import '../../data/dto/journal_response.dart';
 import '../../data/dto/therapy_chat_request.dart';
 import '../../data/dto/therapy_chat_response.dart';
@@ -19,4 +20,8 @@ abstract class TherapyRepository {
     required String content,
   });
 
+  Future<Result<AngerVentResponse>> sendAngerVentMessage({
+    required String message,
+    required List<ChatHistory> history,
+  });
 }

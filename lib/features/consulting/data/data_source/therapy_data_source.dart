@@ -6,6 +6,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 // 프로젝트 구조에 맞게 import 경로 수정 필요
 import '../../../../../core/network/api_response_dto.dart';
 import '../../../../core/network/dio_provider.dart';
+import '../dto/anger_vent_request.dart';
+import '../dto/anger_vent_response.dart';
 import '../dto/journal_response.dart';
 import '../dto/journal_submit_request.dart';
 import '../dto/therapy_chat_request.dart';
@@ -41,10 +43,12 @@ abstract class TherapyDataSource {
   @POST('/journals')
   Future<ApiResponse<JournalResponse>> createJournal(
     @Header('Authorization') String authorization,
-    @Body()
-
-
-
-    JournalSubmitRequest request,
+    @Body() JournalSubmitRequest request,
   );
+
+  @POST('/therapy/vent')
+  Future<ApiResponse<AngerVentResponse>> sendAngerVentMessage(
+      @Header('Authorization') String authorization,
+      @Body() AngerVentRequest request,
+      );
 }
