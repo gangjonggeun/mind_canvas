@@ -1,6 +1,7 @@
 import 'package:mind_canvas/core/services/google/google_oauth_result.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:mind_canvas/core/utils/result.dart';
+import '../../../../app/presentation/notifier/user_notifier.dart';
 import '../../../../core/providers/google_oauth_provider.dart';
 import '../../../profile/domain/usecases/profile_usecase_provider.dart';
 import '../../domain/entities/auth_user_entity.dart';
@@ -23,6 +24,13 @@ class AuthNotifier extends _$AuthNotifier {
 
     if (isLoggedIn) {
       final userResult = await authUseCase.getCurrentUser();
+
+      if (userResult.isSuccess) {
+        Future.microtask(() {
+          ref.read(userNotifierProvider.notifier).refreshProfile();
+        });
+      }
+
       return userResult.fold(
         onSuccess: (user) => user,
         onFailure: (_, __) => null,
@@ -33,67 +41,51 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   /// 🌐 Google 로그인 (새로운 서비스와 연결된 최종 버전)
+  /// 🌐 Google 로그인
   Future<Result<AuthUser?>> googleLogin() async {
-    state = const AsyncLoading(); // UI에 로딩 상태 알림
+    state = const AsyncLoading();
 
-
-    print("🔍 state 업데이트 완료: $state");
-    print("🔍 state.value?.nickname: ${state.value?.nickname}");
-    print("✅ 체크포인트 1: googleLogin 메서드 시작됨.");
-
-
-    // ✨ 4. 우리가 만든 GoogleOAuthService를 Provider를 통해 가져옵니다.
     final googleOAuthService = ref.read(googleOAuthServiceProvider);
-
-    // ✨ 5. 서비스에게 "로그인 해줘!" 라고 시키기만 하면 끝.
-    //        웹/모바일 구분은 서비스가 알아서 처리합니다.
     final googleResult = await googleOAuthService.signIn();
-    print(
-      "✅ 체크포인트 2: googleOAuthService.signIn() 호출 완료. 결과 타입: ${googleResult.runtimeType}",
-    );
 
     return await googleResult.when(
       success: (idToken) async {
-        print("✅ 체크포인트 3-1: success 블록 진입 성공!");
-
         final authUseCase = ref.read(authUseCaseProvider);
         final result = await authUseCase.completeLoginFlow(idToken: idToken);
-        print("✅ 체크포인트 3-3: 서버 로그인(completeLoginFlow) 완료!");
 
         return result.fold(
-          onSuccess: (authResponse) {  // 🎯 이제 AuthResponse가 올바르게 들어옴
-            print("✅ 체크포인트 3-4: 서버 로그인 최종 성공!");
-            print("🔍 서버 응답 닉네임: ${authResponse.nickname}");
+          onSuccess: (authResponse) {
+            print("✅ 서버 로그인 성공! 닉네임: ${authResponse.nickname}, 코인: ${authResponse.coins}");
 
-            // 🎯 AuthResponse를 AuthUser로 변환
+            // 💰 [핵심 수정 1] UserNotifier에 데이터 주입!
+            // 이제 앱 전역(MainScreen 등)에서 코인 정보를 알 수 있게 됩니다.
+            ref.read(userNotifierProvider.notifier).setAuthData(authResponse);
+
+            // AuthUser 변환 (기존 로직)
             final authUser = AuthUser(
-              nickname: authResponse.nickname,  // 🎯 이제 닉네임이 제대로 들어감
+              nickname: authResponse.nickname,
               loginType: LoginType.google,
             );
 
-            print("🔍 생성된 AuthUser: $authUser");
-            print("🔍 AuthUser 닉네임: ${authUser.nickname}");
-
             state = AsyncData(authUser);
-            print("🔍 state 업데이트 완료: $state");
-            print("🔍 state.value?.nickname: ${state.value?.nickname}");
-
             return Results.success(authUser);
           },
           onFailure: (message, code) {
-            print("❌ 체크포인트 3-5: 서버 로그인 최종 실패! 원인: $message");
+            print("❌ 서버 로그인 실패: $message");
             state = AsyncError(message, StackTrace.current);
             return Results.failure<AuthUser?>(message, code);
           },
         );
       },
       failure: (error) {
-        print("구글 로그인 실패 !! $error ");
+        print("구글 로그인 실패: $error");
         state = AsyncData(state.valueOrNull);
         return Results.failure(error.message);
       },
     );
   }
+
+
   /// 📝 프로필 설정 (개선된 버전)
   Future<Result<void>> setupProfile({
     required String nickname,
@@ -153,6 +145,8 @@ class AuthNotifier extends _$AuthNotifier {
 
       // ✨ 6. 우리 서버 로그아웃과 구글 로그아웃을 동시에 처리합니다.
       await Future.wait([authUseCase.logout(), googleOAuthService.signOut()]);
+
+      ref.read(userNotifierProvider.notifier).logout();
 
       state = const AsyncData(null); // UI에 로그아웃 상태(유저 없음)를 알림
       return Results.success(null);

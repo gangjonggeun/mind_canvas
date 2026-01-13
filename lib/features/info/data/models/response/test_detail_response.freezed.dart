@@ -30,7 +30,11 @@ mixin _$TestDetailResponse {
   String? get introduction => throw _privateConstructorUsedError;
   List<String>? get instructions => throw _privateConstructorUsedError;
   String? get backgroundGradient => throw _privateConstructorUsedError;
-  String? get darkModeGradient => throw _privateConstructorUsedError;
+  String? get darkModeGradient =>
+      throw _privateConstructorUsedError; // 💰 [신규 추가] 서버 DTO와 매핑되는 코인 관련 필드
+// @Default를 사용하면 서버에서 해당 필드가 null이거나 안 넘어올 경우(구버전 API 등) 안전하게 기본값을 사용합니다.
+  int get cost => throw _privateConstructorUsedError;
+  bool get isAffordable => throw _privateConstructorUsedError;
 
   /// Serializes this TestDetailResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,7 +63,9 @@ abstract class $TestDetailResponseCopyWith<$Res> {
       String? introduction,
       List<String>? instructions,
       String? backgroundGradient,
-      String? darkModeGradient});
+      String? darkModeGradient,
+      int cost,
+      bool isAffordable});
 }
 
 /// @nodoc
@@ -88,6 +94,8 @@ class _$TestDetailResponseCopyWithImpl<$Res, $Val extends TestDetailResponse>
     Object? instructions = freezed,
     Object? backgroundGradient = freezed,
     Object? darkModeGradient = freezed,
+    Object? cost = null,
+    Object? isAffordable = null,
   }) {
     return _then(_value.copyWith(
       testId: null == testId
@@ -134,6 +142,14 @@ class _$TestDetailResponseCopyWithImpl<$Res, $Val extends TestDetailResponse>
           ? _value.darkModeGradient
           : darkModeGradient // ignore: cast_nullable_to_non_nullable
               as String?,
+      cost: null == cost
+          ? _value.cost
+          : cost // ignore: cast_nullable_to_non_nullable
+              as int,
+      isAffordable: null == isAffordable
+          ? _value.isAffordable
+          : isAffordable // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -157,7 +173,9 @@ abstract class _$$TestDetailResponseImplCopyWith<$Res>
       String? introduction,
       List<String>? instructions,
       String? backgroundGradient,
-      String? darkModeGradient});
+      String? darkModeGradient,
+      int cost,
+      bool isAffordable});
 }
 
 /// @nodoc
@@ -184,6 +202,8 @@ class __$$TestDetailResponseImplCopyWithImpl<$Res>
     Object? instructions = freezed,
     Object? backgroundGradient = freezed,
     Object? darkModeGradient = freezed,
+    Object? cost = null,
+    Object? isAffordable = null,
   }) {
     return _then(_$TestDetailResponseImpl(
       testId: null == testId
@@ -230,6 +250,14 @@ class __$$TestDetailResponseImplCopyWithImpl<$Res>
           ? _value.darkModeGradient
           : darkModeGradient // ignore: cast_nullable_to_non_nullable
               as String?,
+      cost: null == cost
+          ? _value.cost
+          : cost // ignore: cast_nullable_to_non_nullable
+              as int,
+      isAffordable: null == isAffordable
+          ? _value.isAffordable
+          : isAffordable // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -248,7 +276,9 @@ class _$TestDetailResponseImpl implements _TestDetailResponse {
       this.introduction,
       final List<String>? instructions,
       this.backgroundGradient,
-      this.darkModeGradient})
+      this.darkModeGradient,
+      this.cost = 0,
+      this.isAffordable = false})
       : _instructions = instructions;
 
   factory _$TestDetailResponseImpl.fromJson(Map<String, dynamic> json) =>
@@ -284,10 +314,18 @@ class _$TestDetailResponseImpl implements _TestDetailResponse {
   final String? backgroundGradient;
   @override
   final String? darkModeGradient;
+// 💰 [신규 추가] 서버 DTO와 매핑되는 코인 관련 필드
+// @Default를 사용하면 서버에서 해당 필드가 null이거나 안 넘어올 경우(구버전 API 등) 안전하게 기본값을 사용합니다.
+  @override
+  @JsonKey()
+  final int cost;
+  @override
+  @JsonKey()
+  final bool isAffordable;
 
   @override
   String toString() {
-    return 'TestDetailResponse(testId: $testId, imagePath: $imagePath, psychologyTag: $psychologyTag, title: $title, subtitle: $subtitle, estimatedTime: $estimatedTime, difficulty: $difficulty, introduction: $introduction, instructions: $instructions, backgroundGradient: $backgroundGradient, darkModeGradient: $darkModeGradient)';
+    return 'TestDetailResponse(testId: $testId, imagePath: $imagePath, psychologyTag: $psychologyTag, title: $title, subtitle: $subtitle, estimatedTime: $estimatedTime, difficulty: $difficulty, introduction: $introduction, instructions: $instructions, backgroundGradient: $backgroundGradient, darkModeGradient: $darkModeGradient, cost: $cost, isAffordable: $isAffordable)';
   }
 
   @override
@@ -314,7 +352,10 @@ class _$TestDetailResponseImpl implements _TestDetailResponse {
             (identical(other.backgroundGradient, backgroundGradient) ||
                 other.backgroundGradient == backgroundGradient) &&
             (identical(other.darkModeGradient, darkModeGradient) ||
-                other.darkModeGradient == darkModeGradient));
+                other.darkModeGradient == darkModeGradient) &&
+            (identical(other.cost, cost) || other.cost == cost) &&
+            (identical(other.isAffordable, isAffordable) ||
+                other.isAffordable == isAffordable));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -331,7 +372,9 @@ class _$TestDetailResponseImpl implements _TestDetailResponse {
       introduction,
       const DeepCollectionEquality().hash(_instructions),
       backgroundGradient,
-      darkModeGradient);
+      darkModeGradient,
+      cost,
+      isAffordable);
 
   /// Create a copy of TestDetailResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -362,7 +405,9 @@ abstract class _TestDetailResponse implements TestDetailResponse {
       final String? introduction,
       final List<String>? instructions,
       final String? backgroundGradient,
-      final String? darkModeGradient}) = _$TestDetailResponseImpl;
+      final String? darkModeGradient,
+      final int cost,
+      final bool isAffordable}) = _$TestDetailResponseImpl;
 
   factory _TestDetailResponse.fromJson(Map<String, dynamic> json) =
       _$TestDetailResponseImpl.fromJson;
@@ -388,7 +433,12 @@ abstract class _TestDetailResponse implements TestDetailResponse {
   @override
   String? get backgroundGradient;
   @override
-  String? get darkModeGradient;
+  String? get darkModeGradient; // 💰 [신규 추가] 서버 DTO와 매핑되는 코인 관련 필드
+// @Default를 사용하면 서버에서 해당 필드가 null이거나 안 넘어올 경우(구버전 API 등) 안전하게 기본값을 사용합니다.
+  @override
+  int get cost;
+  @override
+  bool get isAffordable;
 
   /// Create a copy of TestDetailResponse
   /// with the given fields replaced by the non-null parameter values.

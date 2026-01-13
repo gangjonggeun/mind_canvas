@@ -14,6 +14,8 @@ class AuthResponse with _$AuthResponse {
     @JsonKey(name: 'refresh_expires_in') @Default(1209600) int refreshExpiresIn,
     @JsonKey(name: 'token_type') @Default('Bearer') String tokenType,
     @JsonKey(name: 'nickname') String? nickname,
+    // 💰 [신규 추가] 서버에서 내려오는 코인 잔액
+    @JsonKey(name: 'coins') @Default(0) int coins,
 
     // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
     @JsonKey(includeFromJson: false, includeToJson: false)
@@ -44,7 +46,8 @@ extension AuthResponseExtension on AuthResponse {
         'access: $maskedAccessToken, '
         'refresh: $maskedRefreshToken, '
         'access_expires_in: ${accessExpiresIn}s, '
-        'refresh_expires_in: ${refreshExpiresIn}s)';
+        'refresh_expires_in: ${refreshExpiresIn}s)'
+        'coins: ${coins}' ;
   }
 
   /// 🎭 토큰 마스킹 (처음 6자 + ... + 마지막 4자)

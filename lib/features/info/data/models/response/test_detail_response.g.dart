@@ -27,6 +27,9 @@ _$TestDetailResponseImpl _$$TestDetailResponseImplFromJson(Map json) =>
               $checkedConvert('backgroundGradient', (v) => v as String?),
           darkModeGradient:
               $checkedConvert('darkModeGradient', (v) => v as String?),
+          cost: $checkedConvert('cost', (v) => (v as num?)?.toInt() ?? 0),
+          isAffordable:
+              $checkedConvert('isAffordable', (v) => v as bool? ?? false),
         );
         return val;
       },
@@ -46,4 +49,6 @@ Map<String, dynamic> _$$TestDetailResponseImplToJson(
       'instructions': instance.instructions,
       'backgroundGradient': instance.backgroundGradient,
       'darkModeGradient': instance.darkModeGradient,
+      'cost': instance.cost,
+      'isAffordable': instance.isAffordable,
     };

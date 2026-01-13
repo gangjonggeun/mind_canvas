@@ -20,6 +20,7 @@ _$AuthResponseImpl _$$AuthResponseImplFromJson(Map json) => $checkedCreate(
           tokenType:
               $checkedConvert('token_type', (v) => v as String? ?? 'Bearer'),
           nickname: $checkedConvert('nickname', (v) => v as String?),
+          coins: $checkedConvert('coins', (v) => (v as num?)?.toInt() ?? 0),
         );
         return val;
       },
@@ -40,4 +41,5 @@ Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
       'refresh_expires_in': instance.refreshExpiresIn,
       'token_type': instance.tokenType,
       'nickname': instance.nickname,
+      'coins': instance.coins,
     };

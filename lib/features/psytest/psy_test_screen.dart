@@ -620,8 +620,8 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
 
     // ✅ TestContentNotifier 사용
     ref.read(testContentNotifierProvider.notifier).submitTest(
-      widget.testId,
-      _answers,
+      testId: widget.testId,
+      userAnswers: _answers,
     );
   }
 

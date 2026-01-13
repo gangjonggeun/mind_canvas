@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'interceptors/coin_sync_interceptor.dart';
+
 part 'dio_provider.g.dart';
 
 /// 🌐 Dio HTTP 클라이언트 Provider
@@ -29,6 +31,27 @@ Dio dio(DioRef ref) {
   // =============================================================
   // 🔍 인터셉터 추가
   // =============================================================
+  // dio.interceptors.add(InterceptorsWrapper(
+  //   onRequest: (options, handler) async {
+  //     // 예: SecureStorage나 AuthNotifier에서 토큰을 가져오는 로직
+  //     // final token = await SecureStorage.getToken();
+  //     // 현재 프로젝트 구조상 AuthNotifier나 Repository에서 토큰을 관리한다면
+  //     // ref.read()를 통해 접근해야 할 수도 있습니다.
+  //
+  //     // 임시 코드: 저장된 토큰이 있다고 가정
+  //     const String? token = null; // ⚠️ 실제로는 저장된 Access Token을 넣어야 함!
+  //
+  //     if (token != null) {
+  //       options.headers['Authorization'] = 'Bearer $token';
+  //       print('🔑 토큰 탑재 완료');
+  //     } else {
+  //       print('⚠️ 토큰 없음: 인증이 필요한 API는 실패할 수 있음');
+  //     }
+  //
+  //     handler.next(options);
+  //   },
+  // ));
+  dio.interceptors.add(CoinSyncInterceptor(ref));
 
   // 1. 로깅 인터셉터 (디버그 모드만)
   dio.interceptors.add(PrettyDioLogger(
@@ -69,7 +92,10 @@ Dio dio(DioRef ref) {
           options.receiveTimeout = const Duration(minutes: 3);
           print('⏱️ AI API 타임아웃 연장: 수신 3분');
         }
-
+        else if (options.path.contains('/recommendation')) {
+          options.receiveTimeout = const Duration(minutes: 3);
+          print('⏱️ AI API 타임아웃 연장: 수신 3분');
+        }
         // 🔐 인증 API → 타임아웃 1분
         else if (options.path.contains('/auth/')) {
           options.receiveTimeout = const Duration(seconds: 60);
@@ -99,6 +125,16 @@ Dio dio(DioRef ref) {
       },
     ),
   );
+
+  dio.interceptors.add(PrettyDioLogger(
+    requestHeader: true,
+    requestBody: true,
+    responseBody: true,
+    responseHeader: true, // ⚠️ 헤더 확인을 위해 true로 변경하는 것 추천 (X-User-Coins 확인용)
+    error: true,
+    compact: true,
+    maxWidth: 90,
+  ));
 
   return dio;
 }

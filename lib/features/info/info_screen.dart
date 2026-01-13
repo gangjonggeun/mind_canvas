@@ -593,31 +593,35 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
   }
 
   Widget _buildStartButton(BuildContext context, TestDetailResponse testDetail) {
+    // 💰 가격에 따른 텍스트 및 아이콘 설정
+    final isFree = testDetail.cost == 0;
+    final buttonText = isFree ? '무료로 시작하기' : '${testDetail.cost}코인으로 시작하기';
+
+    // 돈이 부족하면 버튼 색상을 회색이나 붉은색 계열로 바꿀 수도 있음 (선택사항)
+    // 여기서는 기본 스타일 유지하되 텍스트만 변경
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
+        // 👇 클릭 시직접 검사 로직 호출
         onPressed: () => _startTest(context, testDetail),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          // ... 기존 스타일 유지
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 💰 유료면 코인 아이콘, 무료면 플레이 아이콘
             Icon(
-              Icons.play_arrow,
+              isFree ? Icons.play_arrow : Icons.monetization_on,
               size: 24,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              '테스트 시작하기',
-              style: TextStyle(
+              buttonText, // ✅ 동적 텍스트 적용
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -627,7 +631,6 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       ),
     );
   }
-
 
 
 // ✅ 1. 타로 테스트 여부 확인 함수 추가
@@ -644,15 +647,25 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
 
   // ✅ 2. _startTest 함수 수정
   void _startTest(BuildContext context, TestDetailResponse testDetail) {
+
+    // 🛑 [신규 추가] 1. 입구 컷: 구매 가능 여부 확인
+    // 서버가 내려준 isAffordable이 false면 팝업 띄우고 중단
+    if (!testDetail.isAffordable) {
+      _showChargeDialog(context, testDetail.cost);
+      return; // ⛔ 여기서 함수 종료 (페이지 이동 안 함)
+    }
+
+    // --- 👇 여기서부터는 기존 로직 그대로 유지 👇 ---
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${testDetail.title ?? "테스트"} 시작!'),
+        content: Text('${testDetail.title} 시작!'), // null check는 DTO에서 required 처리했으므로 제거 가능하지만 안전하게 유지
         backgroundColor: AppColors.primaryBlue,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        duration: const Duration(seconds: 1), // 스낵바 짧게
+        duration: const Duration(seconds: 1),
       ),
     );
 
@@ -667,12 +680,11 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       return;
     }
 
-    // 2️⃣ [추가] 타로 테스트인 경우 -> TaroConsultationSetupPage로 이동
+    // 2️⃣ 타로 테스트인 경우
     if (_isTaroTest(testDetail)) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          // 타로 상담 설정 페이지 (주제 입력 -> 스프레드 선택)
           builder: (context) => const TaroConsultationSetupPage(),
         ),
       );
@@ -686,6 +698,47 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
         builder: (context) => PsyTestScreen(
           testId: testDetail.testId,
         ),
+      ),
+    );
+  }
+
+  // 💰 [신규 추가] 충전 유도 다이얼로그
+  void _showChargeDialog(BuildContext context, int cost) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('코인이 부족해요', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          '이 테스트를 진행하려면 $cost코인이 필요합니다.\n보유 코인이 부족합니다.',
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소', style: TextStyle(color: Colors.grey)),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context); // 팝업 닫기
+              // TODO: 충전 페이지나 광고 보기 페이지로 이동 구현
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('충전 페이지 준비 중입니다!')),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('충전하러 가기'),
+          ),
+        ],
       ),
     );
   }

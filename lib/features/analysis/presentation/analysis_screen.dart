@@ -248,7 +248,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     // 데이터 없음 -> 검사 유도
     else {
       return _buildEmptyStateCard(
-        title: "MBTI 성향 분석",
+        title: "16인지 분석",
         description: "나의 에너지는 어디로 향할까요?\n4가지 지표를 통해 나의 성격 유형을 알아보세요.",
         icon: Icons.psychology_outlined,
         buttonText: "성향 분석 하러가기",
@@ -270,10 +270,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     // 데이터 없음 -> 검사 유도
     else {
       return _buildEmptyStateCard(
-        title: "8기능 정밀 분석",
+        title: "페르소나 테스트",
         description: "내가 무의식적으로 사용하는 기능은 무엇일까요?\n나의 사고 방식과 행동 패턴의 원인을 찾아보세요.",
         icon: Icons.lightbulb_outline,
-        buttonText: "8기능 검사 하러가기",
+        buttonText: "페르소나 테스트 하러가기",
         colors: [const Color(0xFF9C27B0), Color(0xFF673AB7)],
         // 보라색 계열
         onTap: () {
@@ -312,10 +312,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       return _buildTopEnneagramTypes(profile.enneagram!);
     } else {
       return _buildEmptyStateCard(
-        title: "에니어그램 유형",
+        title: "9가지 성격 유형",
         description: "9가지 성격 유형 중 나는 어디에 속할까요?\n나의 무의식적인 동기와 행동 패턴을 발견하세요.",
         icon: Icons.people_outline,
-        buttonText: "에니어그램 검사하기",
+        buttonText: "9가지 성격 유형 검사하기",
         colors: [const Color(0xFF4CAF50), Color(0xFF388E3C)],
         onTap: () {
           // TODO: 에니어그램 검사 페이지로 이동
@@ -729,121 +729,111 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start, // 왼쪽 정렬
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          // 1. 제목
+          const Text(
+            '16 인지기능 분석',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+
+          const SizedBox(height: 4), // 제목과 결과 사이 간격
+
+          // 2. 결과 타입 표시 (아래로 이동됨)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF667EEA).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 차지
+              children: [
+
+                Text(
+                  mbti.resultType!, // ✅ 실제 데이터 (예: INFP)
+                  style: const TextStyle(
+                    fontSize: 15, // 강조를 위해 폰트 살짝 키움
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF667EEA),
                   ),
-                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.psychology_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'MBTI 성향 분석',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  Text(
-                    _analysisData.mbtiType!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF667EEA),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 24),
 
           // 4가지 지표 수동 호출 (DTO 필드 -> 슬라이더)
           // 점수(0~100)를 그대로 전달
+          // 1. E vs I (서버값: E점수) -> 그대로 사용
           _buildImageStyleSlider('E', 'I', mbti.energyScore, 'E/I'),
-          const SizedBox(height: 24),
-          _buildImageStyleSlider('N', 'S', mbti.informationScore, 'S/N'),
-          const SizedBox(height: 24),
-          _buildImageStyleSlider('F', 'T', mbti.decisionScore, 'T/F'),
-          const SizedBox(height: 24),
-          _buildImageStyleSlider('P', 'J', mbti.lifestyleScore, 'J/P'),
+
+// 2. S vs N (서버값: N점수) -> 100에서 빼서 S점수로 변환
+          _buildImageStyleSlider('S', 'N', 100 - mbti.informationScore, 'S/N'),
+
+// 3. T vs F (서버값: F점수) -> 100에서 빼서 T점수로 변환
+          _buildImageStyleSlider('T', 'F', 100 - mbti.decisionScore, 'T/F'),
+
+// 4. J vs P (서버값: P점수) -> 100에서 빼서 J점수로 변환
+          _buildImageStyleSlider('J', 'P', 100 - mbti.lifestyleScore, 'J/P'),
         ],
       ),
     );
   }
 
-  // Widget _buildMbtiSlider(MbtiScore score) {
-  //   // 기존 함수를 새로운 스타일로 대체
-  //   return _buildImageStyleSlider(score);
-  // }
-
-  /// 이미지와 같은 스타일의 슬라이더
   Widget _buildImageStyleSlider(
-    String left,
-    String right,
-    int score,
-    String dimension,
-  ) {
-    // 점수가 50보다 크면 오른쪽 성향이 우세하다고 판단
-    final isRightDominant = score > 50;
-    // 시각적 퍼센트 (오른쪽 우세면 점수 그대로, 왼쪽 우세면 100-점수)
-    final percentage = isRightDominant
-        ? score.toDouble()
-        : (100 - score).toDouble();
+      String left,
+      String right,
+      int score, // ⚠️ 왼쪽(left) 성향의 점수 (0~100)
+      String dimension,
+      ) {
+    // 1. 로직 계산
+    // 점수가 50 이상이면 왼쪽(left) 성향이 우세, 미만이면 오른쪽(right) 성향이 우세
+    final bool isLeftDominant = score >= 50;
 
-    // 색상 정의
+    // 2. 화면에 표시할 퍼센트 (항상 50% 이상으로 표시)
+    // 예: 70점 -> 70% (왼쪽), 30점 -> 70% (오른쪽이 70이니까)
+    final int displayPercent = isLeftDominant ? score : (100 - score);
+
+    // 3. 중앙(50)에서 얼마나 떨어져 있는지 비율 계산 (0.0 ~ 1.0)
+    // 예: 70점 -> 차이 20 -> 20/50 = 0.4 (40% 길이)
+    final double fillRatio = (score - 50).abs() / 50.0;
+
+    // 색상 정의 (기존 유지)
     Color getSliderColor() {
       switch (dimension) {
-        case 'E/I':
-          return const Color(0xFFE91E63); // 핑크
-        case 'S/N':
-          return const Color(0xFF2196F3); // 블루
-        case 'T/F':
-          return const Color(0xFFFFC107); // 옐로우
-        case 'J/P':
-          return const Color(0xFF4CAF50); // 그린
-        default:
-          return const Color(0xFF667EEA);
+        case 'E/I': return const Color(0xFFE91E63);
+        case 'S/N': return const Color(0xFF2196F3);
+        case 'T/F': return const Color(0xFFFFC107);
+        case 'J/P': return const Color(0xFF4CAF50);
+        default: return const Color(0xFF667EEA);
       }
     }
 
-    // 타입 설명 맵핑
+    // 타입 설명 맵핑 (기존 유지)
     String getTypeDesc(String type) {
       const map = {
-        'E': '외향형',
-        'I': '내향형',
-        'S': '감각형',
-        'N': '직관형',
-        'T': '사고형',
-        'F': '감정형',
-        'J': '판단형',
-        'P': '인식형',
+        'E': '외향형', 'I': '내향형',
+        'S': '감각형', 'N': '직관형',
+        'T': '사고형', 'F': '감정형',
+        'J': '판단형', 'P': '인식형',
       };
       return map[type] ?? '';
     }
 
-    final sliderColor = getSliderColor();
+    final activeColor = getSliderColor();
+    final inactiveColor = const Color(0xFFE2E8F0); // 회색 (비활성 트랙)
+    final labelInactiveColor = const Color(0xFF94A3B8); // 회색 (비활성 텍스트)
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 라벨들 (이니셜 + 설명)
+        // 1. 라벨들 (좌우 배치)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -857,9 +847,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: !isRightDominant
-                          ? sliderColor
-                          : const Color(0xFF94A3B8),
+                      color: isLeftDominant ? activeColor : labelInactiveColor,
                     ),
                   ),
                   Text(
@@ -867,14 +855,23 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: !isRightDominant
-                          ? sliderColor.withOpacity(0.8)
-                          : const Color(0xFF94A3B8),
+                      color: isLeftDominant ? activeColor.withOpacity(0.8) : labelInactiveColor,
                     ),
                   ),
                 ],
               ),
             ),
+
+            // 중앙 퍼센트 (선택사항: 중앙에 점수 표시)
+            Text(
+              '$displayPercent%',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: activeColor,
+              ),
+            ),
+
             // 오른쪽 라벨
             Expanded(
               child: Column(
@@ -885,9 +882,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: isRightDominant
-                          ? sliderColor
-                          : const Color(0xFF94A3B8),
+                      color: !isLeftDominant ? activeColor : labelInactiveColor,
                     ),
                   ),
                   Text(
@@ -895,9 +890,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isRightDominant
-                          ? sliderColor.withOpacity(0.8)
-                          : const Color(0xFF94A3B8),
+                      color: !isLeftDominant ? activeColor.withOpacity(0.8) : labelInactiveColor,
                     ),
                   ),
                 ],
@@ -906,82 +899,405 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-        // 슬라이더 트랙
+        // 2. 중앙 기준 슬라이더 (핵심 변경 부분)
         Container(
-          height: 6,
+          height: 10, // 기존 6보다 약간 키워서 잘 보이게
+          width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(3),
+            color: inactiveColor, // 배경 트랙 색상
+            borderRadius: BorderRadius.circular(5),
           ),
           child: Stack(
             children: [
-              // 진행 바
-              FractionallySizedBox(
-                alignment: isRightDominant
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                widthFactor: percentage / 100,
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: sliderColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
+              // 중앙선 (기준점)
+              Align(
+                alignment: Alignment.center,
+                child: Container(width: 2, color: Colors.white),
               ),
-              // 슬라이더 노브 (점)
-              Positioned(
-                left: isRightDominant
-                    ? null
-                    : (percentage / 100) *
-                              (MediaQuery.of(context).size.width - 88) -
-                          4,
-                right: isRightDominant
-                    ? (100 - percentage) /
-                              100 *
-                              (MediaQuery.of(context).size.width - 88) -
-                          4
-                    : null,
-                top: -2,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: sliderColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: sliderColor.withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+
+              // 게이지 바 (Row로 반반 나눠서 처리)
+              Row(
+                children: [
+                  // [왼쪽 영역] (0~50 구간)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight, // 오른쪽(중앙)에서 시작해서 왼쪽으로 뻗음
+                      child: FractionallySizedBox(
+                        // 왼쪽이 우세할 때만 길이 가짐
+                        widthFactor: isLeftDominant ? fillRatio.clamp(0.0, 1.0) : 0.0,
+                        child: Container(
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: activeColor,
+                            // 왼쪽 끝만 둥글게
+                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(5)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: activeColor.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // [오른쪽 영역] (50~100 구간)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft, // 왼쪽(중앙)에서 시작해서 오른쪽으로 뻗음
+                      child: FractionallySizedBox(
+                        // 오른쪽이 우세할 때만 길이 가짐
+                        widthFactor: !isLeftDominant ? fillRatio.clamp(0.0, 1.0) : 0.0,
+                        child: Container(
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: activeColor,
+                            // 오른쪽 끝만 둥글게
+                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(5)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: activeColor.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // 퍼센트 표시
-        Center(
-          child: Text(
-            '${percentage.toInt()}%',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: sliderColor,
-            ),
           ),
         ),
       ],
     );
   }
+
+  // Widget _buildMbtiSlider(MbtiScore score) {
+  //   // 기존 함수를 새로운 스타일로 대체
+  //   return _buildImageStyleSlider(score);
+  // }
+  //
+  // /// 이미지와 같은 스타일의 슬라이더
+  // Widget _buildImageStyleSlider(
+  //   String left,
+  //   String right,
+  //   int score,
+  //   String dimension,
+  // ) {
+  //   // 점수가 50보다 크면 오른쪽 성향이 우세하다고 판단
+  //   final isRightDominant = score > 50;
+  //   // 시각적 퍼센트 (오른쪽 우세면 점수 그대로, 왼쪽 우세면 100-점수)
+  //   final percentage = isRightDominant
+  //       ? score.toDouble()
+  //       : (100 - score).toDouble();
+  //
+  //   // 색상 정의
+  //   Color getSliderColor() {
+  //     switch (dimension) {
+  //       case 'E/I':
+  //         return const Color(0xFFE91E63); // 핑크
+  //       case 'S/N':
+  //         return const Color(0xFF2196F3); // 블루
+  //       case 'T/F':
+  //         return const Color(0xFFFFC107); // 옐로우
+  //       case 'J/P':
+  //         return const Color(0xFF4CAF50); // 그린
+  //       default:
+  //         return const Color(0xFF667EEA);
+  //     }
+  //   }
+  //
+  //   // 타입 설명 맵핑
+  //   String getTypeDesc(String type) {
+  //     const map = {
+  //       'E': '외향형',
+  //       'I': '내향형',
+  //       'S': '감각형',
+  //       'N': '직관형',
+  //       'T': '사고형',
+  //       'F': '감정형',
+  //       'J': '판단형',
+  //       'P': '인식형',
+  //     };
+  //     return map[type] ?? '';
+  //   }
+  //
+  //   final sliderColor = getSliderColor();
+  //
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       // 라벨들 (이니셜 + 설명)
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           // 왼쪽 라벨
+  //           Expanded(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   left,
+  //                   style: TextStyle(
+  //                     fontSize: 18,
+  //                     fontWeight: FontWeight.w700,
+  //                     color: !isRightDominant
+  //                         ? sliderColor
+  //                         : const Color(0xFF94A3B8),
+  //                   ),
+  //                 ),
+  //                 Text(
+  //                   getTypeDesc(left),
+  //                   style: TextStyle(
+  //                     fontSize: 12,
+  //                     fontWeight: FontWeight.w500,
+  //                     color: !isRightDominant
+  //                         ? sliderColor.withOpacity(0.8)
+  //                         : const Color(0xFF94A3B8),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           // 오른쪽 라벨
+  //           Expanded(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.end,
+  //               children: [
+  //                 Text(
+  //                   right,
+  //                   style: TextStyle(
+  //                     fontSize: 18,
+  //                     fontWeight: FontWeight.w700,
+  //                     color: isRightDominant
+  //                         ? sliderColor
+  //                         : const Color(0xFF94A3B8),
+  //                   ),
+  //                 ),
+  //                 Text(
+  //                   getTypeDesc(right),
+  //                   style: TextStyle(
+  //                     fontSize: 12,
+  //                     fontWeight: FontWeight.w500,
+  //                     color: isRightDominant
+  //                         ? sliderColor.withOpacity(0.8)
+  //                         : const Color(0xFF94A3B8),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //
+  //       const SizedBox(height: 16),
+  //
+  //       // 슬라이더 트랙
+  //       Container(
+  //         height: 6,
+  //         decoration: BoxDecoration(
+  //           color: const Color(0xFFE2E8F0),
+  //           borderRadius: BorderRadius.circular(3),
+  //         ),
+  //         child: Stack(
+  //           children: [
+  //             // 진행 바
+  //             FractionallySizedBox(
+  //               alignment: isRightDominant
+  //                   ? Alignment.centerRight
+  //                   : Alignment.centerLeft,
+  //               widthFactor: percentage / 100,
+  //               child: Container(
+  //                 height: 6,
+  //                 decoration: BoxDecoration(
+  //                   color: sliderColor,
+  //                   borderRadius: BorderRadius.circular(3),
+  //                 ),
+  //               ),
+  //             ),
+  //             // 슬라이더 노브 (점)
+  //             Positioned(
+  //               left: isRightDominant
+  //                   ? null
+  //                   : (percentage / 100) *
+  //                             (MediaQuery.of(context).size.width - 88) -
+  //                         4,
+  //               right: isRightDominant
+  //                   ? (100 - percentage) /
+  //                             100 *
+  //                             (MediaQuery.of(context).size.width - 88) -
+  //                         4
+  //                   : null,
+  //               top: -2,
+  //               child: Container(
+  //                 width: 10,
+  //                 height: 10,
+  //                 decoration: BoxDecoration(
+  //                   color: sliderColor,
+  //                   shape: BoxShape.circle,
+  //                   border: Border.all(color: Colors.white, width: 2),
+  //                   boxShadow: [
+  //                     BoxShadow(
+  //                       color: sliderColor.withOpacity(0.3),
+  //                       blurRadius: 4,
+  //                       offset: const Offset(0, 2),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //
+  //       const SizedBox(height: 8),
+  //
+  //       // 퍼센트 표시
+  //       Center(
+  //         child: Text(
+  //           '${percentage.toInt()}%',
+  //           style: TextStyle(
+  //             fontSize: 12,
+  //             fontWeight: FontWeight.w600,
+  //             color: sliderColor,
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+  //
+  // Widget _buildImageStyleSlider(
+  //     String leftType,
+  //     String rightType,
+  //     int leftScore, // 무조건 왼쪽 타입(E,S,T,J)의 점수 (0~100)
+  //     String dimension,
+  //     ) {
+  //   // 1. 누가 우세한지 판단
+  //   final bool isLeftDominant = leftScore >= 50;
+  //
+  //   // 2. 화면에 표시할 숫자 (큰 쪽 점수)
+  //   // 예: 70점 -> 70%, 30점 -> 70%(I가 70이니까)
+  //   final int displayPercent = isLeftDominant ? leftScore : (100 - leftScore);
+  //
+  //   // 3. 중앙(50)에서 얼마나 떨어져 있는지 계산 (그래프 길이용)
+  //   // 예: 70점 -> 20차이, 100점 -> 50차이
+  //   final int difference = (leftScore - 50).abs();
+  //
+  //   // 4. 반쪽짜리 트랙 안에서의 비율 계산 (최대 50이니까 50으로 나눔)
+  //   // 예: 차이가 20이면 -> 20/50 = 0.4 (40% 채움)
+  //   final double fillPercent = (difference / 50.0).clamp(0.0, 1.0);
+  //
+  //   // 색상 정의
+  //   Color getSliderColor() {
+  //     switch (dimension) {
+  //       case 'E/I': return const Color(0xFFE91E63);
+  //       case 'S/N': return const Color(0xFF2196F3);
+  //       case 'T/F': return const Color(0xFFFFC107);
+  //       case 'J/P': return const Color(0xFF4CAF50);
+  //       default: return const Color(0xFF667EEA);
+  //     }
+  //   }
+  //
+  //   final activeColor = getSliderColor();
+  //   final inactiveColor = const Color(0xFFE2E8F0); // 트랙 배경색
+  //
+  //   return Column(
+  //     children: [
+  //       // 상단 라벨 (텍스트)
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Text(leftType,
+  //               style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: isLeftDominant ? activeColor : Colors.grey)),
+  //           Text('$displayPercent%',
+  //               style: TextStyle(
+  //                   fontSize: 14,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: activeColor)),
+  //           Text(rightType,
+  //               style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: !isLeftDominant ? activeColor : Colors.grey)),
+  //         ],
+  //       ),
+  //
+  //       const SizedBox(height: 8),
+  //
+  //       // 🔥 중앙 기준 그래프
+  //       Container(
+  //         height: 10,
+  //         width: double.infinity,
+  //         decoration: BoxDecoration(
+  //           color: inactiveColor,
+  //           borderRadius: BorderRadius.circular(5),
+  //         ),
+  //         child: Stack(
+  //           children: [
+  //             // 중앙선 (기준점)
+  //             Align(
+  //               alignment: Alignment.center,
+  //               child: Container(width: 2, color: Colors.white),
+  //             ),
+  //
+  //             // 게이지 (Row로 반반 나눠서 처리)
+  //             Row(
+  //               children: [
+  //                 // [왼쪽 영역]
+  //                 Expanded(
+  //                   child: Align(
+  //                     alignment: Alignment.centerRight, // 중앙에서 시작
+  //                     child: FractionallySizedBox(
+  //                       // 왼쪽 우세일 때만 길이 있음
+  //                       widthFactor: isLeftDominant ? fillPercent : 0.0,
+  //                       child: Container(
+  //                         decoration: BoxDecoration(
+  //                           color: activeColor,
+  //                           borderRadius: const BorderRadius.horizontal(
+  //                               left: Radius.circular(5)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //
+  //                 // [오른쪽 영역]
+  //                 Expanded(
+  //                   child: Align(
+  //                     alignment: Alignment.centerLeft, // 중앙에서 시작
+  //                     child: FractionallySizedBox(
+  //                       // 오른쪽 우세일 때만 길이 있음
+  //                       widthFactor: !isLeftDominant ? fillPercent : 0.0,
+  //                       child: Container(
+  //                         decoration: BoxDecoration(
+  //                           color: activeColor,
+  //                           borderRadius: const BorderRadius.horizontal(
+  //                               right: Radius.circular(5)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   // /// 인지기능 상위 3개
   // Widget _buildTopCognitiveFunctions() {
@@ -1186,40 +1502,20 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.lightbulb_outline,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                '핵심 인지기능',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ],
+          // 헤더 (아이콘 제거)
+          const Text(
+            '핵심 페르소나',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
+            ),
           ),
-
           const SizedBox(height: 4),
           const Text(
-            '당신이 무의식적으로 가장 잘 쓰는 기능들입니다',
+            '당신이 무의식적으로 가장 잘 쓰는 기능들',
             style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
-
           const SizedBox(height: 20),
 
           // 상위 3개 기능 렌더링
@@ -1355,11 +1651,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                     colors: [Color(0xFFFF7043), Color(0xFFE64A19)],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.assessment_outlined,
-                  color: Colors.white,
-                  size: 20,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1528,26 +1819,12 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
           // 헤더 (기존 동일)
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.people_outline,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '에니어그램 유형',
+                    '9가지 성격 유형',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,

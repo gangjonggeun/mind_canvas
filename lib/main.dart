@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dart';
 
 // ✅ 추가: GoRouter 관련 import
 import 'app/main_screen.dart';
 import 'core/router/app_router.dart';
+import 'core/utils/cover_image_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  CoverImageHelper.init();
+
+  // Hive 초기화
+  await Hive.initFlutter();
+  await Hive.openBox<String>('recommendation_cache');
 
   try {
     await dotenv.load(fileName: ".env");

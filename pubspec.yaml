@@ -1,4 +1,3 @@
-
 name: mind_canvas
 description: "Mind-Color Canvas project."
 publish_to: 'none'
@@ -49,6 +48,7 @@ dependencies:
   logger: ^2.4.0
   intl: ^0.20.2
   flutter_dotenv: ^5.1.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -83,4 +83,9 @@ flutter:
     - assets/illustrations/taro/
     - assets/images/background/
     - assets/images/logo/
+    - assets/images/icon/
+    - assets/images/cover/movie/
+    - assets/images/cover/drama/
+    - assets/images/cover/game/
+    - assets/images/cover/book/
     - .env

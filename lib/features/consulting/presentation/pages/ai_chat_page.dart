@@ -339,7 +339,13 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
                 runSpacing: 8,
                 children: suggestions.map((suggestion) {
                   return GestureDetector(
-                    onTap: () => _sendMessage(suggestion),
+                    onTap: () {
+                      _messageController.text = suggestion; // 텍스트 입력
+                      _messageController.selection = TextSelection.fromPosition( // 커서 끝으로 이동
+                        TextPosition(offset: _messageController.text.length),
+                      );
+                      setState(() {}); // UI 갱신 (전송 버튼 활성화 등)
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,

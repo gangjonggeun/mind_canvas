@@ -2,6 +2,7 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../app/presentation/notifier/user_notifier.dart';
 import '../../domain/usecases/test_content_use_case.dart';
 import 'test_content_state.dart';
 
@@ -17,7 +18,11 @@ class TestContentNotifier extends _$TestContentNotifier {
   }
 
   /// 📤 테스트 제출 ✅ 추가
-  Future<void> submitTest(int testId, Map<String, dynamic> userAnswers) async {
+  Future<void> submitTest({
+    required int testId,
+    required Map<String, dynamic> userAnswers,
+    // required int cost, // ✅ 추가됨
+  }) async {
     print('🚀 submitTest 시작: testId=$testId, 답변 수=${userAnswers.length}');
 
     // 제출 중 상태로 변경
@@ -36,6 +41,11 @@ class TestContentNotifier extends _$TestContentNotifier {
         onSuccess: (testResult) {
           print('✅ Notifier: 제출 성공 - ${testResult.resultKey}');
           // print('📊 차원별 점수: ${testResult.dimensionScores}');
+
+          // if (cost > 0) {
+          //   ref.read(userNotifierProvider.notifier).deductCoinsLocal(cost);
+          //   print('💸 로컬 코인 차감 완료: -$cost');
+          // }
 
           state = state.copyWith(
             isSubmitting: false,

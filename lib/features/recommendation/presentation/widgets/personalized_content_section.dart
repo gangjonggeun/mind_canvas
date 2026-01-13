@@ -1,168 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
-import '../../data/mock_content_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mind_canvas/features/recommendation/presentation/widgets/content_detail_sheet.dart';
+import 'dart:math'; // 그라디언트 랜덤 생성용
 
-/// 🎯 추천 컨텐츠 모드
-enum ContentMode {
-  personal,
-  together
-}
+import '../../../../app/presentation/notifier/user_notifier.dart';
+import '../../../../core/utils/cover_image_helper.dart';
+import '../../domain/enums/rec_category.dart';
+import '../../domain/entity/recommendation_result.dart';
+import '../provider/recommendation_notifier.dart';
+import '../../domain/enums/rec_category_extension.dart'; // 👈 이게 있어야 .themeColor 사용 가능
 
-/// 🎬 확장된 컨텐츠 타입 - 한국 트렌드 반영
-enum ContentType {
-  movie,     // 🎬 영화
-  drama,     // 📺 드라마
-  music,     // 🎵 음악
-  book,      // 📚 도서 (소설 + 웹소설)
-  webtoon,   // 📱 웹툰 (만화 포함)
-  game,      // 🎮 게임
-}
-
-/// ContentMode 확장 메서드
-extension ContentModeExtension on ContentMode {
-  String get displayName {
-    switch (this) {
-      case ContentMode.personal:
-        return '당신을 위한 컨텐츠';
-      case ContentMode.together:
-        return '함께 보기 추천';
-    }
-  }
-
-  String get emoji {
-    switch (this) {
-      case ContentMode.personal:
-        return '🎯';
-      case ContentMode.together:
-        return '👥';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case ContentMode.personal:
-        return '성격에 맞는 컨텐츠!';
-      case ContentMode.together:
-        return '같이 즐기는 컨텐츠!';
-    }
-  }
-}
-
-/// ContentType 확장 메서드 - 새로운 타입 추가
-extension ContentTypeExtension on ContentType {
-  String get displayName {
-    switch (this) {
-      case ContentType.movie:
-        return '🎬 영화';
-      case ContentType.drama:
-        return '📺 드라마';
-      case ContentType.music:
-        return '🎵 음악';
-      case ContentType.book:
-        return '📚 도서';
-      case ContentType.webtoon:
-        return '📱 웹툰';
-      case ContentType.game:
-        return '🎮 게임';
-    }
-  }
-
-  /// 컨텐츠 타입별 설명
-  String get description {
-    switch (this) {
-      case ContentType.movie:
-        return '영화 추천';
-      case ContentType.drama:
-        return '드라마 추천';
-      case ContentType.music:
-        return '음악 추천';
-      case ContentType.book:
-        return '소설·웹소설 추천';
-      case ContentType.webtoon:
-        return '웹툰·만화 추천';
-      case ContentType.game:
-        return '게임 추천';
-    }
-  }
-
-  /// 컨텐츠 타입별 색상 테마
-  Color get themeColor {
-    switch (this) {
-      case ContentType.movie:
-        return const Color(0xFF3182CE); // 파란색
-      case ContentType.drama:
-        return const Color(0xFFE53E3E); // 빨간색
-      case ContentType.music:
-        return const Color(0xFF38A169); // 초록색
-      case ContentType.book:
-        return const Color(0xFF805AD5); // 보라색
-      case ContentType.webtoon:
-        return const Color(0xFFD69E2E); // 노란색
-      case ContentType.game:
-        return const Color(0xFF00B5D8); // 청록색
-    }
-  }
-}
-
-/// 🎯 개인화된 컨텐츠 섹션 위젯
-///
-/// 메모리 최적화:
-/// - StatefulWidget으로 내부 상태만 관리
-/// - 조건부 렌더링으로 불필요한 위젯 제거
-/// - const 생성자 및 final 변수 활용
-/// - dispose에서 리소스 정리
-class PersonalizedContentSection extends StatefulWidget {
-  static final _logger = Logger('PersonalizedContentSection');
-
-  final String userMbti;
-  final String? initialPartnerMbti;
-  final ContentMode? initialMode;
-  final ContentType? initialType;
-  final VoidCallback? onContentTap;
-  final bool showMbtiInput;
-
-  const PersonalizedContentSection({
-    super.key,
-    required this.userMbti,
-    this.initialPartnerMbti,
-    this.initialMode,
-    this.initialType,
-    this.onContentTap,
-    this.showMbtiInput = true,
-  });
+class PersonalizedContentSection extends ConsumerStatefulWidget {
+  const PersonalizedContentSection({super.key});
 
   @override
-  State<PersonalizedContentSection> createState() => _PersonalizedContentSectionState();
+  ConsumerState<PersonalizedContentSection> createState() =>
+      _PersonalizedContentSectionState();
 }
 
-class _PersonalizedContentSectionState extends State<PersonalizedContentSection> {
-  static final _logger = Logger('_PersonalizedContentSectionState');
-
-  late ContentMode _selectedContentMode;
-  late ContentType _selectedContentType;
-  late String _partnerMbti;
+class _PersonalizedContentSectionState
+    extends ConsumerState<PersonalizedContentSection> {
+  // 초기 카테고리
+  RecCategory _selectedCategory = RecCategory.MOVIE;
 
   @override
   void initState() {
     super.initState();
-    _selectedContentMode = widget.initialMode ?? ContentMode.personal;
-    _selectedContentType = widget.initialType ?? ContentType.movie;
-    _partnerMbti = widget.initialPartnerMbti ?? 'ENTJ';
-
-    _logger.info('PersonalizedContentSection initialized - Mode: $_selectedContentMode, Type: $_selectedContentType');
+    // 💡 초기화 로직 삭제:
+    // 이제 앱이 켜졌다고 자동으로 요청하지 않고,
+    // 사용자가 버튼을 눌렀을 때만 요청합니다.
+    // (다만, 이전에 받아둔 데이터가 있다면 Notifier가 알아서 보여줍니다.)
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _buildPersonalizedContentSection(isDark);
-  }
+    final recState = ref.watch(recommendationNotifierProvider);
 
-  /// 🎯 메인 컨텐츠 섹션 빌드
-  Widget _buildPersonalizedContentSection(bool isDark) {
+    // UI 색상 정의 (기존 디자인 유지)
     Color cardColor = isDark ? const Color(0xFF2D3748) : Colors.white;
-    Color textColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF2D3748);
-    Color subTextColor = isDark ? const Color(0xFFA0AEC0) : const Color(0xFF64748B);
+    Color textColor = isDark
+        ? const Color(0xFFE2E8F0)
+        : const Color(0xFF2D3748);
+    Color subTextColor = isDark
+        ? const Color(0xFFA0AEC0)
+        : const Color(0xFF64748B);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -179,167 +61,103 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // 메모리 최적화
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 섹션 헤더: 모드 전환 기능 포함
-          _buildSectionHeader(textColor, subTextColor),
-          const SizedBox(height: 20),
-
-          // '함께 보기' 모드일 때만 보이는 MBTI 입력 섹션
-          if (_selectedContentMode == ContentMode.together && widget.showMbtiInput) ...[
-            _buildMbtiInputSection(isDark),
-            const SizedBox(height: 20),
-          ],
-
-          // 컨텐츠 카테고리 탭
-          _buildContentTabs(isDark),
-          const SizedBox(height: 16),
-
-          // 추천 컨텐츠 리스트
-          _buildContentList(),
-        ],
-      ),
-    );
-  }
-
-  /// 📋 섹션 헤더 빌드 - 확장 메서드 사용
-  Widget _buildSectionHeader(Color textColor, Color subTextColor) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _selectedContentType.themeColor.withOpacity(0.1), // 타입별 색상 적용
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            _selectedContentMode.emoji, // 확장 메서드 사용
-            style: const TextStyle(fontSize: 24),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // 1. 헤더 섹션 (Extension 사용)
+          Row(
             children: [
-              Text(
-                _selectedContentMode.displayName, // 확장 메서드 사용
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  // 🎨 Extension 사용 (.themeColor)
+                  color: _selectedCategory.themeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  // 🖼️ Extension 사용 (.icon)
+                  _selectedCategory.icon,
+                  color: _selectedCategory.themeColor,
+                  size: 24,
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                _selectedContentType.description, // 선택된 타입의 설명
-                style: TextStyle(fontSize: 14, color: subTextColor),
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '당신을 위한 AI 추천', // 기존 텍스트 유지
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      // 🏷️ Extension 사용 (.label)
+                      '${_selectedCategory.label} 큐레이션',
+                      style: TextStyle(fontSize: 14, color: subTextColor),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              // 새로고침 버튼 (로딩 중엔 인디케이터)
+              if (!recState.isLoading &&
+                  ref.watch(recommendationNotifierProvider).result != null)
+                IconButton(
+                  onPressed: _requestRecommendation,
+                  icon: Icon(Icons.refresh, color: subTextColor),
+                  tooltip: '다시 추천 받기 (15코인)',
+                )
+              else if (recState.isLoading)
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _selectedCategory.themeColor,
+                  ),
+                ),
             ],
           ),
-        ),
-        IconButton(
-          onPressed: _toggleContentMode,
-          icon: Icon(
-            _selectedContentMode == ContentMode.personal ? Icons.group_add_outlined : Icons.person_outline,
-            color: _selectedContentType.themeColor, // 타입별 색상 적용
-          ),
-          tooltip: _selectedContentMode == ContentMode.personal ? '함께 보기 모드로 전환' : '개인 추천 모드로 전환',
-        ),
-      ],
-    );
-  }
+          const SizedBox(height: 20),
 
-  /// 💕 MBTI 입력 섹션 빌드
-  Widget _buildMbtiInputSection(bool isDark) {
-    Color subTextColor = isDark ? const Color(0xFFA0AEC0) : const Color(0xFF64748B);
-    Color boxColor = isDark ? const Color(0xFF4A5568) : Colors.white;
-    Color borderColor = isDark ? const Color(0xFF2D3748) : const Color(0xFFE2E8F0);
-    Color textColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF2D3748);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _selectedContentType.themeColor.withOpacity(isDark ? 0.2 : 0.1), // 타입별 색상 적용
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('나의 MBTI', style: TextStyle(fontSize: 12, color: subTextColor, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: boxColor.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(widget.userMbti, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
-                ),
-              ],
+          // 2. 카테고리 탭 (가로 스크롤)
+          SizedBox(
+            height: 45,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: RecCategory.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final category = RecCategory.values[index];
+                return _buildContentTab(category, isDark);
+              },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Icon(Icons.favorite, color: _selectedContentType.themeColor, size: 20), // 타입별 색상 적용
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('상대방 MBTI', style: TextStyle(fontSize: 12, color: subTextColor, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _showMbtiSelector,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: boxColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_partnerMbti, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.edit, size: 16, color: subTextColor),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
+
+          // 3. 컨텐츠 리스트 (카드)
+          _buildBody(recState, isDark),
         ],
       ),
     );
   }
 
-  /// 🎬 컨텐츠 탭 빌드 - 스크롤 가능한 가로 탭
-  Widget _buildContentTabs(bool isDark) {
-    return SizedBox(
-      height: 45, // 높이 고정으로 메모리 최적화
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: ContentType.values.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final type = ContentType.values[index];
-          return _buildContentTab(type.displayName, type, isDark); // 확장 메서드 사용
-        },
-      ),
-    );
-  }
-
-  /// 📺 개별 컨텐츠 탭 위젯 - 타입별 색상 테마 적용
-  Widget _buildContentTab(String title, ContentType type, bool isDark) {
-    final isSelected = _selectedContentType == type;
-    final themeColor = type.themeColor;
+  // 기존 디자인과 동일한 탭 위젯
+  Widget _buildContentTab(RecCategory category, bool isDark) {
+    final isSelected = _selectedCategory == category;
+    final themeColor = category.themeColor; // Extension
 
     return GestureDetector(
-      onTap: () => _changeContentType(type),
+      onTap: () {
+        setState(() {
+          _selectedCategory = category;
+        });
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -353,7 +171,7 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
               : Border.all(color: themeColor.withOpacity(0.3), width: 1),
         ),
         child: Text(
-          title,
+          category.label, // Extension
           style: TextStyle(
             color: isSelected
                 ? Colors.white
@@ -366,12 +184,50 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
     );
   }
 
-  /// 📜 컨텐츠 리스트 빌드
-  Widget _buildContentList() {
-    final contentList = _getContentList();
+  // 데이터 상태에 따른 본문
+  Widget _buildBody(RecommendationState state, bool isDark) {
+    if (state.errorMessage != null) {
+      return _buildErrorState(state.errorMessage!);
+    }
 
-    if (contentList.isEmpty) {
-      return _buildEmptyContentWidget();
+    // 1️⃣ 데이터 없음 (초기 상태) -> "추천 받기 버튼" 표시
+    if (state.result == null && !state.isLoading) {
+      return _buildRequestButtonState(isDark);
+    }
+
+    // 2️⃣ 로딩 중
+    if (state.isLoading) {
+      return const SizedBox(
+        height: 180,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 12),
+              Text(
+                "AI가 취향을 분석하고 있습니다...",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3️⃣ 데이터 있음 -> 리스트 표시
+    // 현재 선택된 탭에 맞는 데이터 찾기
+    final group = state.result!.groups.firstWhere(
+      (g) => g.category == _selectedCategory,
+      orElse: () =>
+          RecommendationCategoryGroup(category: _selectedCategory, items: []),
+    );
+
+    if (group.items.isEmpty) {
+      return const SizedBox(
+        height: 180,
+        child: Center(child: Text("이 카테고리의 추천 결과가 없습니다.")),
+      );
     }
 
     return SizedBox(
@@ -379,63 +235,274 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: contentList.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemCount: group.items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final content = contentList[index];
-          return _buildContentCard(content);
+          final item = group.items[index];
+          // ✨ 기존 카드 디자인 재사용
+          return _buildLegacyStyleCard(item);
         },
       ),
     );
   }
 
-  /// 📭 빈 컨텐츠 위젯
-  Widget _buildEmptyContentWidget() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? const Color(0xFFA0AEC0) : const Color(0xFF64748B);
-
+  /// 🔘 추천 요청 버튼 위젯
+  Widget _buildRequestButtonState(bool isDark) {
     return Container(
       height: 180,
-      alignment: Alignment.center,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black12 : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.content_paste_off_outlined,
-            size: 48,
-            color: textColor.withOpacity(0.5),
+            Icons.auto_awesome,
+            size: 40,
+            color: _selectedCategory.themeColor,
           ),
           const SizedBox(height: 12),
           Text(
-            '준비 중인 컨텐츠입니다',
+            "아직 추천받은 내역이 없습니다",
             style: TextStyle(
-              color: textColor,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '곧 다양한 ${_selectedContentType.description}을 만나보세요!',
+            "성격 데이터를 기반으로 딱 맞는 컨텐츠를 찾아드려요!",
             style: TextStyle(
-              color: textColor.withOpacity(0.7),
               fontSize: 12,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
             ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _requestRecommendation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _selectedCategory.themeColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 4,
+            ),
+            icon: const Icon(Icons.bolt, size: 18),
+            label: const Text("추천 받기 (15코인)"),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "* 심리 테스트 결과가 많을수록 정확도가 올라갑니다",
+            style: TextStyle(fontSize: 10, color: Colors.grey),
           ),
         ],
       ),
     );
   }
 
-  /// 🎭 추천 컨텐츠 카드 위젯 - 실제 사용 중인 코드 그대로
-  Widget _buildContentCard(Map<String, dynamic> content) {
+  /// ⚠️ 에러 상태 위젯
+  Widget _buildErrorState(String message) {
+    return Container(
+      height: 180,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12),
+          ),
+          TextButton(
+            onPressed: _requestRecommendation,
+            child: const Text("다시 시도"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // // 🚀 요청 메서드
+  // void _requestRecommendation() {
+  //   // 1. 코인 확인 (UserNotifier 상태 확인)
+  //   final user = ref.read(userNotifierProvider);
+  //   final coins = user?.coins ?? 0;
+  //
+  //   if (coins < 15) {
+  //     // 코인 부족 팝업
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(const SnackBar(content: Text('코인이 부족합니다! (필요: 15코인)')));
+  //     return;
+  //   }
+  //
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text('AI 추천을 요청합니다... 잠시만 기다려주세요.')),
+  //   );
+  //
+  //   ref
+  //       .read(recommendationNotifierProvider.notifier)
+  //       .fetchRecommendations(
+  //         categories: RecCategory.values,
+  //         userMood: "",
+  //         forceRefresh: true,
+  //       );
+  // }
+
+  void _requestRecommendation() {
+    _showRefreshConfirmDialog();
+  }
+
+  // 💬 [추가] 재요청 확인 다이얼로그
+  Future<void> _showRefreshConfirmDialog() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // 1. 다이얼로그 띄우기
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF2D3748) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            '새로운 추천 받기',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 18,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '현재 추천받은 컨텐츠 목록은 사라지고,\n새로운 분석 결과로 덮어씌워집니다.',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.black87,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/icon/coin_palette_128.webp', // 코인 아이콘 경로 확인
+                    width: 18,
+                    height: 18,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '15코인이 차감됩니다.',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber, // 혹은 포인트 컬러
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // 취소
+              child: Text(
+                '취소',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true), // 확인
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B73FF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('새로 받기'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // 2. 확인을 눌렀을 때만 실제 로직 실행
+    if (confirm == true) {
+      _executeRefresh();
+    }
+  }
+
+  // ⚡ [추가] 실제 API 요청 및 코인 검사 로직
+  void _executeRefresh() {
+    // 1. 코인 확인
+    final user = ref.read(userNotifierProvider);
+    final coins = user?.coins ?? 0;
+
+    if (coins < 15) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('코인이 부족합니다! (필요: 15코인)'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 2. 안내 메시지
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('AI가 새로운 취향을 분석 중입니다...'),
+        backgroundColor: const Color(0xFF2D3748),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+
+    // 3. API 요청 (강제 갱신)
+    ref
+        .read(recommendationNotifierProvider.notifier)
+        .fetchRecommendations(
+          categories: RecCategory.values,
+          userMood: "", // 필요하다면 여기에 기분 입력값을 넣을 수 있음
+          forceRefresh: true,
+        );
+  }
+
+  /// 🎨 기존 디자인을 최대한 살린 카드 위젯
+  /// (이미지 대신 그라디언트를 사용하지만, 텍스트 위치/배지는 그대로 유지)
+  Widget _buildLegacyStyleCard(RecommendationContent item) {
+    final imagePath = CoverImageHelper.getImagePath(_selectedCategory, item.title);
+
     return GestureDetector(
       onTap: () {
-        _logger.info('Content tapped: ${content['title']} (${_selectedContentType.displayName})');
-        widget.onContentTap?.call();
+        showContentDetail(context, item, _selectedCategory);
       },
       child: Container(
-        width: 150,
+        width: 150, // 기존 너비 유지
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
@@ -451,109 +518,99 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 이미지 로딩 최적화
-              Image.network(
-                content['imageUrl']!,
-                fit: BoxFit.cover,
-                cacheWidth: 300, // 메모리 최적화
-                cacheHeight: 360, // 메모리 최적화
-                errorBuilder: (context, error, stackTrace) {
-                  _logger.warning('Failed to load image: ${content['imageUrl']}');
-                  return Container(
-                    color: Colors.grey[300],
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _getContentTypeIcon(_selectedContentType),
-                          color: Colors.grey,
-                          size: 32,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _selectedContentType.displayName,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.grey[100],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                            : null,
-                        strokeWidth: 2,
-                        color: _selectedContentType.themeColor,
+              // 1. 배경 (이미지 or 그라디언트)
+              if (imagePath != null)
+                Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // 파일은 있는데 로드 에러나면 그라디언트
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: _generateGradient(item.title),
                       ),
-                    ),
-                  );
-                },
-              ),
-              // 그라디언트 오버레이
+                    );
+                  },
+                )
+              else
+              // 이미지가 아직 로드 안 됐거나 파일이 없으면 그라디언트
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: _generateGradient(item.title),
+                  ),
+                ),
+
+              // 💡 틴트 효과 (이미지가 있을 때만 살짝 어둡게)
+              if (imagePath != null)
+                Container(color: Colors.black.withOpacity(0.3)),
+
+              // 2. 하단 그라디언트 오버레이 (텍스트 가독성용 - 기존 유지)
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       Colors.transparent,
-                      (content['gradientColors'] as List<Color>?)?.first.withOpacity(0.3) ??
-                          _selectedContentType.themeColor.withOpacity(0.3),
-                      (content['gradientColors'] as List<Color>?)?.last.withOpacity(0.9) ??
-                          _selectedContentType.themeColor.withOpacity(0.9)
+                      Colors.black.withOpacity(0.6), // 어둡게 처리하여 글자 잘 보이게
+                      Colors.black.withOpacity(0.9),
                     ],
-                    stops: const [0.3, 0.6, 1.0],
+                    stops: const [0.3, 0.7, 1.0],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                 ),
               ),
-              // 하단 텍스트 정보
+
+              // 3. 텍스트 정보 (기존 위치 유지: 하단)
               Positioned(
                 bottom: 12,
                 left: 12,
                 right: 12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      content['title']!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        shadows: [Shadow(blurRadius: 2)],
+                // ✅ Column 대신 높이가 제한된 Container 사용
+                child: SizedBox(
+                  height: 60, // 텍스트 영역 높이 고정 (제목 + 설명 + 간격)
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end, // 아래 정렬
+                    children: [
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          shadows: [Shadow(blurRadius: 2)],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      content['subtitle']!,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 11,
-                        shadows: const [Shadow(blurRadius: 2)],
+                      const SizedBox(height: 4),
+                      Expanded(
+                        // 남은 공간 모두 사용
+                        child: Text(
+                          item.description,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 11,
+                            shadows: const [Shadow(blurRadius: 2)],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              // 평점 배지
+
+              // 4. 배지 (기존 위치 유지: 우측 상단)
               Positioned(
                 top: 8,
                 right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(8),
@@ -561,14 +618,14 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _getRatingIcon(_selectedContentType),
+                      const Icon(
+                        Icons.incomplete_circle,
                         color: Colors.amber,
-                        size: 14,
+                        size: 12,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        content['rating']!,
+                        "${item.matchPercent}%", // 매칭률 표시
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -579,24 +636,15 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
                   ),
                 ),
               ),
-              // 컨텐츠 타입 표시 배지
+
+              // 5. 좌측 상단 카테고리 아이콘 (심심해서 추가, 제거 가능)
               Positioned(
                 top: 8,
                 left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _selectedContentType.themeColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _getContentTypeLabel(_selectedContentType),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: Icon(
+                  _selectedCategory.icon,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 16,
                 ),
               ),
             ],
@@ -606,172 +654,23 @@ class _PersonalizedContentSectionState extends State<PersonalizedContentSection>
     );
   }
 
-  // --- 유틸리티 메서드들 ---
+  // 제목 기반 랜덤 그라디언트 생성기 (이미지 대체용)
+  LinearGradient _generateGradient(String title) {
+    final hash = title.hashCode;
+    final random = Random(hash);
+    final baseColor = _selectedCategory.themeColor;
 
-  /// 컨텐츠 타입별 아이콘 반환
-  IconData _getContentTypeIcon(ContentType type) {
-    switch (type) {
-      case ContentType.movie:
-        return Icons.movie_outlined;
-      case ContentType.drama:
-        return Icons.tv_outlined;
-      case ContentType.music:
-        return Icons.music_note_outlined;
-      case ContentType.book:
-        return Icons.menu_book_outlined;
-      case ContentType.webtoon:
-        return Icons.auto_stories_outlined;
-      case ContentType.game:
-        return Icons.sports_esports_outlined;
-    }
-  }
+    // HSL 변환으로 톤 변경
+    final hsl = HSLColor.fromColor(baseColor);
+    final color1 = hsl
+        .withHue((hsl.hue + random.nextInt(40) - 20) % 360)
+        .toColor();
+    final color2 = hsl.withLightness(0.4).toColor(); // 좀 더 어둡게
 
-  /// 컨텐츠 타입별 평점 아이콘 반환
-  IconData _getRatingIcon(ContentType type) {
-    switch (type) {
-      case ContentType.movie:
-      case ContentType.drama:
-        return Icons.star_rounded;
-      case ContentType.music:
-        return Icons.favorite;
-      case ContentType.book:
-      case ContentType.webtoon:
-        return Icons.thumb_up_rounded;
-      case ContentType.game:
-        return Icons.videogame_asset_rounded;
-    }
-  }
-
-  /// 컨텐츠 타입별 라벨 반환
-  String _getContentTypeLabel(ContentType type) {
-    switch (type) {
-      case ContentType.movie:
-        return 'MOVIE';
-      case ContentType.drama:
-        return 'DRAMA';
-      case ContentType.music:
-        return 'MUSIC';
-      case ContentType.book:
-        return 'BOOK';
-      case ContentType.webtoon:
-        return 'TOON';
-      case ContentType.game:
-        return 'GAME';
-    }
-  }
-
-  // --- 로직 및 이벤트 처리 함수들 ---
-
-  /// 컨텐츠 모드 토글
-  void _toggleContentMode() {
-    setState(() {
-      _selectedContentMode = _selectedContentMode == ContentMode.personal
-          ? ContentMode.together
-          : ContentMode.personal;
-    });
-    _logger.info('Content mode changed to: $_selectedContentMode');
-  }
-
-  /// 컨텐츠 타입 변경
-  void _changeContentType(ContentType type) {
-    if (_selectedContentType != type) {
-      setState(() {
-        _selectedContentType = type;
-      });
-      _logger.info('Content type changed to: $type');
-    }
-  }
-
-  /// 컨텐츠 리스트 가져오기 - 확장된 타입 지원
-  List<Map<String, dynamic>> _getContentList() {
-    try {
-      if (_selectedContentMode == ContentMode.together) {
-        switch (_selectedContentType) {
-          case ContentType.movie:
-            return MockContentData.getTogetherMovieList(widget.userMbti, _partnerMbti);
-          case ContentType.drama:
-            return MockContentData.getTogetherDramaList(widget.userMbti, _partnerMbti);
-          case ContentType.music:
-            return MockContentData.getTogetherMusicList(widget.userMbti, _partnerMbti);
-          case ContentType.book:
-            return MockContentData.getTogetherBookList(widget.userMbti, _partnerMbti);
-          case ContentType.webtoon:
-            return MockContentData.getTogetherWebtoonList(widget.userMbti, _partnerMbti);
-          case ContentType.game:
-            return MockContentData.getTogetherGameList(widget.userMbti, _partnerMbti);
-        }
-      } else {
-        switch (_selectedContentType) {
-          case ContentType.movie:
-            return MockContentData.getMovieList();
-          case ContentType.drama:
-            return MockContentData.getDramaList();
-          case ContentType.music:
-            return MockContentData.getMusicList();
-          case ContentType.book:
-            return MockContentData.getBookList();
-          case ContentType.webtoon:
-            return MockContentData.getWebtoonList();
-          case ContentType.game:
-            return MockContentData.getGameList();
-        }
-      }
-    } catch (e) {
-      _logger.warning('Error getting content list for $_selectedContentType: $e');
-      return [];
-    }
-  }
-
-  /// 파트너 MBTI 선택 BottomSheet
-  void _showMbtiSelector() {
-    final mbtiTypes = MockContentData.getMbtiTypes();
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '상대방의 MBTI를 선택해주세요',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                alignment: WrapAlignment.center,
-                children: mbtiTypes.map((mbti) {
-                  return ChoiceChip(
-                    label: Text(mbti),
-                    selected: _partnerMbti == mbti,
-                    selectedColor: _selectedContentType.themeColor,
-                    onSelected: (isSelected) {
-                      if (isSelected) {
-                        setState(() {
-                          _partnerMbti = mbti;
-                        });
-                        Navigator.pop(context);
-                        _logger.info('Partner MBTI changed to: $_partnerMbti');
-                      }
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
+    return LinearGradient(
+      colors: [color1, color2],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
     );
-  }
-
-  @override
-  void dispose() {
-    _logger.info('PersonalizedContentSection disposed - Last selected: $_selectedContentType');
-    super.dispose();
   }
 }

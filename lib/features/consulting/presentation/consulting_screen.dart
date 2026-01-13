@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:mind_canvas/features/consulting/presentation/pages/anger_vent_page.dart';
 import 'pages/emotion_diary_page.dart';
 import 'pages/ai_chat_page.dart';
 // import 'pages/mindfulness_sound_page.dart'; // TODO: 구현 필요
@@ -102,7 +103,6 @@ class ConsultingScreen extends StatelessWidget {
     );
   }
 
-  /// 📋 상담 옵션 카드들 - 세로 배치 (4줄)
   Widget _buildConsultingOptions(BuildContext context, bool isDark) {
     return Column(
       children: [
@@ -135,6 +135,25 @@ class ConsultingScreen extends StatelessWidget {
             const Color(0xFF764BA2).withOpacity(isDark ? 0.2 : 0.1),
           ],
           onTap: () => _navigateToAiChat(context),
+        ),
+        const SizedBox(height: 16),
+
+        // 🔥 AI 화풀기 채팅 카드 (NEW!)
+        _buildConsultingCard(
+          context: context,
+          isDark: isDark,
+          icon: Icons.local_fire_department, // 화풀이 아이콘
+          iconColor: const Color(0xFFFF5F6D), // 붉은색 계열
+          title: '😠 AI 화풀기',
+          subtitle: '속 시원하게 털어놓고\nAI 샌드백과 함께 스트레스를 날려보세요',
+          gradientColors: [
+            // 붉은색 계열 그라데이션
+            const Color(0xFFFF5F6D).withOpacity(isDark ? 0.2 : 0.1),
+            const Color(0xFFFFC371).withOpacity(isDark ? 0.2 : 0.1),
+          ],
+          onTap: () => _navigateToAngerVent(context), // 새로운 네비게이션 함수
+          badge: '신규',
+          badgeColor: const Color(0xFFFF5F6D),
         ),
         const SizedBox(height: 16),
 
@@ -173,6 +192,16 @@ class ConsultingScreen extends StatelessWidget {
           badgeColor: const Color(0xFFD69E2E),
         ),
       ],
+    );
+  }
+
+  void _navigateToAngerVent(BuildContext context) {
+    _logger.info('Navigate to Anger Vent');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AngerVentPage(), // AngerVentPage로 이동
+        settings: const RouteSettings(name: '/anger-vent'),
+      ),
     );
   }
 

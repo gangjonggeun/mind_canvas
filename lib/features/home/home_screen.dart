@@ -10,13 +10,15 @@ import '../../core/theme/app_colors.dart';
 import '../../features/info/info_screen.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
 
-import '../recommendation/presentation/widgets/personalized_content_section.dart' as recommendation;
+import '../recommendation/presentation/widgets/personalized_content_section.dart'
+    as recommendation;
+
 // import 'widgets/home_viewpager.dart';
 import 'dart:math' as math;
 import '../home/presentation/notifiers/test_list_notifier.dart';
 
-
 import 'domain/models/test_ranking_item.dart';
+
 /// Mind Canvas 심리테스트 홈 화면
 ///
 /// 심리테스트 메인 대시보드
@@ -28,10 +30,7 @@ import 'domain/models/test_ranking_item.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   final VoidCallback? onGoToAnalysis; // 분석 화면으로 이동 콜백
 
-  const HomeScreen({
-    super.key,
-    this.onGoToAnalysis,
-  });
+  const HomeScreen({super.key, this.onGoToAnalysis});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -39,8 +38,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final String _userMbti = 'INFP'; // 사용자 MBTI (실제로는 UserProvider에서 가져와야 함)
-
-
 
   @override
   void initState() {
@@ -50,7 +47,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(testListNotifierProvider.notifier).loadPopularTests();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +61,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // ===== 📋 메인 컨텐츠 영역 (반응형 패딩) =====
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),  // 반응형 패딩
+                padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),
+                // 반응형 패딩
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -93,9 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 네비게이션: 성격 기반 추천 화면으로 이동
   void _navigateToPersonalityRecommendations() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const RecommendationScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const RecommendationScreen()),
     );
   }
 
@@ -107,8 +102,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('💡 심리 인사이트', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            TextButton(onPressed: () {}, child: const Text('더보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))),
+            const Text(
+              '💡 심리 인사이트',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: const Text(
+                '더보기',
+                style: TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -117,7 +128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _buildPsychologyInsightCard(
           title: '대인 관계 회복',
           subtitle: '전문가의 심리학 지식으로\n더 깊이 있는 자아 이해를 도와드려요',
-          imageUrl: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&h=150&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&h=150&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -132,7 +144,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _buildPsychologyInsightCard(
           title: '일상 심리학',
           subtitle: '매일 만나는 상황에서\n심리학적 원리를 찾아보세요',
-          imageUrl: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&h=150&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&h=150&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -147,7 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _buildPsychologyInsightCard(
           title: '마음 챙기기',
           subtitle: '스트레스와 불안에서 벗어나\n평온한 마음을 찾아보세요',
-          imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=150&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=150&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -257,7 +271,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     // 🏷️ 배지
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(12),
@@ -349,28 +366,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-                '🏆 인기 테스트 랭킹',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary
-                )
+              '🏆 인기 테스트 랭킹',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const PopularTestRankingScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                    '더보기',
-                    style: TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.w500
-                    )
-                )
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PopularTestRankingScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                '더보기',
+                style: TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ),
@@ -386,8 +403,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // 초기 상태에서 자동 로드
                 Future.microtask(() {
                   if (context.mounted) {
-                    print('🔄 HomeScreen: Loading popular tests from initial state');
-                    ref.read(testListNotifierProvider.notifier).loadPopularTests();
+                    print(
+                      '🔄 HomeScreen: Loading popular tests from initial state',
+                    );
+                    // ref.read(testListNotifierProvider.notifier).loadPopularTests();
                   }
                 });
                 return _buildRankingLoading();
@@ -399,7 +418,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
 
               loaded: (items, hasMore, currentPage, isLoadingMore, loadType) {
-                print('✅ HomeScreen: Loaded ${items.length} items, loadType: $loadType');
+                print(
+                  '✅ HomeScreen: Loaded ${items.length} items, loadType: $loadType',
+                );
 
                 // 데이터가 있으면 표시
                 if (items.isNotEmpty) {
@@ -407,12 +428,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 } else {
                   // 빈 데이터면 다시 로드 시도
                   print('⚠️ HomeScreen: Empty data, retrying...');
-                  Future.microtask(() {
-                    if (context.mounted) {
-                      ref.read(testListNotifierProvider.notifier).loadPopularTests();
-                    }
-                  });
-                  return _buildRankingLoading();
+
+                  return SizedBox(
+                    height: 100,
+                    child: Center(
+                      child: Text(
+                        '진행 중인 랭킹이 없습니다.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
                 }
               },
 
@@ -426,7 +451,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
-// 에러 상태 UI (재시도 버튼 포함)
+
+  // 에러 상태 UI (재시도 버튼 포함)
   Widget _buildRankingError(String message) {
     return Container(
       height: AppDimensions.getRankingCardTotalHeight(context),
@@ -434,11 +460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 32,
-              color: Colors.red[400],
-            ),
+            Icon(Icons.error_outline, size: 32, color: Colors.red[400]),
             const SizedBox(height: 8),
             Text(
               '데이터 로드 실패',
@@ -451,10 +473,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -478,8 +497,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-
-// 플레이스홀더 UI (개선)
+  // 플레이스홀더 UI (개선)
   Widget _buildRankingPlaceholder() {
     return Container(
       height: AppDimensions.getRankingCardTotalHeight(context),
@@ -487,18 +505,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.poll_outlined,
-              size: 32,
-              color: AppColors.textTertiary,
-            ),
+            Icon(Icons.poll_outlined, size: 32, color: AppColors.textTertiary),
             const SizedBox(height: 8),
             Text(
               '인기 테스트 준비 중...',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -506,7 +517,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-// 실제 랭킹 리스트 UI
+  // 실제 랭킹 리스트 UI
   Widget _buildRankingList(List<TestRankingItem> items) {
     return SizedBox(
       height: AppDimensions.getRankingCardTotalHeight(context),
@@ -514,7 +525,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         itemCount: math.min(items.length, 5),
-        separatorBuilder: (context, index) => SizedBox(width: AppDimensions.getRankingCardSpacing(context)),
+        separatorBuilder: (context, index) =>
+            SizedBox(width: AppDimensions.getRankingCardSpacing(context)),
         itemBuilder: (context, index) {
           final test = items[index];
           return _buildRankingCard(
@@ -583,7 +595,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   //   );
   // }
 
-// 로딩 상태 UI (개선)
+  // 로딩 상태 UI (개선)
   Widget _buildRankingLoading() {
     return Container(
       height: AppDimensions.getRankingCardTotalHeight(context),
@@ -596,23 +608,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.primaryBlue,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Text(
               '인기 테스트 불러오는 중...',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildUserRecommendations() {
     return Column(
@@ -621,16 +631,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('✨ 당신을 위한 추천', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const Text(
+              '✨ 당신을 위한 추천',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
             TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RecommendationScreen(),
-                    ),
-                  );
-                },
-                child: const Text('전체보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const RecommendationScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                '전체보기',
+                style: TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ),
@@ -641,12 +664,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.backgroundSecondary, AppColors.backgroundTertiary]
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.backgroundSecondary,
+                AppColors.backgroundTertiary,
+              ],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.withOpacity20(AppColors.primaryBlue)),
+            border: Border.all(
+              color: AppColors.withOpacity20(AppColors.primaryBlue),
+            ),
           ),
           child: Column(
             children: [
@@ -656,8 +684,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                        color: AppColors.withOpacity10(AppColors.primaryBlue),
-                        borderRadius: BorderRadius.circular(12)
+                      color: AppColors.withOpacity10(AppColors.primaryBlue),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text('🎯', style: TextStyle(fontSize: 24)),
                   ),
@@ -666,9 +694,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('당신을 위한 테스트', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                        const Text(
+                          '당신을 위한 테스트',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        const Text('당신의 성향에 맞는 심리검사를 추천해드려요', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                        const Text(
+                          '당신의 성향에 맞는 심리검사를 추천해드려요',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -678,7 +719,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ===== 🎨 추천 검사 카드들 (랭킹 카드 재사용) =====
               SizedBox(
-                height: AppDimensions.getRankingCardTotalHeight(context),  // 랭킹 카드와 동일한 높이
+                height: AppDimensions.getRankingCardTotalHeight(context),
+                // 랭킹 카드와 동일한 높이
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -686,38 +728,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _buildRecommendationCard(
                       title: '꿈 분석 검사',
                       subtitle: '무의식 탐구',
-                      imagePath: AppAssets.personaItemHigh, // 기존 에셋 재사용
+                      imagePath: AppAssets.personaItemHigh,
+                      // 기존 에셋 재사용
                       accuracy: '95%',
                       badgeText: '추천',
-                      gradientColors: [AppColors.primaryBlue, AppColors.secondaryTeal],
+                      gradientColors: [
+                        AppColors.primaryBlue,
+                        AppColors.secondaryTeal,
+                      ],
                       onTap: () {
                         print('꿈 분석 검사 선택됨');
                       },
                     ),
-                    SizedBox(width: AppDimensions.getRankingCardSpacing(context)),
+                    SizedBox(
+                      width: AppDimensions.getRankingCardSpacing(context),
+                    ),
 
                     // 두 번째 추천: 색채 심리 검사
                     _buildRecommendationCard(
                       title: '색채 심리 검사',
                       subtitle: '감정 상태 분석',
-                      imagePath: AppAssets.mbtiItemHigh, // 기존 에셋 재사용
+                      imagePath: AppAssets.mbtiItemHigh,
+                      // 기존 에셋 재사용
                       accuracy: '92%',
                       badgeText: '인기',
-                      gradientColors: [AppColors.secondaryTeal, AppColors.secondaryPurple],
+                      gradientColors: [
+                        AppColors.secondaryTeal,
+                        AppColors.secondaryPurple,
+                      ],
                       onTap: () {
                         print('색채 심리 검사 선택됨');
                       },
                     ),
-                    SizedBox(width: AppDimensions.getRankingCardSpacing(context)),
+                    SizedBox(
+                      width: AppDimensions.getRankingCardSpacing(context),
+                    ),
 
                     // 세 번째 추천: 성격 분석 검사
                     _buildRecommendationCard(
                       title: '성격 분석 검사',
                       subtitle: '심층 성격 탐구',
-                      imagePath: AppAssets.headspaceItemHigh, // 기존 에셋 재사용
+                      imagePath: AppAssets.headspaceItemHigh,
+                      // 기존 에셋 재사용
                       accuracy: '89%',
                       badgeText: '신규',
-                      gradientColors: [AppColors.secondaryPurple, Color(0xFFFF8A65)],
+                      gradientColors: [
+                        AppColors.secondaryPurple,
+                        Color(0xFFFF8A65),
+                      ],
                       onTap: () {
                         print('성격 분석 검사 선택됨');
                       },
@@ -732,14 +790,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 24),
 
         // ===== 🎬 새로운 추천 컨텐츠 섹션 사용 =====
-        recommendation.PersonalizedContentSection(
-          userMbti: _userMbti,
-          initialPartnerMbti: 'ENTJ',
-          initialMode: recommendation.ContentMode.personal,
-          initialType: recommendation.ContentType.movie,
-          onContentTap: _navigateToPersonalityRecommendations,
-          showMbtiInput: true,
-        ),
+        recommendation.PersonalizedContentSection(),
         const SizedBox(height: 32),
       ],
     );
@@ -752,8 +803,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('💭 인기 간단한 테스트', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            TextButton(onPressed: () {}, child: const Text('더보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))),
+            const Text(
+              '💭 인기 간단한 테스트',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: const Text(
+                '더보기',
+                style: TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -761,7 +828,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // ===== 🌅 첫 번째 카드: 상상해보는 내 심리테스트 =====
         _buildImageContentCard(
           title: '상상해보는 내 심리테스트',
-          imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=200&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=200&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -774,7 +842,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // ===== 🤝 두 번째 카드: 육감불만 테스트 =====
         _buildImageContentCard(
           title: '육감불만 테스트',
-          imageUrl: 'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=600&h=200&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=600&h=200&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -787,7 +856,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // ===== 🌌 세 번째 카드: 남성적 VS 여성적 테스트 =====
         _buildImageContentCard(
           title: '당신은 남성적? 여성적? 남성성 여성성 테스트',
-          imageUrl: 'https://images.unsplash.com/photo-1519578443396-9048f6db0b2f?w=600&h=200&fit=crop&auto=format',
+          imageUrl:
+              'https://images.unsplash.com/photo-1519578443396-9048f6db0b2f?w=600&h=200&fit=crop&auto=format',
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -908,7 +978,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
@@ -958,30 +1031,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('📈 최근 검사 기록', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const Text(
+              '📈 최근 검사 기록',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
             Row(
               children: [
                 TextButton(
-                    onPressed: () {
-                      // 분석 화면으로 이동
-                      widget.onGoToAnalysis?.call();
-                    },
-                    child: const Text('내 분석', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600))
+                  onPressed: () {
+                    // 분석 화면으로 이동
+                    widget.onGoToAnalysis?.call();
+                  },
+                  child: const Text(
+                    '내 분석',
+                    style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 TextButton(
-                    onPressed: () {},
-                    child: const Text('전체보기', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w500))
+                  onPressed: () {},
+                  child: const Text(
+                    '전체보기',
+                    style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ],
             ),
           ],
         ),
         const SizedBox(height: 16),
-        _buildRecentTestItem('🏠 HTP 심리검사', '2024.07.03', '분석 완료', AppColors.primaryBlue),
+        _buildRecentTestItem(
+          '🏠 HTP 심리검사',
+          '2024.07.03',
+          '분석 완료',
+          AppColors.primaryBlue,
+        ),
         const SizedBox(height: 12),
-        _buildRecentTestItem('🎨 자유화 검사', '2024.07.01', '분석 중', AppColors.secondaryTeal),
+        _buildRecentTestItem(
+          '🎨 자유화 검사',
+          '2024.07.01',
+          '분석 중',
+          AppColors.secondaryTeal,
+        ),
         const SizedBox(height: 12),
-        _buildRecentTestItem('👥 성격 유형 검사', '2024.06.28', '분석 완료', AppColors.secondaryPurple),
+        _buildRecentTestItem(
+          '👥 성격 유형 검사',
+          '2024.06.28',
+          '분석 완료',
+          AppColors.secondaryPurple,
+        ),
       ],
     );
   }
@@ -1003,11 +1110,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: AppDimensions.getRankingCardWidth(context),  // 반응형 너비
+        width: AppDimensions.getRankingCardWidth(context), // 반응형 너비
         margin: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.backgroundCard,
-          borderRadius: BorderRadius.circular(AppDimensions.rankingCardBorderRadius),
+          borderRadius: BorderRadius.circular(
+            AppDimensions.rankingCardBorderRadius,
+          ),
           border: Border.all(color: AppColors.borderLight),
           boxShadow: [
             BoxShadow(
@@ -1026,17 +1135,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // 메인 이미지 - 반응형 크기로 관리
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(AppDimensions.rankingCardBorderRadius)
+                    top: Radius.circular(AppDimensions.rankingCardBorderRadius),
                   ),
                   child: Container(
                     width: double.infinity,
-                    height: AppDimensions.getRankingCardImageHeight(context),  // 반응형 높이
+                    height: AppDimensions.getRankingCardImageHeight(context),
+                    // 반응형 높이
                     decoration: BoxDecoration(
                       color: AppColors.backgroundSecondary.withOpacity(0.1),
                     ),
                     child: _buildImageWithFallback(
-                        imagePath,
-                        AppDimensions.getRankingCardImageHeight(context)  // 반응형 높이 전달
+                      imagePath,
+                      AppDimensions.getRankingCardImageHeight(
+                        context,
+                      ), // 반응형 높이 전달
                     ),
                   ),
                 ),
@@ -1046,7 +1158,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: rankColor,
                       borderRadius: BorderRadius.circular(12),
@@ -1062,7 +1177,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       '$rank위',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: AppDimensions.getRankingCardRankBadgeFontSize(context),  // 반응형 폰트
+                        fontSize: AppDimensions.getRankingCardRankBadgeFontSize(
+                          context,
+                        ), // 반응형 폰트
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1073,7 +1190,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             // 하단 텍스트 정보 - 반응형 크기로 관리
             Padding(
-              padding: EdgeInsets.all(AppDimensions.getRankingCardPadding(context)),  // 반응형 패딩
+              padding: EdgeInsets.all(
+                AppDimensions.getRankingCardPadding(context),
+              ), // 반응형 패딩
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1081,7 +1200,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: AppDimensions.getRankingCardTitleFontSize(context),  // 반응형 폰트
+                      fontSize: AppDimensions.getRankingCardTitleFontSize(
+                        context,
+                      ), // 반응형 폰트
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
@@ -1094,7 +1215,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     '${_formatParticipantCount(participantCount)}명 참여',
                     style: TextStyle(
-                      fontSize: AppDimensions.getRankingCardParticipantFontSize(context),  // 반응형 폰트
+                      fontSize: AppDimensions.getRankingCardParticipantFontSize(
+                        context,
+                      ), // 반응형 폰트
                       color: AppColors.textTertiary,
                     ),
                   ),
@@ -1142,12 +1265,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.rankingCardBorderRadius)
+          top: Radius.circular(AppDimensions.rankingCardBorderRadius),
         ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.rankingCardBorderRadius)
+          top: Radius.circular(AppDimensions.rankingCardBorderRadius),
         ),
         child: Image.network(
           imagePath,
@@ -1183,12 +1306,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: AppDimensions.getRankingCardWidth(context),  // 랭킹 카드와 동일한 너비
+        width: AppDimensions.getRankingCardWidth(context), // 랭킹 카드와 동일한 너비
         margin: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.backgroundCard,
-          borderRadius: BorderRadius.circular(AppDimensions.rankingCardBorderRadius),
-          border: Border.all(color: gradientColors.first.withOpacity(0.3)), // 그라디언트 색상 사용
+          borderRadius: BorderRadius.circular(
+            AppDimensions.rankingCardBorderRadius,
+          ),
+          border: Border.all(color: gradientColors.first.withOpacity(0.3)),
+          // 그라디언트 색상 사용
           boxShadow: [
             BoxShadow(
               color: gradientColors.first.withOpacity(0.15),
@@ -1206,7 +1332,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // 메인 이미지 - 랭킹 카드와 동일한 구조
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(AppDimensions.rankingCardBorderRadius)
+                    top: Radius.circular(AppDimensions.rankingCardBorderRadius),
                   ),
                   child: Container(
                     width: double.infinity,
@@ -1247,7 +1373,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: gradientColors,
@@ -1267,7 +1396,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       badgeText,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: AppDimensions.getRankingCardRankBadgeFontSize(context),
+                        fontSize: AppDimensions.getRankingCardRankBadgeFontSize(
+                          context,
+                        ),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1278,7 +1409,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             // 하단 텍스트 정보 - 랭킹 카드와 동일한 구조
             Padding(
-              padding: EdgeInsets.all(AppDimensions.getRankingCardPadding(context)),
+              padding: EdgeInsets.all(
+                AppDimensions.getRankingCardPadding(context),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1286,7 +1419,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: AppDimensions.getRankingCardTitleFontSize(context),
+                      fontSize: AppDimensions.getRankingCardTitleFontSize(
+                        context,
+                      ),
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
@@ -1299,7 +1434,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: gradientColors.first.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -1307,7 +1445,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Text(
                           '정확도 $accuracy',
                           style: TextStyle(
-                            fontSize: AppDimensions.getRankingCardParticipantFontSize(context),
+                            fontSize:
+                                AppDimensions.getRankingCardParticipantFontSize(
+                                  context,
+                                ),
                             fontWeight: FontWeight.w600,
                             color: gradientColors.first,
                           ),
@@ -1324,7 +1465,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildRecentTestItem(String title, String date, String status, Color color) {
+  Widget _buildRecentTestItem(
+    String title,
+    String date,
+    String status,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1337,23 +1483,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Container(
             width: 8,
             height: 40,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(date, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  date,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.withOpacity10(color), borderRadius: BorderRadius.circular(6)),
-            child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)),
+            decoration: BoxDecoration(
+              color: AppColors.withOpacity10(color),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
           ),
         ],
       ),
