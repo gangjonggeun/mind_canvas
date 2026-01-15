@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mind_canvas/features/recommendation/presentation/pages/community_page.dart';
 
 // 실제 프로젝트에서는 아래 import 경로를 활성화하고 사용하세요.
 import 'pages/ideal_type_worldcup_page.dart';
@@ -754,7 +755,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
   void _navigateToUserRecommendations() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const UserRecommendationPage()),
+      MaterialPageRoute(builder: (_) => const CommunityPage()),
     );
   }
 }

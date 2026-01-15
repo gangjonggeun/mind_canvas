@@ -1,0 +1,181 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../core/utils/result.dart';
+
+import '../../data/dto/embedded_content.dart';
+import '../../data/dto/post_response.dart';
+import '../../domain/usecase/community_use_case.dart';
+
+part 'post_notifier.freezed.dart';
+part 'post_notifier.g.dart';
+
+// -----------------------------------------------------------------------------
+// 📋 State Definition
+// -----------------------------------------------------------------------------
+@freezed
+class PostState with _$PostState {
+  const factory PostState({
+    @Default(false) bool isLoading,      // 로딩 중
+    @Default(false) bool isLoadMore,     // 추가 로딩 중 (하단 스피너용)
+    @Default([]) List<PostResponse> posts, // 게시글 리스트
+    String? errorMessage,                // 에러 메시지
+
+    // 페이징 관련 상태
+    @Default(0) int currentPage,
+    @Default(true) bool hasMore,         // 다음 페이지가 있는지
+    @Default(20) int size,               // 페이지 사이즈
+
+    // 현재 필터 상태 (새로고침 시 사용)
+    String? currentChannel,
+    String? currentCategory,
+    String? currentSort,
+  }) = _PostState;
+
+  factory PostState.initial() => const PostState();
+}
+
+// -----------------------------------------------------------------------------
+// 📢 Notifier Implementation
+// -----------------------------------------------------------------------------
+@Riverpod(keepAlive: true) // 탭 이동해도 스크롤/데이터 유지
+class PostNotifier extends _$PostNotifier {
+  late final CommunityUseCase _useCase;
+
+  @override
+  PostState build() {
+    _useCase = ref.watch(communityUseCaseProvider);
+    return PostState.initial();
+  }
+
+  /// 🔄 게시글 목록 새로고침 (첫 로드)
+  /// - [channel]: 특정 채널 (없으면 전체/자동)
+  /// - [sort]: 정렬 (최신순, 인기순 등)
+  Future<void> fetchPosts({
+    String? channel,
+    String? category,
+    String? sort,
+    bool forceRefresh = false,
+  }) async {
+    // 이미 데이터가 있고 강제 새로고침이 아니면 패스 (채널이 바뀌었으면 무조건 실행)
+    if (state.posts.isNotEmpty &&
+        !forceRefresh &&
+        state.currentChannel == channel &&
+        state.currentSort == sort) {
+      return;
+    }
+
+    state = state.copyWith(
+      isLoading: true,
+      posts: forceRefresh ? [] : state.posts,
+      currentPage: 0,
+      hasMore: true,
+      currentChannel: channel,
+      currentCategory: category,
+      currentSort: sort,
+      errorMessage: null,
+    );
+
+    // ✅ [핵심 변경] sort가 'TRENDING'이면 트렌딩 API 호출, 아니면 일반 API 호출
+    final result = (sort == 'TRENDING')
+        ? await _useCase.getTrendingPosts(page: 0, size: state.size)
+        : await _useCase.getPosts(
+      channel: channel,
+      category: category,
+      sort: sort, // 'createdAt,desc' or 'likeCount,desc'
+      page: 0,
+      size: state.size,
+    );
+
+    result.fold(
+      onSuccess: (pageData) {
+        state = state.copyWith(
+          isLoading: false,
+          posts: pageData.content,
+          hasMore: !pageData.last,
+          currentPage: pageData.number,
+        );
+      },
+      onFailure: (message, code) {
+        state = state.copyWith(isLoading: false, errorMessage: message);
+      },
+    );
+  }
+
+  /// ⬇️ 무한 스크롤: 다음 페이지 불러오기
+  Future<void> loadMorePosts() async {
+    if (state.isLoading || state.isLoadMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadMore: true);
+    final nextPage = state.currentPage + 1;
+
+    // ✅ [핵심 변경] 무한 스크롤 때도 분기 처리 필요
+    final result = (state.currentSort == 'TRENDING')
+        ? await _useCase.getTrendingPosts(page: nextPage, size: state.size)
+        : await _useCase.getPosts(
+      channel: state.currentChannel,
+      category: state.currentCategory,
+      sort: state.currentSort,
+      page: nextPage,
+      size: state.size,
+    );
+
+    result.fold(
+      onSuccess: (pageData) {
+        state = state.copyWith(
+          isLoadMore: false,
+          posts: [...state.posts, ...pageData.content],
+          hasMore: !pageData.last,
+          currentPage: pageData.number,
+        );
+      },
+      onFailure: (message, code) {
+        state = state.copyWith(isLoadMore: false);
+      },
+    );
+  }
+
+  /// ✍️ 게시글 작성
+  /// - 성공 시 목록을 새로고침하여 내가 쓴 글이 보이게 함
+  Future<bool> createPost({
+    required String channel,
+    required String title,
+    required String content,
+    required String category, // "CHAT", "REVIEW" ...
+    String? imageUrl,
+    EmbeddedContent? embeddedContent,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    final result = await _useCase.createPost(
+      channel: channel,
+      category: category,
+      title: title,
+      content: content,
+      imageUrl: imageUrl,
+      embeddedContent: embeddedContent,
+    );
+
+    bool isSuccess = false;
+
+    await result.fold(
+      onSuccess: (newPostId) async {
+        isSuccess = true;
+        // 작성 성공 시 목록 새로고침 (최신순일 경우)
+        await fetchPosts(
+          channel: state.currentChannel,
+          sort: 'createdAt,desc',
+          forceRefresh: true,
+        );
+      },
+      onFailure: (message, code) {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: message,
+        );
+      },
+    );
+
+    return isSuccess;
+  }
+}

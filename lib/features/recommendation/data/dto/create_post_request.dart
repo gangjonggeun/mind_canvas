@@ -16,8 +16,8 @@ part 'create_post_request.g.dart';
 class CreatePostRequest with _$CreatePostRequest {
   const factory CreatePostRequest({
     // 채널이 null이면 서버가 알아서 자동 배정하므로 nullable
-    ChannelType? channel,
-    required PostCategory category,
+    String? channel,
+    required String category, // "CHAT", "REVIEW" ...
     required String title,
     required String content,
 

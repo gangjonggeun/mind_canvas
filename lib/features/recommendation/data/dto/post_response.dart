@@ -13,8 +13,8 @@ class PostResponse with _$PostResponse {
   const factory PostResponse({
     required int id,
     @JsonKey(name: 'user_id') required int userId,
-    required ChannelType channel,
-    required PostCategory category,
+    required String channel,
+    required String category,
     required String title,
 
     // 목록 조회시 contentSummary가 내려올 수 있음

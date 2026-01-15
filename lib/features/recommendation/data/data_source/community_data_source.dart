@@ -7,6 +7,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/api_response_dto.dart'; // 프로젝트 공통 ApiResponse
 import '../../../../core/network/dio_provider.dart';
+import '../../../../core/network/page_response.dart';
+import '../dto/channel_recommendation_response.dart';
+import '../dto/create_post_request.dart';
+import '../dto/post_response.dart';
 
 
 part 'community_data_source.g.dart';
@@ -33,8 +37,8 @@ abstract class CommunityDataSource {
   @GET('/community/posts')
   Future<ApiResponse<PageResponse<PostResponse>>> getPosts(
       @Header('Authorization') String token, {
-        @Query('channel') ChannelType? channel,
-        @Query('category') PostCategory? category,
+        @Query('channel') String? channel,
+        @Query('category') String? category,
         @Query('page') int page = 0,
         @Query('size') int size = 20,
         @Query('sort') String? sort, // 예: "createdAt,desc" or "likeCount,desc"
@@ -82,6 +86,6 @@ abstract class CommunityDataSource {
   @POST('/community/channels/{channel}/join')
   Future<ApiResponse<String>> joinChannel(
       @Header('Authorization') String token,
-      @Path('channel') ChannelType channel,
+      @Path('channel') String channel, // 여기도 String
       );
 }

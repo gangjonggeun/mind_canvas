@@ -7,7 +7,7 @@ part 'channel_recommendation_response.g.dart';
 @freezed
 class ChannelRecommendationResponse with _$ChannelRecommendationResponse {
   const factory ChannelRecommendationResponse({
-    required ChannelType channel,
+    required String channel,
     required String name,
     required String description,
     required String reason,
