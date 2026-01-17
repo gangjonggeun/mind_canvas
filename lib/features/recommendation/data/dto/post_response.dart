@@ -12,23 +12,35 @@ part 'post_response.g.dart';
 class PostResponse with _$PostResponse {
   const factory PostResponse({
     required int id,
-    @JsonKey(name: 'user_id') required int userId,
+
+    // ✅ [수정] user_id -> userId (서버가 보내는 키값 확인 필요)
+    // 만약 서버가 snake_case 설정을 안 했다면 기본값은 userId입니다.
+    @JsonKey(name: 'userId') required int userId,
+
     required String channel,
     required String category,
     required String title,
+    // ✅ [추가] 작성자 정보 받기 (서버 필드명과 일치해야 함 authorNickname)
+    @JsonKey(name: 'authorNickname') String? authorNickname,
+    @JsonKey(name: 'authorProfileImage') String? authorProfileImage,
 
-    // 목록 조회시 contentSummary가 내려올 수 있음
-    @JsonKey(name: 'content_summary') String? contentSummary,
-    @JsonKey(name: 'content') String? content, // 상세 조회시
+    // // ✅ [수정] content_summary -> contentSummary
+    // @JsonKey(name: 'contentSummary') String? contentSummary,
+    @JsonKey(name: 'content') String? content,
 
-    @JsonKey(name: 'image_url') String? imageUrl,
-    @JsonKey(name: 'embedded_content') EmbeddedContent? embeddedContent,
+    // ✅ [수정] image_url -> imageUrl
+    @JsonKey(name: 'imageUrl') String? imageUrl,
 
-    @JsonKey(name: 'view_count') required int viewCount,
-    @JsonKey(name: 'like_count') required int likeCount,
-    @JsonKey(name: 'comment_count') required int commentCount,
+    // ✅ [수정] embedded_content -> embeddedContent
+    @JsonKey(name: 'embeddedContent') EmbeddedContent? embeddedContent,
 
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    // ✅ [수정] view_count -> viewCount 등
+    @JsonKey(name: 'viewCount') required int viewCount,
+    @JsonKey(name: 'likeCount') required int likeCount,
+    @JsonKey(name: 'commentCount') required int commentCount,
+
+    // ✅ [수정] created_at -> createdAt
+    @JsonKey(name: 'createdAt') required DateTime createdAt,
   }) = _PostResponse;
 
   factory PostResponse.fromJson(Map<String, dynamic> json) =>

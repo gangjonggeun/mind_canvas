@@ -11,7 +11,7 @@ class ChannelRecommendationResponse with _$ChannelRecommendationResponse {
     required String name,
     required String description,
     required String reason,
-    @JsonKey(name: 'is_joined') required bool isJoined,
+    @JsonKey(name: 'joined') required bool isJoined,
   }) = _ChannelRecommendationResponse;
 
   factory ChannelRecommendationResponse.fromJson(Map<String, dynamic> json) =>

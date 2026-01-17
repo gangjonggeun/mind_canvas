@@ -173,16 +173,27 @@ class CommunityRepositoryImpl implements CommunityRepository {
   /// 공통 try-catch 래퍼 (코드 중복 방지)
   Future<Result<T>> _safeCall<T>(Future<dynamic> Function() apiCall) async {
     try {
-      // 1. API 호출 실행
-      // dynamic으로 받은 뒤 ApiResponse<T>로 캐스팅하거나
-      // DataSource가 ApiResponse<T>를 반환한다고 가정
       final response = await apiCall();
 
-      // 2. 응답 성공 여부 체크 (Retrofit ApiResponse 필드 사용)
-      if (response.success && response.data != null) {
-        // print('✅ [Repo] 요청 성공');
-        return Result.success(response.data as T);
+      // ✅ [수정] data가 없더라도 success가 true면 성공으로 처리
+      // (특히 joinChannel 처럼 응답 데이터 없이 메시지만 오는 경우 대응)
+      if (response.success) {
+
+        // 데이터가 있으면 반환
+        if (response.data != null) {
+          return Result.success(response.data as T);
+        }
+
+        // 데이터가 없는데 T가 String이면 message라도 반환 (joinChannel 대응)
+        if (T == String) {
+          return Result.success(response.message as T);
+        }
+
+        // 데이터가 꼭 필요한데 없으면 에러 (Post 목록 등)
+        // 하지만 void나 bool, String 응답인 경우는 위에서 처리됨
+        return Result.failure('데이터가 없습니다.', 'NO_DATA');
       } else {
+        // 실패 처리
         print('❌ [Repo] API 실패 응답: ${response.message}');
         return Result.failure(response.message ?? '요청 실패', response.error?.code);
       }

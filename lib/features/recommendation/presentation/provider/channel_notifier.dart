@@ -69,7 +69,7 @@ class ChannelNotifier extends _$ChannelNotifier {
     if (!hasFree) {
       const freeChannel = ChannelRecommendationResponse(
         channel: 'FREE',
-        name: '자유 광장',
+        name: '자유 광장(ALL)',
         description: '모두가 자유롭게 이야기하는 곳',
         reason: '기본 제공',
         isJoined: true, // 강제로 true

@@ -77,75 +77,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     super.dispose();
   }
 
-  //
-  // @override
-  // Widget build(BuildContext context) {
-  //   // 3. 상태 구독 (State Watching)
-  //   final state = ref.watch(userAnalysisNotifierProvider);
-  //
-  //   return Scaffold(
-  //     backgroundColor: const Color(0xFFF8FAFC),
-  //     body: FadeTransition(
-  //       opacity: _fadeAnimation,
-  //       child: CustomScrollView(
-  //         physics: const BouncingScrollPhysics(),
-  //         slivers: [
-  //           // 트렌디한 앱바
-  //           _buildTrendyAppBar(),
-  //
-  //           // 메인 컨텐츠
-  //           SliverPadding(
-  //             padding: const EdgeInsets.all(20),
-  //             sliver: SliverList(
-  //               delegate: SliverChildListDelegate([
-  //                 // 상단: 트렌디 요약 카드
-  //                 _buildTrendyPersonalityCard(),
-  //
-  //                 const SizedBox(height: 20),
-  //
-  //                 // 성격 태그들 (더 작게)
-  //                 _buildCompactTags(),
-  //
-  //                 const SizedBox(height: 32),
-  //
-  //                 // MBTI 슬라이더 (4개)
-  //                 if (_analysisData.mbtiType != null)
-  //                   _buildMbtiSliderSection(),
-  //
-  //                 const SizedBox(height: 24),
-  //
-  //                 // 인지기능 상위 3개
-  //                 _buildTopCognitiveFunctions(),
-  //
-  //                 const SizedBox(height: 24),
-  //
-  //                 // Big 5 성격지표 (5개)
-  //                 _buildBigFiveSliders(),
-  //
-  //                 const SizedBox(height: 24),
-  //
-  //                 // 에니어그램 상위 3개
-  //                 _buildTopEnneagramTypes(),
-  //
-  //                 const SizedBox(height: 24),
-  //
-  //                 // 핵심 성격 지표
-  //                 _buildCorePersonalityIndicator(),
-  //
-  //                 const SizedBox(height: 32),
-  //
-  //                 // // 추천 컨텐츠
-  //                 // _buildRecommendedContent(),
-  //                 //
-  //                 // const SizedBox(height: 20),
-  //               ]),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -492,13 +423,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   /// 개선된 트렌디한 앱바
   Widget _buildTrendyAppBar() {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 120, // 아이콘이 빠져서 높이를 살짝 줄임 (140 -> 120)
       floating: false,
       pinned: true,
       elevation: 0,
+      // 배경색 (다크모드 대응 필요시 조건문 추가)
       backgroundColor: const Color(0xFFF8FAFC),
-      foregroundColor: const Color(0xFF1E293B),
       flexibleSpace: FlexibleSpaceBar(
+        centerTitle: false,
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -507,62 +439,30 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
               colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+          child: const Padding(
+            padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF667EEA).withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.psychology_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '나의 성격 분석',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E293B),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            '심리테스트를 할수록 정확해지는',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                // ✅ 아이콘 제거됨, 텍스트만 깔끔하게 배치
+                Text(
+                  '나의 성격 분석',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1E293B),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  '심리테스트를 할수록 정확해지는 분석',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
