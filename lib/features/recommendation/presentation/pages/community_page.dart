@@ -8,6 +8,8 @@ import '../../data/dto/embedded_content.dart';
 import '../../data/dto/post_response.dart';
 import '../provider/channel_notifier.dart';
 import '../provider/post_notifier.dart';
+import '../widgets/category_popup_menu.dart';
+import '../widgets/like_button.dart';
 import 'create_post_page.dart'; // 날짜 포맷팅용
 
 // Import 경로를 프로젝트에 맞게 수정해주세요
@@ -458,35 +460,139 @@ class _FilterBar extends StatelessWidget {
   const _FilterBar({required this.currentSort, required this.onSortChanged});
 
   @override
+  @override
   Widget build(BuildContext context) {
-    // currentSort가 null이면 기본값(최신순)으로 간주
-    final isNew = currentSort == null || currentSort == 'createdAt,desc';
-    final isHot = currentSort == 'likeCount,desc';
-    final isTrending = currentSort == 'TRENDING';
+    return Consumer(
+      builder: (context, ref, child) {
+        final currentCategory = ref.watch(postNotifierProvider).currentCategory;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          _buildFilterChip(
-            label: '최신',
-            isSelected: isNew,
-            onTap: () => onSortChanged('createdAt,desc'),
+        void changeCategory(String? category) {
+          final postState = ref.read(postNotifierProvider);
+          ref.read(postNotifierProvider.notifier).fetchPosts(
+            channel: postState.currentChannel,
+            sort: postState.currentSort,
+            category: category,
+            forceRefresh: true,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ 좌우 끝으로 정렬
+            children: [
+              // 1. [좌측] 정렬 칩 (최신 / 인기 / 급상승)
+              Row(
+                children: [
+                  _buildSortChip(
+                    label: '최신 ✨', // ✅ 이모티콘 추가
+                    isSelected: currentSort == null || currentSort == 'createdAt,desc',
+                    onTap: () => onSortChanged('createdAt,desc'),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSortChip(
+                    label: '인기 🔥',
+                    isSelected: currentSort == 'likeCount,desc',
+                    onTap: () => onSortChanged('likeCount,desc'),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSortChip(
+                    label: '급상승 🚀',
+                    isSelected: currentSort == 'TRENDING',
+                    onTap: () => onSortChanged('TRENDING'),
+                  ),
+                ],
+              ),
+
+              // 2. [우측] 카테고리 선택 (드롭다운 메뉴)
+              CategoryPopupMenu(
+                currentCategory: currentCategory,
+                onCategoryChanged: changeCategory,
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: '인기 🔥', // 전체 기간 인기글
-            isSelected: isHot,
-            onTap: () => onSortChanged('likeCount,desc'),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryChip(
+    BuildContext context,
+    String label,
+    String? categoryValue,
+  ) {
+    // 현재 선택된 카테고리인지 확인 (Provider 구독 필요)
+    // 여기선 편의상 ConsumerWidget으로 바꾸거나, 상위에서 상태를 받아와야 함.
+    final currentCategory = ProviderScope.containerOf(
+      context,
+    ).read(postNotifierProvider).currentCategory;
+    final isSelected = currentCategory == categoryValue;
+
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          // 카테고리 변경 요청
+          // ref.read가 안되면 콜백으로 위임하거나 ConsumerWidget 사용
+          // onCategoryChanged(categoryValue);
+        }
+      },
+      // ... 스타일링 (파스텔톤 등)
+    );
+  }
+
+  // 정렬 칩 (기존 디자인)
+  Widget _buildSortChip({required String label, required bool isSelected, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
           ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: '급상승 🚀', // 최근 7일 인기글
-            isSelected: isTrending,
-            // ✅ [중요] 트렌딩은 특수 키워드 'TRENDING'을 넘김
-            onTap: () => onSortChanged('TRENDING'),
+        ),
+      ),
+    );
+  }
+
+  // ✅ [신규] 카테고리 옵션 박스 디자인
+  Widget _buildCategoryOption(
+      String label,
+      String? value,
+      String? currentValue,
+      Function(String?) onSelect
+      ) {
+    final isSelected = currentValue == value;
+    return GestureDetector(
+      onTap: () => onSelect(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6B73FF).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(8), // 네모난 박스 느낌
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6B73FF) : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1,
           ),
-        ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? const Color(0xFF6B73FF) : Colors.grey.shade600,
+          ),
+        ),
       ),
     );
   }
@@ -523,7 +629,7 @@ class _FilterBar extends StatelessWidget {
 // =============================================================================
 // 🃏 [Widget] 게시글 카드 (Post Card)
 // =============================================================================
-class _PostCard extends StatelessWidget {
+class _PostCard extends ConsumerWidget {
   final PostResponse post;
 
   const _PostCard({required this.post});
@@ -531,6 +637,28 @@ class _PostCard extends StatelessWidget {
   String _getChannelDisplayName(String channelCode) {
     if (channelCode == 'FREE') return '자유 광장';
     return channelCode; // 나머지는 그대로 (INTP 등)
+  }
+
+  Color _getChannelColor(String channelCode) {
+    if (channelCode == 'FREE') return Colors.black;
+    final hash = channelCode.hashCode;
+    final colors = [
+      const Color(0xFFE57373), const Color(0xFFBA68C8), const Color(0xFF64B5F6),
+      const Color(0xFF4DB6AC), const Color(0xFFFFB74D), const Color(0xFFA1887F),
+      const Color(0xFF90A4AE)
+    ];
+    return colors[hash.abs() % colors.length];
+  }
+
+
+  // 📝 카테고리 한글 변환
+  String _getCategoryName(String categoryCode) {
+    switch (categoryCode) {
+      case 'CHAT': return '잡담';
+      case 'QUESTION': return '질문';
+      case 'REVIEW': return '리뷰';
+      default: return '기타';
+    }
   }
 
   // 🔹 숫자 포맷팅 헬퍼 (조회수)
@@ -545,29 +673,25 @@ class _PostCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final timeAgo = _getTimeAgo(post.createdAt);
-    final channelName = _getChannelDisplayName(post.channel);
+    final channelName = post.channel == 'FREE' ? '자유 광장(ALL)' : post.channel;
+    final channelColor = _getChannelColor(post.channel);
+    final categoryName = _getCategoryName(post.category);
 
     return Container(
-      // ✅ [스타일] 카드형 디자인 (그림자 + 둥근 모서리)
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      // 양옆 여백 추가
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16), // 둥근 모서리
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05), // 은은한 그림자
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. 헤더 (프로필, 닉네임)
+          // 1. 헤더 (프로필, 닉네임, 정보)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -575,27 +699,42 @@ class _PostCard extends StatelessWidget {
                 UserProfileAvatar(
                   imageUrl: post.authorProfileImage,
                   userId: post.userId,
-                  radius: 18,
+                  radius: 20, // 조금 더 키움
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ [닉네임] 서버에서 받은 닉네임 표시
+                      // 닉네임
                       Text(
                         post.authorNickname ?? '익명',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
-                      Text(
-                        '$channelName • $timeAgo',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                        ),
+                      const SizedBox(height: 2),
+
+                      // ✅ [수정] 채널명(색상) • 카테고리(회색) • 시간
+                      Row(
+                        children: [
+                          Text(
+                            channelName,
+                            style: TextStyle(
+                              color: channelColor, // 채널 고유 색상
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            categoryName,
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '• $timeAgo',
+                            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -605,48 +744,35 @@ class _PostCard extends StatelessWidget {
             ),
           ),
 
-          // 2. 텍스트 내용 (제목 + 본문) - 위치 이동됨
+          // 2. 본문 (제목 + 내용)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 제목 (폰트 키움 + 자간 추가)
                 Text(
                   post.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18, // ✅ [수정] 16 -> 18sp
-                    height: 1.3,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, height: 1.3),
                 ),
-                const SizedBox(height: 8), // ✅ [수정] 제목과 본문 사이 간격
-                // 본문
-                ExpandablePostText(
-                  text: post.content!, // 이제 null이 아님 (required)
-                  maxLines: 5, // 5줄 기준
-                ),
+                const SizedBox(height: 8),
+                ExpandablePostText(text: post.content!, maxLines: 5),
               ],
             ),
           ),
 
           const SizedBox(height: 12),
 
-          // 3. 미디어 / 콘텐츠 (이미지 or 임베드)
+          // 3. 이미지/임베드
           if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(top: 4),
               width: double.infinity,
-              height: 250, // 높이 조정
+              height: 250,
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                image: DecorationImage(
-                  image: NetworkImage(post.imageUrl!),
-                  fit: BoxFit.cover,
-                ),
+                image: DecorationImage(image: NetworkImage(post.imageUrl!), fit: BoxFit.cover),
               ),
             ),
-
           if (post.embeddedContent != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -654,42 +780,25 @@ class _PostCard extends StatelessWidget {
             ),
 
           const SizedBox(height: 8),
-          const Divider(height: 1, color: Colors.black12), // 구분선
-          // 4. 하단 액션 (좋아요/댓글)
+          const Divider(height: 1, color: Colors.black12),
+
+          // 4. 하단 액션 (좋아요 연결)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
             child: Row(
               children: [
-                _ActionIcon(
-                  icon: Icons.favorite_border,
-                  label: '${post.likeCount}',
-                  onTap: () {},
+                // ✅ [연결] 좋아요 버튼
+                LikeButton(
+                  // DTO에 isLiked 필드가 없으면 기본 false
+                  // (서버 DTO에 @JsonProperty("isLiked") boolean isLiked 추가 권장)
+                  isLiked: false,
+                  likeCount: post.likeCount,
+                  onTap: (isLiked) {
+                    // ✅ Notifier 호출 -> API 전송
+                    ref.read(postNotifierProvider.notifier).toggleLike(post.id);
+                  },
                 ),
-                const SizedBox(width: 20),
-                _ActionIcon(
-                  icon: Icons.chat_bubble_outline,
-                  label: '${post.commentCount}',
-                  onTap: () {},
-                ),
-                const SizedBox(width: 20),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.remove_red_eye_outlined,
-                      size: 20,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatCount(post.viewCount), // 포맷팅 적용 (예: 1.2천)
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
+
                 const Spacer(),
                 const Icon(Icons.bookmark_border, color: Colors.grey),
               ],

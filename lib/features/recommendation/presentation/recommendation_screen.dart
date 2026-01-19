@@ -3,6 +3,7 @@ import 'package:mind_canvas/features/recommendation/presentation/pages/community
 import 'package:mind_canvas/features/recommendation/presentation/widgets/community_promo_section.dart';
 
 // 실제 프로젝트에서는 아래 import 경로를 활성화하고 사용하세요.
+import '../../../core/widgets/common_sliver_app_bar.dart';
 import 'pages/ideal_type_worldcup_page.dart';
 import 'pages/personality_recommendations_page.dart';
 import 'pages/user_recommendation_page.dart';
@@ -43,50 +44,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ✅ 1. 트렌디한 앱바 (아이콘 없이 텍스트만)
-          SliverAppBar(
-            expandedHeight: 120, // 높이 통일
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: bgColorStart,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [bgColorStart, bgColorEnd],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '✨ 맞춤 컨텐츠 추천',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: textColor,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '당신의 성격에 딱 맞는 컨텐츠를 찾아보세요',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          const CommonSliverAppBar(
+            title: '맞춤 컨텐츠 추천',
+            subtitle: '당신의 성격에 딱 맞는 컨텐츠를 찾아보세요',
+            icon: Icons.auto_awesome_rounded,
+            iconColor: Color(0xFFFFB74D), // 포인트 컬러 변경
           ),
 
           // ✅ 2. 바디 컨텐츠 (SliverList로 감싸기)

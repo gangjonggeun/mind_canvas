@@ -88,4 +88,10 @@ abstract class CommunityDataSource {
       @Header('Authorization') String token,
       @Path('channel') String channel, // 여기도 String
       );
+
+  @POST('/community/posts/{id}/like')
+  Future<ApiResponse<bool>> toggleLike(
+      @Header('Authorization') String token,
+      @Path('id') int id,
+      );
 }

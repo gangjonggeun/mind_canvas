@@ -178,4 +178,47 @@ class PostNotifier extends _$PostNotifier {
 
     return isSuccess;
   }
+
+  Future<void> toggleLike(int postId) async {
+    // 1. 현재 리스트에서 해당 포스트 찾기
+    final currentPosts = [...state.posts];
+    final index = currentPosts.indexWhere((p) => p.id == postId);
+
+    if (index == -1) return; // 없으면 리턴
+
+    final post = currentPosts[index];
+
+    // ⚠️ 주의: 서버 DTO에 'isLiked' 필드가 있어야 완벽함.
+    // 현재는 로컬에서만 상태를 뒤집습니다. (기본값 false라고 가정 시)
+    // 만약 PostResponse에 isLiked 필드가 없다면, UI에서는 토글될 때마다 상태를 반전시킵니다.
+    // 여기서는 로컬 UI만 갱신하기 위해 임시 변수를 씁니다.
+
+    // 2. API 호출
+    final result = await _useCase.toggleLike(postId);
+
+    result.fold(
+      onSuccess: (isLikedNow) {
+        // 3. 성공 시: 서버가 준 최신 상태(isLikedNow)에 맞춰 카운트 업데이트
+        // (만약 서버가 bool을 안 준다면 로컬에서 계산)
+
+        final newLikeCount = isLikedNow
+            ? post.likeCount + 1
+            : (post.likeCount > 0 ? post.likeCount - 1 : 0);
+
+        final updatedPost = post.copyWith(
+          // isLiked: isLikedNow, // DTO에 필드 추가 권장
+          likeCount: newLikeCount,
+        );
+
+        currentPosts[index] = updatedPost;
+
+        // 상태 업데이트 (화면 갱신)
+        state = state.copyWith(posts: currentPosts);
+      },
+      onFailure: (msg, code) {
+        // 실패 시 에러 메시지 (원상복구 로직은 생략함)
+        print("좋아요 실패: $msg");
+      },
+    );
+  }
 }

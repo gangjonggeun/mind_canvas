@@ -88,4 +88,9 @@ class CommunityUseCase {
   Future<Result<String>> joinChannel(String channel) {
     return _repository.joinChannel(channel);
   }
+
+  Future<Result<bool>> toggleLike(int postId) {
+    return _repository.toggleLike(postId);
+  }
+
 }

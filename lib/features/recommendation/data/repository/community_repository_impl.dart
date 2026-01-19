@@ -39,7 +39,14 @@ class CommunityRepositoryImpl implements CommunityRepository {
   // ------------------------------------------------------------------------
   // 📝 게시글 관련
   // ------------------------------------------------------------------------
-
+  @override
+  Future<Result<bool>> toggleLike(int postId) async {
+    return _safeCall(() async {
+      // print('❤️ [Repo] 좋아요 토글 요청: id=$postId');
+      final token = await _getTokenOrThrow();
+      return await _dataSource.toggleLike(token, postId);
+    });
+  }
   @override
   Future<Result<PageResponse<PostResponse>>> getPosts({
     String? channel,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:mind_canvas/features/consulting/presentation/pages/anger_vent_page.dart';
+import '../../../core/widgets/common_sliver_app_bar.dart';
 import 'pages/emotion_diary_page.dart';
 import 'pages/ai_chat_page.dart';
 // import 'pages/mindfulness_sound_page.dart'; // TODO: 구현 필요
@@ -25,26 +26,42 @@ class ConsultingScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF7F9FC),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 헤더 영역
-              _buildHeader(isDark),
+      // ✅ [수정] SingleChildScrollView -> CustomScrollView로 변경해야 SliverAppBar 사용 가능
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // 1. 헤더 (SliverAppBar)
+          const CommonSliverAppBar(
+            title: '마음 상담',
+            subtitle: 'AI와 함께하는 종합 감정 케어',
+            // 🌱 새싹 모양 아이콘 적용 (아래 설명 참고)
+            icon: Icons.eco_rounded,
+            iconColor: Color(0xFF69F0AE),
+          ),
+
+          // 2. 나머지 컨텐츠 (SliverList로 감싸기)
+          SliverList(
+            delegate: SliverChildListDelegate([
               const SizedBox(height: 32),
 
-              // 상담 옵션 카드들 (2x2 그리드)
-              _buildConsultingOptions(context, isDark),
-              const SizedBox(height: 24),
+              // 패딩을 여기서 줍니다.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // 상담 옵션 카드들
+                    _buildConsultingOptions(context, isDark),
+                    const SizedBox(height: 24),
 
-              // 최근 활동 섹션
-              _buildRecentActivity(isDark),
-            ],
+                    // 최근 활동 섹션
+                    _buildRecentActivity(isDark),
+                    const SizedBox(height: 40), // 하단 여백
+                  ],
+                ),
+              ),
+            ]),
           ),
-        ),
+        ],
       ),
     );
   }

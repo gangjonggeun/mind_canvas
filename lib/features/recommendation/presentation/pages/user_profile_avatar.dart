@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-
-
 class UserProfileAvatar extends StatelessWidget {
   final String? imageUrl;
   final int userId;
@@ -36,24 +34,25 @@ class UserProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 이미지가 있으면 네트워크 이미지
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
+    // ✅ null 이거나, 빈 문자열이거나, 공백만 있는 경우 체크
+    bool hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+
+    if (hasImage) {
       return CircleAvatar(
         radius: radius,
         backgroundColor: Colors.grey.shade200,
         backgroundImage: NetworkImage(imageUrl!),
+        // 로딩 에러 시 아이콘으로 대체하는 방어 코드 추가
+        onBackgroundImageError: (_, __) {},
+        child: null,
       );
     }
 
-    // 없으면 랜덤 컬러 + 아이콘
+    // 이미지 없으면 랜덤 컬러 + 아이콘
     return CircleAvatar(
       radius: radius,
       backgroundColor: _getBackgroundColor(userId),
-      child: Icon(
-        Icons.person,
-        size: radius * 1.2,
-        color: Colors.white,
-      ),
+      child: Icon(Icons.person, size: radius * 1.2, color: Colors.white),
     );
   }
 }

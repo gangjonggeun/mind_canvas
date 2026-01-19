@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/common_sliver_app_bar.dart';
 import '../data/dto/psychological_profile_response.dart';
 import '../domain/entities/analysis_data.dart';
 import '../analysis_sample_data.dart';
@@ -136,7 +137,11 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            _buildTrendyAppBar(),
+            const CommonSliverAppBar(
+              title: '나의 성격 분석',
+              subtitle: '심리테스트를 할수록 정확해지는 분석',
+              icon: Icons.pie_chart_rounded,
+            ),
 
             SliverPadding(
               padding: const EdgeInsets.all(20),
