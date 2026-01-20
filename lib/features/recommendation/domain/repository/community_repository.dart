@@ -17,6 +17,8 @@ abstract class CommunityRepository {
   Future<Result<bool>> toggleLike(int postId);
   /// 🔥 트렌딩(실시간 인기글) 조회
   Future<Result<PageResponse<PostResponse>>> getTrendingPosts({
+    String? channel,
+    String? category,
     int page = 0,
     int size = 10,
   });

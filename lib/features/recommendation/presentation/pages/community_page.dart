@@ -791,7 +791,7 @@ class _PostCard extends ConsumerWidget {
                 LikeButton(
                   // DTO에 isLiked 필드가 없으면 기본 false
                   // (서버 DTO에 @JsonProperty("isLiked") boolean isLiked 추가 권장)
-                  isLiked: false,
+                  isLiked: post.isLiked,
                   likeCount: post.likeCount,
                   onTap: (isLiked) {
                     // ✅ Notifier 호출 -> API 전송

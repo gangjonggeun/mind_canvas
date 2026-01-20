@@ -8,6 +8,7 @@ import '../../data/dto/post_response.dart';
 import '../../domain/usecase/community_use_case.dart';
 
 part 'post_notifier.freezed.dart';
+
 part 'post_notifier.g.dart';
 
 // -----------------------------------------------------------------------------
@@ -16,16 +17,14 @@ part 'post_notifier.g.dart';
 @freezed
 class PostState with _$PostState {
   const factory PostState({
-    @Default(false) bool isLoading,      // 로딩 중
-    @Default(false) bool isLoadMore,     // 추가 로딩 중 (하단 스피너용)
+    @Default(false) bool isLoading, // 로딩 중
+    @Default(false) bool isLoadMore, // 추가 로딩 중 (하단 스피너용)
     @Default([]) List<PostResponse> posts, // 게시글 리스트
-    String? errorMessage,                // 에러 메시지
-
+    String? errorMessage, // 에러 메시지
     // 페이징 관련 상태
     @Default(0) int currentPage,
-    @Default(true) bool hasMore,         // 다음 페이지가 있는지
-    @Default(20) int size,               // 페이지 사이즈
-
+    @Default(true) bool hasMore, // 다음 페이지가 있는지
+    @Default(20) int size, // 페이지 사이즈
     // 현재 필터 상태 (새로고침 시 사용)
     String? currentChannel,
     String? currentCategory,
@@ -78,14 +77,20 @@ class PostNotifier extends _$PostNotifier {
 
     // ✅ [핵심 변경] sort가 'TRENDING'이면 트렌딩 API 호출, 아니면 일반 API 호출
     final result = (sort == 'TRENDING')
-        ? await _useCase.getTrendingPosts(page: 0, size: state.size)
+        ? await _useCase.getTrendingPosts(
+            channel: channel, // 👈 추가
+            category: category,
+            page: 0,
+            size: state.size,
+          )
         : await _useCase.getPosts(
-      channel: channel,
-      category: category,
-      sort: sort, // 'createdAt,desc' or 'likeCount,desc'
-      page: 0,
-      size: state.size,
-    );
+            channel: channel,
+            category: category,
+            sort: sort,
+            // 'createdAt,desc' or 'likeCount,desc'
+            page: 0,
+            size: state.size,
+          );
 
     result.fold(
       onSuccess: (pageData) {
@@ -113,12 +118,12 @@ class PostNotifier extends _$PostNotifier {
     final result = (state.currentSort == 'TRENDING')
         ? await _useCase.getTrendingPosts(page: nextPage, size: state.size)
         : await _useCase.getPosts(
-      channel: state.currentChannel,
-      category: state.currentCategory,
-      sort: state.currentSort,
-      page: nextPage,
-      size: state.size,
-    );
+            channel: state.currentChannel,
+            category: state.currentCategory,
+            sort: state.currentSort,
+            page: nextPage,
+            size: state.size,
+          );
 
     result.fold(
       onSuccess: (pageData) {
@@ -169,10 +174,7 @@ class PostNotifier extends _$PostNotifier {
         );
       },
       onFailure: (message, code) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: message,
-        );
+        state = state.copyWith(isLoading: false, errorMessage: message);
       },
     );
 
@@ -206,7 +208,7 @@ class PostNotifier extends _$PostNotifier {
             : (post.likeCount > 0 ? post.likeCount - 1 : 0);
 
         final updatedPost = post.copyWith(
-          // isLiked: isLikedNow, // DTO에 필드 추가 권장
+          isLiked: isLikedNow, // DTO에 필드 추가 권장
           likeCount: newLikeCount,
         );
 

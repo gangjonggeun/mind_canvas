@@ -23,7 +23,7 @@ class PostResponse with _$PostResponse {
     // ✅ [추가] 작성자 정보 받기 (서버 필드명과 일치해야 함 authorNickname)
     @JsonKey(name: 'authorNickname') String? authorNickname,
     @JsonKey(name: 'authorProfileImage') String? authorProfileImage,
-
+    @JsonKey(name: 'isLiked') @Default(false) bool isLiked,
     // // ✅ [수정] content_summary -> contentSummary
     // @JsonKey(name: 'contentSummary') String? contentSummary,
     @JsonKey(name: 'content') String? content,

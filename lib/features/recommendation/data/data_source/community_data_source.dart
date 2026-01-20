@@ -47,6 +47,8 @@ abstract class CommunityDataSource {
   /// 2. 트렌딩(인기글) 조회
   @GET('/community/trending')
   Future<ApiResponse<PageResponse<PostResponse>>> getTrendingPosts(
+      @Query('channel') String? channel,
+      @Query('category') String? category,
       @Header('Authorization') String token, {
         @Query('page') int page = 0,
         @Query('size') int size = 10,

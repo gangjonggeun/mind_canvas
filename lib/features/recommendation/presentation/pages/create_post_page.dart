@@ -77,10 +77,14 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     hint: const Text("게시판을 선택하세요"),
                     isExpanded: true,
                     items: myChannels.map((channel) {
+                      String displayName = channel.name;
+                      if (channel.channel == 'FREE') {
+                        displayName = "자유 광장(ALL) 채널"; // 'Free 채널' 대신 이걸로 표시
+                      }
                       return DropdownMenuItem(
                         value: channel.channel,
                         child: Text(
-                          channel.name, // "자유 광장" 등
+                          displayName, // "자유 광장" 등
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       );

@@ -74,6 +74,8 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   Future<Result<PageResponse<PostResponse>>> getTrendingPosts({
+    String? channel,
+    String? category,
     int page = 0,
     int size = 10,
   }) async {
@@ -82,6 +84,8 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
       final token = await _getTokenOrThrow();
       final response = await _dataSource.getTrendingPosts(
+        channel,
+        category,
         token,
         page: page,
         size: size,

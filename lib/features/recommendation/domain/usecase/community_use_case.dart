@@ -45,10 +45,17 @@ class CommunityUseCase {
 
   /// 트렌딩(실시간 인기글) 조회
   Future<Result<PageResponse<PostResponse>>> getTrendingPosts({
+    String? channel, // ✅ 추가
+    String? category, // ✅ 추가
     int page = 0,
     int size = 10,
   }) {
-    return _repository.getTrendingPosts(page: page, size: size);
+    return _repository.getTrendingPosts(
+      channel: channel,
+      category: category,
+      page: page,
+      size: size,
+    );
   }
 
   /// 게시글 작성
@@ -92,5 +99,4 @@ class CommunityUseCase {
   Future<Result<bool>> toggleLike(int postId) {
     return _repository.toggleLike(postId);
   }
-
 }
