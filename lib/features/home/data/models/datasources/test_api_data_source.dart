@@ -22,42 +22,6 @@ part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
 abstract class TestApiDataSource {
   factory TestApiDataSource(Dio dio, {String baseUrl}) = _TestApiDataSource;
 
-  /// 🎯 심리 테스트 제출 및 결과 반환
-  ///
-  /// <p><strong>핵심 특징:</strong></p>
-  /// - ✅ 답변 유효성 검증 (클라이언트 + 서버)
-  /// - 🎯 테스트별 자동 채점 (GenericScorer)
-  /// - 📊 차원별 점수 계산 및 결과 결정
-  /// - 🏆 결과 즉시 반환
-  /// - 🔒 인증 필수 (로그인한 사용자만)
-  ///
-  /// <p><strong>요청 예시:</strong></p>
-  /// ```dart
-  /// final request = SubmitTestRequest(
-  ///   testId: 1,
-  ///   answers: [
-  ///     TestAnswer(
-  ///       questionId: 'q1',
-  ///       selectedValue: 'ACHIEVEMENT_A',
-  ///     ),
-  ///     TestAnswer(
-  ///       questionId: 'q30',
-  ///       selectedValue: '자유롭고 의미있는 삶',
-  ///     ),
-  ///   ],
-  /// );
-  ///
-  /// final result = await testApi.submitTest(
-  ///   request,
-  ///   'Bearer $accessToken',
-  /// );
-  /// ```
-  ///
-  /// 서버 엔드포인트: POST /api/v1/tests/submit
-  ///
-  /// @param request 테스트 제출 요청 (testId + answers)
-  /// @param authorization JWT 토큰 (Bearer {token})
-  /// @return 채점 결과 (resultKey, dimensionScores, resultDetails 등)
   @POST('/tests/submit')
   Future<ApiResponse<TestResultResponse>> submitTest(
       @Body() SubmitTestRequest request,
@@ -156,50 +120,6 @@ abstract class TestApiDataSource {
       @Header('Authorization') String authorization,
       );
 
-  // =============================================================
-  // 🔍 개별 테스트 관련 API들 (추후 구현 예정)
-  // =============================================================
-
-  /// 🔍 테스트 상세 정보 조회
-  ///
-  /// 서버 엔드포인트: GET /api/v1/tests/{testId}
-  /// 인증: 선택사항
-  // @GET('/tests/{testId}')
-  // Future<ApiResponse<TestDetailResponse>> getTestDetail(
-  //   @Path('testId') int testId, {
-  //   @Header('Authorization') String? authorization,
-  // });
-
-  /// 📊 테스트 시작 (응답 세션 생성)
-  ///
-  /// 서버 엔드포인트: POST /api/v1/tests/{testId}/start
-  /// 인증: 필수
-  // @POST('/tests/{testId}/start')
-  // Future<ApiResponse<TestSessionResponse>> startTest(
-  //   @Path('testId') int testId,
-  //   @Header('Authorization') String authorization,
-  // );
-
-  /// 📝 테스트 응답 제출
-  ///
-  /// 서버 엔드포인트: POST /api/v1/tests/{testId}/submit
-  /// 인증: 필수
-  // @POST('/tests/{testId}/submit')
-  // Future<ApiResponse<TestResultResponse>> submitTest(
-  //   @Path('testId') int testId,
-  //   @Body() TestSubmissionRequest request,
-  //   @Header('Authorization') String authorization,
-  // );
-
-  /// 🏆 테스트 결과 조회
-  ///
-  /// 서버 엔드포인트: GET /api/v1/tests/{testId}/result
-  /// 인증: 필수
-  // @GET('/tests/{testId}/result')
-  // Future<ApiResponse<TestResultResponse>> getTestResult(
-  //   @Path('testId') int testId,
-  //   @Header('Authorization') String authorization,
-  // );
 
   // =============================================================
   // 🏥 헬스체크 API

@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
+import 'package:mind_canvas/features/home/presentation/widgets/home_recommendation_section.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.dart';
 
 import '../../core/theme/app_assets.dart';
@@ -50,6 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
@@ -69,10 +71,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 16),
                     _buildTestRanking(),
                     const SizedBox(height: 32),
-                    _buildUserRecommendations(),
+                    const HomeRecommendationSection(),
                     const SizedBox(height: 32),
-                    _buildTestCategories(),
-                    const SizedBox(height: 32),
+                    // _buildTestCategories(),
+                    // const SizedBox(height: 32),
                     _buildRecentTests(),
                     const SizedBox(height: 32),
                     _buildPsychologyInsights(),
@@ -497,25 +499,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // 플레이스홀더 UI (개선)
-  Widget _buildRankingPlaceholder() {
-    return Container(
-      height: AppDimensions.getRankingCardTotalHeight(context),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.poll_outlined, size: 32, color: AppColors.textTertiary),
-            const SizedBox(height: 8),
-            Text(
-              '인기 테스트 준비 중...',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // 실제 랭킹 리스트 UI
   Widget _buildRankingList(List<TestRankingItem> items) {
