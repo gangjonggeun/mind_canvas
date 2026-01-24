@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dart';
-
+import 'package:flutter/services.dart';
 // ✅ 추가: GoRouter 관련 import
 import 'app/main_screen.dart';
 import 'core/router/app_router.dart';
@@ -25,6 +25,13 @@ void main() async {
   } catch (e) {
     print("❌ .env 파일 로드 실패: $e");
   }
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // (선택사항) 화면 방향을 세로로 고정하고 싶다면
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const ProviderScope(child: MindCanvasApp()));
 

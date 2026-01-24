@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
+import 'package:mind_canvas/features/home/presentation/widgets/HomeInsightSection.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/home_recommendation_section.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.dart';
 
@@ -77,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // const SizedBox(height: 32),
                     _buildRecentTests(),
                     const SizedBox(height: 32),
-                    _buildPsychologyInsights(),
+                    const HomeInsightSection(),
                     const SizedBox(height: 20),
                   ],
                 ),

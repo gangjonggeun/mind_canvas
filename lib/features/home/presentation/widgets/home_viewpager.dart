@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../info/info_screen.dart';
 import 'viewpager_items.dart';
 import 'page_indicator.dart';
 
@@ -108,6 +109,14 @@ class _HomeViewPagerState extends State<HomeViewPager> {
     }
   }
 
+  // ✅ [추가] 공통 네비게이션 함수
+  void _navigateToTestInfo(BuildContext context, int testId) {
+    _onUserInteraction(); // 터치했으니 타이머 재설정
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => InfoScreen(testId: testId)));
+  }
+
   @override
   Widget build(BuildContext context) {
     const taroItem = TaroPageViewItem();
@@ -125,19 +134,23 @@ class _HomeViewPagerState extends State<HomeViewPager> {
               // 타로 심리상담
               GestureDetector(
                 onTap: () {
-                  _onUserInteraction(); // 1. 기존의 자동 슬라이드 재시작
-                  taroItem.onTapCallback(context)?.call(); // 2. 타로 아이템의 페이지 이동 콜백 실행
+                  _navigateToTestInfo(context, 9);
                 },
                 child: const TaroPageViewItem(),
               ),
               // 페르소나 테스트
               GestureDetector(
-                onTap: _onUserInteraction,
+                onTap: () {
+                  _navigateToTestInfo(context, 10);
+                },
                 child: const PersonaPageViewItem(),
               ),
               // HTP 심리검사
               GestureDetector(
-                onTap: _onUserInteraction,
+                onTap: () {
+                  // ⚠️ TODO: 실제 DB의 'HTP 테스트' ID 입력 (예: 11)
+                  _navigateToTestInfo(context,3);
+                },
                 child: const HTPPageViewItem(),
               ),
             ],
