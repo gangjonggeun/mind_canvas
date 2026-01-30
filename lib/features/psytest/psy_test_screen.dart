@@ -12,10 +12,12 @@ import 'data/model/test_question.dart';
 /// [최종 버전] 데이터 기반의 유연한 심리 테스트 화면 (주관식 답변 기능 추가)
 class PsyTestScreen extends ConsumerStatefulWidget {
   final int testId;
+  final String testName;
 
   const PsyTestScreen({
     super.key,
     required this.testId,
+    required this.testName
   });
 
   @override
@@ -263,7 +265,8 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
       title: Row(
         children: [
           Text(
-            'MBTI 검사',
+            widget.testName,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : const Color(0xFF2D3748)),
           ),
           const Spacer(),

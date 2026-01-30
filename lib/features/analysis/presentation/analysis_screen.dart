@@ -153,7 +153,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                   const SizedBox(height: 32),
 
                   // 2️⃣ 8기능 섹션
-                  _buildCognitiveSection(profile),
+                  // _buildCognitiveSection(profile),
 
                   const SizedBox(height: 32),
 
@@ -195,29 +195,29 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       );
     }
   }
-
-  /// 2️⃣ 8기능(인지기능) 분석 섹션 (Se, Si, Ne...)
-  Widget _buildCognitiveSection(PsychologicalProfileResponse? profile) {
-    // hasCognitiveFunctions 체크: 8기능 점수 합이 0보다 큰지 확인
-    if (profile != null && profile.hasCognitiveFunctions) {
-      // ⚠️ 변경점: mbti 객체가 아닌 cognitiveFunctions 객체를 전달
-      return _buildTopCognitiveFunctions(profile.cognitiveFunctions!);
-    }
-    // 데이터 없음 -> 검사 유도
-    else {
-      return _buildEmptyStateCard(
-        title: "페르소나 테스트",
-        description: "내가 무의식적으로 사용하는 기능은 무엇일까요?\n나의 사고 방식과 행동 패턴의 원인을 찾아보세요.",
-        icon: Icons.lightbulb_outline,
-        buttonText: "페르소나 테스트 하러가기",
-        colors: [const Color(0xFF9C27B0), Color(0xFF673AB7)],
-        // 보라색 계열
-        onTap: () {
-          print("8기능 검사 이동");
-        },
-      );
-    }
-  }
+  //
+  // /// 2️⃣ 8기능(인지기능) 분석 섹션 (Se, Si, Ne...)
+  // Widget _buildCognitiveSection(PsychologicalProfileResponse? profile) {
+  //   // hasCognitiveFunctions 체크: 8기능 점수 합이 0보다 큰지 확인
+  //   if (profile != null && profile.hasCognitiveFunctions) {
+  //     // ⚠️ 변경점: mbti 객체가 아닌 cognitiveFunctions 객체를 전달
+  //     return _buildTopCognitiveFunctions(profile.cognitiveFunctions!);
+  //   }
+  //   // 데이터 없음 -> 검사 유도
+  //   else {
+  //     return _buildEmptyStateCard(
+  //       title: "페르소나 테스트",
+  //       description: "내가 무의식적으로 사용하는 기능은 무엇일까요?\n나의 사고 방식과 행동 패턴의 원인을 찾아보세요.",
+  //       icon: Icons.lightbulb_outline,
+  //       buttonText: "페르소나 테스트 하러가기",
+  //       colors: [const Color(0xFF9C27B0), Color(0xFF673AB7)],
+  //       // 보라색 계열
+  //       onTap: () {
+  //         print("8기능 검사 이동");
+  //       },
+  //     );
+  //   }
+  // }
 
   /// Big5 섹션
   Widget _buildBig5Section(PsychologicalProfileResponse? profile) {

@@ -697,6 +697,7 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       MaterialPageRoute(
         builder: (context) => PsyTestScreen(
           testId: testDetail.testId,
+          testName: testDetail.title,
         ),
       ),
     );
