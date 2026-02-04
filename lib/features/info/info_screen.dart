@@ -698,6 +698,7 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
         builder: (context) => PsyTestScreen(
           testId: testDetail.testId,
           testName: testDetail.title,
+          testTag: testDetail.psychologyTag,
         ),
       ),
     );

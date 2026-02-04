@@ -14,6 +14,7 @@ import '../../../../psytest/data/model/test_question.dart';
 import '../../../domain/models/test_ranking_item.dart';
 import '../../../domain/repositories/test_repository.dart';
 import '../datasources/test_api_data_source.dart';
+import '../request/subjective_test_submit_request.dart';
 
 
 
@@ -28,6 +29,84 @@ class TestRepositoryImpl implements TestRepository {
   }) : _testApiDataSource = testApiDataSource,
         _tokenManager = tokenManager;
 
+  @override
+  Future<Result<TestResultResponse>> submitSubjectiveTest(
+      SubjectiveTestSubmitRequest request,
+      ) async {
+    try {
+      // 1️⃣ 클라이언트 측 검증 (확장 메서드 활용)
+      if (!request.isValid) {
+        return Result.failure(
+          'VALIDATION_ERROR',
+          '모든 문항에 답변을 입력해주세요.',
+        );
+      }
+
+      // 2️⃣ 토큰 가져오기
+      final token = await _tokenManager.getValidAccessToken();
+      if (token == null) {
+        return  Result.failure(
+          'AUTHENTICATION_ERROR',
+          '로그인이 필요합니다',
+        );
+      }
+
+      // 3️⃣ API 호출 (AI 분석이라 시간이 좀 걸릴 수 있음)
+      final apiResponse = await _testApiDataSource.submitSubjectiveTest(
+        request,
+        token, // Bearer prefix 처리는 TokenManager나 Interceptor에 있다고 가정
+      );
+
+      // 4️⃣ 응답 처리
+      if (apiResponse.success && apiResponse.data != null) {
+        return Result.success(
+          apiResponse.data!,
+          apiResponse.message ?? '분석이 완료되었습니다.',
+        );
+      } else {
+        return Result.failure(
+          apiResponse.message ?? 'UNKNOWN_ERROR',
+          apiResponse.message ?? '알 수 없는 오류가 발생했습니다',
+        );
+      }
+    } on DioException catch (e) {
+      // 5️⃣ 네트워크 오류 처리
+      // (기존 submitTest와 동일한 로직 재사용 가능)
+      if (e.response?.statusCode == 400) {
+        return Result.failure(
+          'VALIDATION_ERROR',
+          e.response?.data['message'] ?? '입력 정보가 올바르지 않습니다.',
+        );
+      } else if (e.response?.statusCode == 402) { // 💰 코인 부족 (402 Payment Required)
+        return  Result.failure(
+          'INSUFFICIENT_COIN',
+          '코인이 부족하여 분석을 진행할 수 없습니다.',
+        );
+      } else if (e.response?.statusCode == 401) {
+        return Result.failure(
+          'AUTHENTICATION_ERROR',
+          '인증이 만료되었습니다. 다시 로그인해주세요',
+        );
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return  Result.failure(
+          'TIMEOUT_ERROR',
+          'AI 분석 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+        );
+      } else {
+        return Result.failure(
+          'NETWORK_ERROR',
+          '서버 통신 오류: ${e.message}',
+        );
+      }
+    } catch (e) {
+      // 6️⃣ 예상치 못한 오류
+      return Result.failure(
+        'UNKNOWN_ERROR',
+        '시스템 오류가 발생했습니다: $e',
+      );
+    }
+  }
   @override
   Future<Result<TestResultResponse>> submitTest(
       SubmitTestRequest request,

@@ -13,11 +13,13 @@ import 'data/model/test_question.dart';
 class PsyTestScreen extends ConsumerStatefulWidget {
   final int testId;
   final String testName;
+  final String? testTag;
 
   const PsyTestScreen({
     super.key,
     required this.testId,
-    required this.testName
+    required this.testName,
+    this.testTag, // 리스트 화면에서 넘겨주세요 (예: "AI_BIG5")
   });
 
   @override
@@ -47,85 +49,6 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
   // 🎨 애니메이션 컨트롤러
   late AnimationController _pageAnimationController;
   late Animation<double> _pageAnimation;
-
-  // // ✅ [수정됨] '주관식' 질문이 포함된 새로운 데이터
-  // final List<List<TestQuestion>> _questionPages = [
-  //   // 페이지 1: 기본 유형 (텍스트 라디오 + 주관식)
-  //   [
-  //     TestQuestion(id: 'q1', text: '주말에 주로 무엇을 하며 시간을 보내나요?', options: [
-  //       QuestionOption(id: 'a', text: '친구들과 만나서 활동한다', value: 'E'),
-  //       QuestionOption(id: 'b', text: '집에서 혼자만의 시간을 갖는다', value: 'I'),
-  //     ]),
-  //     TestQuestion(id: 'q2', text: '최근 당신을 가장 잘 표현하는 단어 하나를 적어주세요.', type: QuestionType.subjective),
-  //   ],
-  //   // 페이지 2: 이미지 선택 유형
-  //   [
-  //     TestQuestion(id: 'q3', text: '더 끌리는 풍경을 선택해주세요.', type: QuestionType.image, options: [
-  //       QuestionOption(id: 'a', value: 'J', imageUrl: 'assets/images/background/htp_background_1_high.webp', text: '잘 정돈된 집'),
-  //       QuestionOption(id: 'b', value: 'P', imageUrl: 'assets/images/background/htp_background_2_high.webp', text: '자유로운 숲길'),
-  //     ]),
-  //   ],
-  //   // 페이지 3: 질문에 이미지 + 답변은 라디오
-  //   [
-  //     TestQuestion(
-  //       id: 'q4',
-  //       text: '이 그림을 보고 어떤 감정이 드나요?',
-  //       imageUrl: 'assets/images/background/htp_background_2_high.webp', // ✅ 질문 자체에 이미지가 포함된 경우
-  //       options: [
-  //         QuestionOption(id: 'a', text: '평온하고 안정적이다', value: 'S'),
-  //         QuestionOption(id: 'b', text: '자유롭고 창의적이다', value: 'N'),
-  //         QuestionOption(id: 'c', text: '조금 외로워 보인다', value: 'F'),
-  //       ],
-  //     ),
-  //   ],
-  //   // 페이지 4: 질문에 이미지 + 답변은 주관식
-  //   [
-  //     TestQuestion(
-  //       id: 'q5',
-  //       text: '이 그림 속 장소에 제목을 붙여주세요.',
-  //       imageUrl: 'assets/images/background/htp_background_1_high.webp',
-  //       type: QuestionType.subjective,
-  //     ),
-  //   ],
-  //   // 페이지 5: 드롭다운(선택 박스) 유형
-  //   [
-  //     TestQuestion(
-  //       id: 'q6',
-  //       text: '당신의 업무 스타일과 가장 가까운 것을 선택해주세요.',
-  //       type: QuestionType.text, // ✅ 드롭다운 질문 타입
-  //       options: [
-  //         QuestionOption(id: 'a', text: '미리 계획하고 체계적으로 실행한다', value: 'J'),
-  //         QuestionOption(id: 'b', text: '상황에 맞춰 유연하게 대처한다', value: 'P'),
-  //         QuestionOption(id: 'c', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'P'),
-  //         QuestionOption(id: 'd', text: '마감 기한에 맞춰 집중적으로 처리한다', value: 'J'),
-  //       ],
-  //     ),
-  //   ],
-  //   // 페이지 6: 질문에 이미지 + 답변은 드롭다운
-  //   [
-  //     TestQuestion(
-  //       id: 'q7',
-  //       text: '이 캐릭터가 할 것 같은 말은 무엇인가요?',
-  //       imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-  //       type: QuestionType.text,
-  //       options: [
-  //         QuestionOption(id: 'a', text: '"우리 같이 새로운거 해보자!"', value: 'E'),
-  //         QuestionOption(id: 'b', text: '"이 문제의 핵심은 말이야..."', value: 'T'),
-  //         QuestionOption(id: 'c', text: '"다들 괜찮아? 내가 도와줄까?"', value: 'F'),
-  //       ],
-  //     ),
-  //   ],
-  //   // 페이지 7: 모든 유형 혼합
-  //   [
-  //     TestQuestion(id: 'q8', text: '스트레스를 받을 때 어떻게 해소하나요?', options: [
-  //       QuestionOption(id: 'a', text: '친구들과 이야기를 나눈다', value: 'E'),
-  //       QuestionOption(id: 'b', text: '혼자서 조용히 생각한다', value: 'I'),
-  //     ]),
-  //     TestQuestion(id: 'q9', text: '가장 중요하게 생각하는 가치를 적어주세요.', type: QuestionType.subjective),
-  //   ],
-  // ];
-  //
-  // late final int _totalPages = _questionPages.length;
 
   @override
   void initState() {
@@ -384,8 +307,9 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
           Text(question.text, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : const Color(0xFF2D3748), height: 1.4)),
           const SizedBox(height: 20),
           // ✅ [수정됨] 질문 타입에 따라 다른 위젯을 그립니다.
-          if (question.type == QuestionType.subjective)
-            _buildSubjectiveInput(question.id, isDarkMode)
+          if (question.type == QuestionType.text ||
+              question.type == QuestionType.textarea)
+            _buildSubjectiveInput(question, isDarkMode)
           else
             ...(question.options ?? []).map((option) {
               if (option.imageUrl != null) return _buildImageOption(question.id, option, isDarkMode);
@@ -448,30 +372,50 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
   }
 
   /// 🎨 주관식 답변 입력
-  Widget _buildSubjectiveInput(String questionId, bool isDarkMode) {
+  Widget _buildSubjectiveInput(TestQuestion question, bool isDarkMode) {
     final controller = _textControllers.putIfAbsent(
-      questionId,
-          () => TextEditingController(text: _answers[questionId] as String?),
+      question.id,
+          () => TextEditingController(text: _answers[question.id] as String?),
     );
+
+    // ✅ inputType 확인 (서버에서 "textarea"로 내려온다고 가정)
+    // TestQuestion 모델에 inputType 필드가 없으면 map['inputType']을 확인하거나
+    // 기본적으로 길이가 긴 질문은 textarea로 취급하는 로직 필요
+    final isLongText = question.type == QuestionType.textarea;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: _optionDecoration(false, isDarkMode).copyWith(
         color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
       ),
       child: TextField(
         controller: controller,
-        onChanged: (text) => setState(() => _answers[questionId] = text),
-        maxLines: 1,
-        style: _optionTextStyle(false, isDarkMode).copyWith(fontWeight: FontWeight.normal),
+        onChanged: (text) => setState(() => _answers[question.id] = text),
+
+        // ✅ [핵심] 텍스트 에어리어 스타일 적용
+        maxLines: isLongText ? null : 1, // null이면 제한 없이 늘어남
+        minLines: isLongText ? 5 : 1,    // 최소 높이 확보
+        keyboardType: isLongText ? TextInputType.multiline : TextInputType.text,
+        textInputAction: isLongText ? TextInputAction.newline : TextInputAction.done,
+
+        style: _optionTextStyle(false, isDarkMode).copyWith(
+          fontWeight: FontWeight.normal,
+          height: 1.5, // 줄간격 살짝 넉넉하게
+        ),
         decoration: InputDecoration(
           border: InputBorder.none,
-          hintText: '여기에 답변을 입력하세요...',
-          hintStyle: TextStyle(color: isDarkMode ? Colors.white38 : Colors.black38),
+          hintText: isLongText
+              ? '내용을 자유롭게 작성해주세요.\n(자세하고 솔직하게 적을수록 정확도가 올라갑니다.)'
+              : '답변을 입력하세요...',
+          hintStyle: TextStyle(
+            color: isDarkMode ? Colors.white38 : Colors.black38,
+            fontSize: 14,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
     );
   }
-
   // ✅ 수정: 제출 중 상태 확인
   Widget _buildNavigationButtons(
       bool isDarkMode,
@@ -579,16 +523,30 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
   //==================================================================
 
   bool _canGoToNextPage() {
+    // 마지막 페이지 넘어서는 항상 true
     if (_currentPage >= _questionPages.length) return true;
+
     final currentQuestions = _questionPages[_currentPage];
+
     for (final question in currentQuestions) {
+      // 1. 답변 키가 아예 없거나 값이 null인 경우 (공통)
       if (!_answers.containsKey(question.id) || _answers[question.id] == null) {
         return false;
       }
-      if (question.type == QuestionType.subjective && (_answers[question.id] as String).isEmpty) {
-        return false;
+
+      final answer = _answers[question.id];
+
+      // 2. 주관식 (한 줄 or 여러 줄)인 경우: 빈 문자열 체크
+      if (question.type == QuestionType.text || question.type == QuestionType.textarea) {
+        // String으로 형변환 후 trim()으로 공백 제거 확인
+        if (answer is String && answer.trim().isEmpty) {
+          return false;
+        }
       }
+
+      // 3. (선택사항) Drawing 타입이 추가된다면 여기서 파일 경로 체크 등 추가
     }
+
     return true;
   }
 
@@ -621,11 +579,25 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen> with TickerProvid
     print('📤 _submitTest 호출됨');
     print('답변 데이터: $_answers');
 
-    // ✅ TestContentNotifier 사용
-    ref.read(testContentNotifierProvider.notifier).submitTest(
-      testId: widget.testId,
-      userAnswers: _answers,
-    );
+    // ✅ AI 테스트 여부 확인 (태그가 'AI_'로 시작하거나 특정 태그 리스트에 포함)
+    final isAiTest = widget.testTag != null &&
+        widget.testTag!.toUpperCase().startsWith('AI');
+
+    if (isAiTest) {
+      print('🤖 AI 주관식 테스트 제출 로직 실행');
+      // [신규] 주관식 제출 함수 호출
+      ref.read(testContentNotifierProvider.notifier).submitSubjectiveTest(
+        testTag: widget.testTag!, // "AI_BIG5"
+        userAnswers: _answers,
+      );
+    } else {
+      print('📝 일반 객관식 테스트 제출 로직 실행');
+      // [기존] 일반 제출 함수 호출
+      ref.read(testContentNotifierProvider.notifier).submitTest(
+        testId: widget.testId,
+        userAnswers: _answers,
+      );
+    }
   }
 
   void _showExitDialog() {

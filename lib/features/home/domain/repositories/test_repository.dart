@@ -7,11 +7,15 @@ import '../../../info/data/models/response/test_detail_response.dart';
 import '../../../psy_result/data/model/request/submit_test_request.dart';
 import '../../../psy_result/data/model/response/test_result_response.dart';
 import '../../../psytest/data/model/test_question.dart';
+import '../../data/models/request/subjective_test_submit_request.dart';
 import '../models/test_ranking_item.dart';
 
 /// 🧠 테스트 Repository 인터페이스 (확장 버전)
 abstract class TestRepository {
 
+  Future<Result<TestResultResponse>> submitSubjectiveTest(
+      SubjectiveTestSubmitRequest request,
+      );
   /// 🎯 심리 테스트 제출
   ///
   /// @param request 테스트 제출 요청 (testId + answers)

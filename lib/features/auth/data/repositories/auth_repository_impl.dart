@@ -8,6 +8,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_api_data_source.dart';
 import '../models/request/auth_request_dto.dart';
 import '../models/response/auth_response_dto.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // ✅ import 필수
 
 /// 🔑 인증 Repository 구현체 (업데이트)
 ///
@@ -25,6 +26,41 @@ class AuthRepositoryImpl implements AuthRepository {
   // =============================================================
   // 🔐 로그인 메서드들
   // =============================================================
+  /// 🔄 FCM 토큰 동기화 함수
+  @override
+  Future<void> syncFcmToken() async {
+    try {
+      // 1️⃣ Firebase 서버로부터 내 폰의 FCM 토큰을 받아옵니다.
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
+      if (fcmToken == null) {
+        print("⚠️ FCM 토큰을 가져오지 못했습니다.");
+        return;
+      }
+      print("🔥 내 폰의 FCM Token: $fcmToken");
+
+      // 2️⃣ 내 앱에 저장된 JWT Access Token(로그인 토큰)을 가져옵니다
+      final accessToken = await _tokenManager.getValidAccessToken();
+
+      if (accessToken == null) {
+        print("⚠️ 로그인이 되어있지 않아 서버에 전송하지 않습니다.");
+        return;
+      }
+
+      // 3️⃣ 서버로 전송 (헤더에 JWT, 바디에 FCM 토큰)
+      // "Bearer " 접두사는 TokenManager에서 붙여주거나 여기서 붙여야 함 (서버 설정에 따라)
+      await _dataSource.updateFcmToken(
+        accessToken, // 👈 헤더로 들어감
+        {'token': fcmToken}, // 👈 바디로 들어감
+      );
+
+      print("✅ 서버에 FCM 토큰 저장 완료!");
+
+    } catch (e) {
+      print("❌ 토큰 동기화 실패: $e");
+      // 이 에러는 사용자에게 팝업을 띄울 필요까진 없음 (백그라운드 작업이라)
+    }
+  }
 
   @override
   Future<Result<AuthResponse>> loginWithGoogle(

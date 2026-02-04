@@ -10,6 +10,7 @@ import '../../../../info/data/models/response/test_detail_response.dart';
 import '../../../../psy_result/data/model/request/submit_test_request.dart';
 import '../../../../psy_result/data/model/response/test_result_response.dart';
 import '../../../../psytest/data/model/response/test_content_response.dart';
+import '../request/subjective_test_submit_request.dart';
 import '../response/tests_response.dart';
 
 part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
@@ -21,6 +22,12 @@ part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
 @RestApi()
 abstract class TestApiDataSource {
   factory TestApiDataSource(Dio dio, {String baseUrl}) = _TestApiDataSource;
+
+  @POST('/tests/subjective/submit')
+  Future<ApiResponse<TestResultResponse>> submitSubjectiveTest(
+      @Body() SubjectiveTestSubmitRequest request,
+      @Header('Authorization') String authorization,
+      );
 
   @POST('/tests/submit')
   Future<ApiResponse<TestResultResponse>> submitTest(

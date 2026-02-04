@@ -12,20 +12,31 @@ abstract class AuthApiDataSource {
   factory AuthApiDataSource(Dio dio, {String baseUrl}) = _AuthApiDataSource;
 
 
-  /// Google 로그인 ✅
+  @PATCH('/users/fcm-token')
+  Future<ApiResponse<void>> updateFcmToken(
+      @Header('Authorization') String accessToken, // 👈 JWT 토큰 받는 부분 추가
+      @Body() Map<String, String> body,
+      );
+
+  // ... 기존 로그인 관련 코드들 ...
   @POST('/auth/google')
-  // @Headers(<String, dynamic>{ // ✅ 헤더 추가
-  //   'Content-Type': 'application/json',
-  // })
   Future<ApiResponse<AuthResponse>> loginWithGoogle(
       @Body() GoogleLoginRequest request,
       );
 
+
+  // /// Google 로그인 ✅
+  // @POST('/auth/google')
+  // // @Headers(<String, dynamic>{ // ✅ 헤더 추가
+  // //   'Content-Type': 'application/json',
+  // // })
+  // Future<ApiResponse<AuthResponse>> loginWithGoogle(
+  //     @Body() GoogleLoginRequest request,
+  //     );
+
   /// 토큰 갱신 ✅ 및 자동로그인에서 사용
   @POST('/auth/refresh')
-  // @Headers(<String, dynamic>{ // ✅ 이 헤더 추가 필요!
-  //   'Content-Type': 'application/json',
-  // })
+
   Future<ApiResponse<AuthResponse>> refreshTokens(
       @Body() RefreshTokenRequest request,  // 🔄 Header에서 Body로 변경!
       );

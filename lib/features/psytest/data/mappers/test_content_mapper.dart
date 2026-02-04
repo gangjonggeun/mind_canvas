@@ -36,13 +36,15 @@ class TestContentMapper {
   static QuestionType _mapInputTypeToQuestionType(String inputType) {
     switch (inputType) {
       case 'choice':
-        return QuestionType.text; // 또는 적절한 타입
+        return QuestionType.choice; // ✅ 객관식은 choice로!
       case 'text':
+        return QuestionType.text;   // ✅ 한 줄 입력
       case 'textarea':
-        return QuestionType.subjective;
+        return QuestionType.textarea; // ✅ 여러 줄 입력
       case 'drawing':
-        return QuestionType.subjective; // 그림 그리기
+        return QuestionType.drawing;  // ✅ 그림
       default:
+      // 기본값은 안전하게 text(한 줄) 또는 choice로 처리
         return QuestionType.text;
     }
   }

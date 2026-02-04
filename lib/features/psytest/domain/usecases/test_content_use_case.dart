@@ -3,6 +3,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/utils/result.dart';
+import '../../../home/data/models/request/subjective_test_submit_request.dart';
 import '../../../home/domain/repositories/test_repository.dart';
 import '../../../home/data/repositories/test_repository_provider.dart';
 import '../../../psy_result/data/model/dto/test_answer.dart';
@@ -24,7 +25,71 @@ class TestContentUseCase {
   final TestRepository _repository;
 
   TestContentUseCase(this._repository);
+  /// 🧠 주관식(AI) 테스트 제출
+  ///
+  /// @param testTag 테스트 태그 (예: AI_BIG5)
+  /// @param orderedAnswers 질문 순서대로 정렬된 답변 리스트
+  /// @return AI 분석 결과
+  Future<Result<TestResultResponse>> submitSubjectiveTest(
+      String testTag,
+      List<String> orderedAnswers,
+      ) async {
+    try {
+      // 1. 비즈니스 규칙 검증
+      if (testTag.isEmpty) {
+        return Result.failure(
+          'INVALID_TAG',
+          '테스트 태그가 올바르지 않습니다',
+        );
+      }
 
+      if (orderedAnswers.isEmpty || orderedAnswers.any((a) => a.trim().isEmpty)) {
+        return  Result.failure(
+          'EMPTY_ANSWERS',
+          '모든 질문에 답변을 입력해주세요',
+        );
+      }
+
+      print('🎯 UseCase: 주관식 AI 제출 시작 - Tag: $testTag, 답변 수: ${orderedAnswers.length}');
+
+      // 2. Request 생성 (서버 DTO와 매핑)
+      final request = SubjectiveTestSubmitRequest(
+        testTag: testTag,
+        answers: orderedAnswers,
+      );
+
+      // 3. 클라이언트 검증
+      if (!request.isValid) {
+        return Result.failure(
+          'VALIDATION_ERROR',
+          '유효하지 않은 답변 데이터입니다.',
+        );
+      }
+
+      // 4. Repository 호출 (새로 만든 함수 호출)
+      final result = await _repository.submitSubjectiveTest(request);
+
+      return result.fold(
+        onSuccess: (testResult) {
+          print('✅ UseCase: AI 분석 성공 - 결과: ${testResult.resultKey}');
+          return Result.success(
+            testResult,
+            'AI 분석이 완료되었습니다.',
+          );
+        },
+        onFailure: (errorCode, message) {
+          print('❌ UseCase: AI 분석 실패 - $message');
+          return Result.failure(errorCode, message);
+        },
+      );
+    } catch (e) {
+      print('💥 UseCase 예외 발생: $e');
+      return Result.failure(
+        'USECASE_ERROR',
+        '분석 요청 중 오류가 발생했습니다: $e',
+      );
+    }
+  }
 
   /// 테스트 제출
   ///
