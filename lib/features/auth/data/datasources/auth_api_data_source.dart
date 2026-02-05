@@ -12,9 +12,11 @@ abstract class AuthApiDataSource {
   factory AuthApiDataSource(Dio dio, {String baseUrl}) = _AuthApiDataSource;
 
 
-  @PATCH('/users/fcm-token')
-  Future<ApiResponse<void>> updateFcmToken(
-      @Header('Authorization') String accessToken, // 👈 JWT 토큰 받는 부분 추가
+  @PATCH('/auth/fcm-token')
+  // 🚨 수정 전: Future<ApiResponse<void>> updateFcmToken(...)
+  // ✅ 수정 후: dynamic으로 변경
+  Future<ApiResponse<dynamic>> updateFcmToken(
+      @Header('Authorization') String authorization,
       @Body() Map<String, String> body,
       );
 

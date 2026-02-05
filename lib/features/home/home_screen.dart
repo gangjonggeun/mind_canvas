@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,6 +49,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(testListNotifierProvider.notifier).loadPopularTests();
     });
+
+
+    // 🔔 앱이 켜져 있을 때 알림 수신
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('📩 포그라운드 알림 도착: ${message.notification?.title}');
+
+      if (message.notification != null) {
+        // 간단하게 스낵바로 표시
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${message.notification!.title}\n${message.notification!.body}'),
+            backgroundColor: Colors.blueAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+
   }
 
   @override
@@ -96,269 +115,269 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       MaterialPageRoute(builder: (context) => const RecommendationScreen()),
     );
   }
-
-  /// 🧠 심리 팁 인사이트 섹션
-  Widget _buildPsychologyInsights() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              '💡 심리 인사이트',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text(
-                '더보기',
-                style: TextStyle(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // ===== 🧠 첫 번째 인사이트: 심리 학자의 조언 =====
-        _buildPsychologyInsightCard(
-          title: '대인 관계 회복',
-          subtitle: '전문가의 심리학 지식으로\n더 깊이 있는 자아 이해를 도와드려요',
-          imageUrl:
-              'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&h=150&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          ),
-          badgeText: '전문가',
-        ),
-
-        const SizedBox(height: 12),
-
-        // ===== 🌌 두 번째 인사이트: 일상 심리학 =====
-        _buildPsychologyInsightCard(
-          title: '일상 심리학',
-          subtitle: '매일 만나는 상황에서\n심리학적 원리를 찾아보세요',
-          imageUrl:
-              'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&h=150&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF26C6DA), Color(0xFF00BCD4)],
-          ),
-          badgeText: '일상',
-        ),
-
-        const SizedBox(height: 12),
-
-        // ===== 💭 세 번째 인사이트: 마음 챙기기 =====
-        _buildPsychologyInsightCard(
-          title: '마음 챙기기',
-          subtitle: '스트레스와 불안에서 벗어나\n평온한 마음을 찾아보세요',
-          imageUrl:
-              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=150&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFFFF8A65), Color(0xFFFFB74D)],
-          ),
-          badgeText: '힐링',
-        ),
-      ],
-    );
-  }
-
-  /// 심리 인사이트 카드 빌더
-  Widget _buildPsychologyInsightCard({
-    required String title,
-    required String subtitle,
-    required String imageUrl,
-    required Gradient gradient,
-    required String badgeText,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        print('심리 인사이트 클릭: $title');
-      },
-      child: Container(
-        width: double.infinity,
-        height: 110,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              // ===== 🖼️ 배경 이미지 (고선명도 최적화) =====
-              Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
-                  placeholder: (context, url) => Container(
-                    decoration: BoxDecoration(gradient: gradient),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    decoration: BoxDecoration(gradient: gradient),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '이미지 로딩 실패',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // ===== 🎨 그라데이션 오버레이 (더 부드럽게) =====
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      stops: const [0.0, 0.5, 1.0],
-                      colors: [
-                        Colors.black.withOpacity(0.6),
-                        Colors.black.withOpacity(0.2),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // ===== 📝 주요 컨텐츠 영역 =====
-              Positioned(
-                left: 20,
-                right: 70,
-                top: 0,
-                bottom: 0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 🏷️ 배지
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        badgeText,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // 📝 메인 타이틀
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // 📄 서브 타이틀
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
-                        height: 1.3,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // ===== 🔜 오른쪽 아이콘 영역 =====
-              Positioned(
-                right: 20,
-                top: 0,
-                bottom: 0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.lightbulb_outline,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  //
+  // /// 🧠 심리 팁 인사이트 섹션
+  // Widget _buildPsychologyInsights() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           const Text(
+  //             '💡 심리 인사이트',
+  //             style: TextStyle(
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.bold,
+  //               color: AppColors.textPrimary,
+  //             ),
+  //           ),
+  //           TextButton(
+  //             onPressed: () {},
+  //             child: const Text(
+  //               '더보기',
+  //               style: TextStyle(
+  //                 color: AppColors.primaryBlue,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 16),
+  //
+  //       // ===== 🧠 첫 번째 인사이트: 심리 학자의 조언 =====
+  //       _buildPsychologyInsightCard(
+  //         title: '대인 관계 회복',
+  //         subtitle: '전문가의 심리학 지식으로\n더 깊이 있는 자아 이해를 도와드려요',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&h=150&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+  //         ),
+  //         badgeText: '전문가',
+  //       ),
+  //
+  //       const SizedBox(height: 12),
+  //
+  //       // ===== 🌌 두 번째 인사이트: 일상 심리학 =====
+  //       _buildPsychologyInsightCard(
+  //         title: '일상 심리학',
+  //         subtitle: '매일 만나는 상황에서\n심리학적 원리를 찾아보세요',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&h=150&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFF26C6DA), Color(0xFF00BCD4)],
+  //         ),
+  //         badgeText: '일상',
+  //       ),
+  //
+  //       const SizedBox(height: 12),
+  //
+  //       // ===== 💭 세 번째 인사이트: 마음 챙기기 =====
+  //       _buildPsychologyInsightCard(
+  //         title: '마음 챙기기',
+  //         subtitle: '스트레스와 불안에서 벗어나\n평온한 마음을 찾아보세요',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=150&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFFFF8A65), Color(0xFFFFB74D)],
+  //         ),
+  //         badgeText: '힐링',
+  //       ),
+  //     ],
+  //   );
+  // }
+  //
+  // /// 심리 인사이트 카드 빌더
+  // Widget _buildPsychologyInsightCard({
+  //   required String title,
+  //   required String subtitle,
+  //   required String imageUrl,
+  //   required Gradient gradient,
+  //   required String badgeText,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       print('심리 인사이트 클릭: $title');
+  //     },
+  //     child: Container(
+  //       width: double.infinity,
+  //       height: 110,
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(16),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.black.withOpacity(0.08),
+  //             blurRadius: 12,
+  //             offset: const Offset(0, 4),
+  //           ),
+  //         ],
+  //       ),
+  //       child: ClipRRect(
+  //         borderRadius: BorderRadius.circular(16),
+  //         child: Stack(
+  //           children: [
+  //             // ===== 🖼️ 배경 이미지 (고선명도 최적화) =====
+  //             Positioned.fill(
+  //               child: CachedNetworkImage(
+  //                 imageUrl: imageUrl,
+  //                 fit: BoxFit.cover,
+  //                 filterQuality: FilterQuality.high,
+  //                 placeholder: (context, url) => Container(
+  //                   decoration: BoxDecoration(gradient: gradient),
+  //                   child: const Center(
+  //                     child: CircularProgressIndicator(
+  //                       strokeWidth: 2,
+  //                       color: Colors.white,
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 errorWidget: (context, url, error) => Container(
+  //                   decoration: BoxDecoration(gradient: gradient),
+  //                   child: Column(
+  //                     mainAxisAlignment: MainAxisAlignment.center,
+  //                     children: [
+  //                       Icon(
+  //                         Icons.broken_image_outlined,
+  //                         color: Colors.white.withOpacity(0.7),
+  //                         size: 24,
+  //                       ),
+  //                       const SizedBox(height: 4),
+  //                       Text(
+  //                         '이미지 로딩 실패',
+  //                         style: TextStyle(
+  //                           color: Colors.white.withOpacity(0.7),
+  //                           fontSize: 10,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //
+  //             // ===== 🎨 그라데이션 오버레이 (더 부드럽게) =====
+  //             Positioned.fill(
+  //               child: Container(
+  //                 decoration: BoxDecoration(
+  //                   gradient: LinearGradient(
+  //                     begin: Alignment.centerLeft,
+  //                     end: Alignment.centerRight,
+  //                     stops: const [0.0, 0.5, 1.0],
+  //                     colors: [
+  //                       Colors.black.withOpacity(0.6),
+  //                       Colors.black.withOpacity(0.2),
+  //                       Colors.transparent,
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //
+  //             // ===== 📝 주요 컨텐츠 영역 =====
+  //             Positioned(
+  //               left: 20,
+  //               right: 70,
+  //               top: 0,
+  //               bottom: 0,
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   // 🏷️ 배지
+  //                   Container(
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 10,
+  //                       vertical: 4,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: Colors.white.withOpacity(0.25),
+  //                       borderRadius: BorderRadius.circular(12),
+  //                       border: Border.all(
+  //                         color: Colors.white.withOpacity(0.4),
+  //                         width: 1,
+  //                       ),
+  //                     ),
+  //                     child: Text(
+  //                       badgeText,
+  //                       style: const TextStyle(
+  //                         color: Colors.white,
+  //                         fontSize: 10,
+  //                         fontWeight: FontWeight.w700,
+  //                         letterSpacing: 0.5,
+  //                       ),
+  //                     ),
+  //                   ),
+  //
+  //                   const SizedBox(height: 8),
+  //
+  //                   // 📝 메인 타이틀
+  //                   Text(
+  //                     title,
+  //                     style: const TextStyle(
+  //                       color: Colors.white,
+  //                       fontSize: 16,
+  //                       fontWeight: FontWeight.bold,
+  //                       height: 1.2,
+  //                     ),
+  //                     maxLines: 1,
+  //                     overflow: TextOverflow.ellipsis,
+  //                   ),
+  //
+  //                   const SizedBox(height: 4),
+  //
+  //                   // 📄 서브 타이틀
+  //                   Text(
+  //                     subtitle,
+  //                     style: TextStyle(
+  //                       color: Colors.white.withOpacity(0.9),
+  //                       fontSize: 12,
+  //                       height: 1.3,
+  //                       fontWeight: FontWeight.w500,
+  //                     ),
+  //                     maxLines: 2,
+  //                     overflow: TextOverflow.ellipsis,
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //
+  //             // ===== 🔜 오른쪽 아이콘 영역 =====
+  //             Positioned(
+  //               right: 20,
+  //               top: 0,
+  //               bottom: 0,
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   Container(
+  //                     padding: const EdgeInsets.all(8),
+  //                     decoration: BoxDecoration(
+  //                       color: Colors.white.withOpacity(0.15),
+  //                       borderRadius: BorderRadius.circular(20),
+  //                     ),
+  //                     child: const Icon(
+  //                       Icons.lightbulb_outline,
+  //                       color: Colors.white,
+  //                       size: 20,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   /// 🏆 인기 테스트 랭킹 섹션 (반응형) - Consumer 버전
   Widget _buildTestRanking() {

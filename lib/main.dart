@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +16,21 @@ import 'core/utils/cover_image_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CoverImageHelper.init();
+  await Firebase.initializeApp(); // 파이어베이스 초기화
+
+  // 🔔 권한 요청 (iOS/Android 13+)
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+  try {
+    String? token = await FirebaseMessaging.instance.getToken();
+    print("🔥 [디버깅] 현재 기기 FCM Token: $token");
+  } catch (e) {
+    print("❌ [디버깅] 토큰 가져오기 실패: $e");
+    // iOS의 경우 APNs 설정이 안 되어있으면 여기서 에러가 나거나 영원히 대기합니다.
+  }
 
   // Hive 초기화
   await Hive.initFlutter();

@@ -58,10 +58,16 @@ class TestRepositoryImpl implements TestRepository {
       );
 
       // 4️⃣ 응답 처리
-      if (apiResponse.success && apiResponse.data != null) {
+      if (apiResponse.success) {
         return Result.success(
-          apiResponse.data!,
-          apiResponse.message ?? '분석이 완료되었습니다.',
+          apiResponse.data ?? const TestResultResponse(
+            resultKey: "PENDING_AI", // ✅ 식별용 키 (가장 중요)
+            resultTag: "분석 중...",
+            briefDescription: "AI가 답변을 분석하고 있습니다.",
+            backgroundColor: "FFFFFF", // 흰색 (오류 방지용 HEX)
+
+          ),
+          apiResponse.message ?? '분석이 시작되었습니다.',
         );
       } else {
         return Result.failure(
@@ -107,6 +113,7 @@ class TestRepositoryImpl implements TestRepository {
       );
     }
   }
+
   @override
   Future<Result<TestResultResponse>> submitTest(
       SubmitTestRequest request,

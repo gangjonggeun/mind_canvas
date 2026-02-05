@@ -206,8 +206,13 @@ class AuthUseCase {
     );
 
     return loginResult.fold(
-      onSuccess: (authResponse) {
+      onSuccess: (authResponse) async {
         print('🔍 completeLoginFlow - 서버 응답 닉네임: ${authResponse.nickname}');
+
+        _authRepository.syncFcmToken().then((_) {
+          print("📲 FCM 토큰 동기화 작업 시작");
+        });
+
         return Results.success(authResponse);  // 🎯 AuthResponse 그대로 반환
       },
       onFailure: (message, code) {
@@ -215,7 +220,11 @@ class AuthUseCase {
       },
     );
   }
-
+  Future<void> syncFcmToken() async {
+    print("🎯 [UseCase] syncFcmToken 진입");
+    await _authRepository.syncFcmToken();
+    print("🎯 [UseCase] syncFcmToken 호출 완료");
+  }
   /// 🎫 유효한 Access Token 반환
   Future<String?> getValidAccessToken() async {
     return await _authRepository.getAccessToken();

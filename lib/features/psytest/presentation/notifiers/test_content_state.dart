@@ -25,3 +25,14 @@ class TestContentState with _$TestContentState {
 
   factory TestContentState.initial() => const TestContentState();
 }
+
+
+extension TestContentStateX on TestContentState {
+  /// 현재 결과가 AI 분석 대기 상태인지 확인
+  bool get isAiPending =>
+      isCompleted && testResult?.resultKey == "PENDING_AI";
+
+  /// 일반적인 결과 도출 상태인지 확인
+  bool get hasActualResult =>
+      isCompleted && testResult != null && testResult?.resultKey != "PENDING_AI";
+}

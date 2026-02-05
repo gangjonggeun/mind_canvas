@@ -6,6 +6,7 @@ import '../../../../core/providers/google_oauth_provider.dart';
 import '../../../profile/domain/usecases/profile_usecase_provider.dart';
 import '../../domain/entities/auth_user_entity.dart';
 import '../../domain/enums/login_type.dart';
+import '../../domain/repositories/auth_repository_provider.dart';
 import '../../domain/usecases/auth_usecase_provider.dart';
 
 part 'auth_provider.g.dart';
@@ -22,13 +23,25 @@ class AuthNotifier extends _$AuthNotifier {
     final authUseCase = ref.read(authUseCaseProvider);
     final isLoggedIn = await authUseCase.isLoggedIn();
 
+    print("🧐 [Build] 로그인 상태: $isLoggedIn");
+
     if (isLoggedIn) {
       final userResult = await authUseCase.getCurrentUser();
 
+      print("🧐 [Build] 유저 정보 결과 성공여부: ${userResult.isSuccess}");
+
       if (userResult.isSuccess) {
-        Future.microtask(() {
+        Future.microtask(() async {
           ref.read(userNotifierProvider.notifier).refreshProfile();
+
+          print("🚩 [Build] 모든 조건 만족! syncFcmToken 호출 시도");
+
+          final repo = ref.read(authRepositoryProvider);
+
+          await repo.syncFcmToken();
+          // authUseCase.syncFcmToken();
         });
+
       }
 
       return userResult.fold(

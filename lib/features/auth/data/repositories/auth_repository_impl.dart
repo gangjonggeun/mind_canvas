@@ -29,6 +29,8 @@ class AuthRepositoryImpl implements AuthRepository {
   /// 🔄 FCM 토큰 동기화 함수
   @override
   Future<void> syncFcmToken() async {
+    print("🚀 [FCM] syncFcmToken 함수 호출됨!");
+
     try {
       // 1️⃣ Firebase 서버로부터 내 폰의 FCM 토큰을 받아옵니다.
       final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -47,6 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return;
       }
 
+      print("🚀 [FCM] 서버로 토큰 전송 시도: $fcmToken");
       // 3️⃣ 서버로 전송 (헤더에 JWT, 바디에 FCM 토큰)
       // "Bearer " 접두사는 TokenManager에서 붙여주거나 여기서 붙여야 함 (서버 설정에 따라)
       await _dataSource.updateFcmToken(

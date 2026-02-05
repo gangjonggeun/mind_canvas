@@ -44,7 +44,13 @@
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         tools:targetApi="31">
-        
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
         <!-- MainActivity 대신 FlutterActivity 직접 사용 -->
         <activity
             android:name="io.flutter.embedding.android.FlutterActivity"
@@ -55,7 +61,10 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            
+
+
+
+
             <!-- Flutter 앱의 메인 진입점 설정 -->
             <meta-data
                 android:name="io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode"
