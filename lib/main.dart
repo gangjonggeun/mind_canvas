@@ -18,6 +18,8 @@ void main() async {
   CoverImageHelper.init();
   await Firebase.initializeApp(); // 파이어베이스 초기화
 
+
+
   // 🔔 권한 요청 (iOS/Android 13+)
   await FirebaseMessaging.instance.requestPermission(
     alert: true,

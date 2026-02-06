@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/ai_analysis_helper.dart';
 import '../../domain/models/taro_spread_type.dart';
+import '../providers/taro_analysis_notifier.dart';
 import '../providers/taro_consultation_provider.dart';
 import '../providers/taro_consultation_state.dart';
 import '../widgets/taro_background.dart';
 import '../widgets/spread_type_card.dart';
 import 'taro_card_selection_page.dart';
-import 'taro_result_page.dart';
-import 'dart:async';
+
 
 /// 타로 상담 설정 페이지 (테마 입력 + 스프레드 선택)
 /// 
@@ -96,53 +97,72 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
+              // 1. 상태 및 노티파이어 가져오기
               final state = ref.watch(taroConsultationNotifierProvider);
               final notifier = ref.read(taroConsultationNotifierProvider.notifier);
+              final analysisState = ref.watch(taroAnalysisProvider);
 
-              // 상태 변화 리스너
+              // =============================================================
+              // 🎧 리스너 1: 상담 과정 관리 (카드 선택 페이지 이동 등)
+              // =============================================================
               ref.listen<TaroConsultationState>(
                 taroConsultationNotifierProvider,
-                (previous, next) {
-                  // 에러 처리
+                    (previous, next) {
+                  // ❌ 에러 처리 (상담 설정 중 에러)
                   if (next.status == TaroStatus.error && next.errorMessage != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(next.errorMessage!),
-                        backgroundColor: TaroColors.statusError,
-                      ),
-                    );
+                    AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
                   }
 
-                  // 카드 선택 단계로 이동
+                  // 🃏 카드 선택 단계로 이동 (기존 로직 유지)
                   if (previous?.status != next.status &&
                       next.status == TaroStatus.cardSelection) {
-
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const TaroCardSelectionPage(),
                       ),
                     ).then((_) {
-                      // 🚨 [수정 2] 돌아왔을 때 상태 초기화 (Clean Slate)
-                      _resetState();
+                      // 돌아왔을 때 설정 초기화
+                      notifier.reset();
                     });
-                  }
-
-                  // 🎯 결과 화면으로 이동
-                  if (next.status == TaroStatus.completed) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const TaroResultPage(),
-                      ),
-                    );
                   }
                 },
               );
 
+              // =============================================================
+              // 🎧 리스너 2: AI 분석 상태 관리 (제출 후 결과 대기)
+              // =============================================================
+              ref.listen<TarotAnalysisState>(
+                taroAnalysisProvider,
+                    (previous, next) {
+                  // ❌ 분석 요청 자체 실패 시
+                  if (next.errorMessage != null && !next.isSubmitting) {
+                    AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
+                    return;
+                  }
+
+                  // 🤖 AI 분석 접수 완료 (PENDING)
+                  if (next.isCompleted && next.result?.id == "PENDING") {
+                    print("🔮 타로 분석 접수 성공 -> 다이얼로그 노출");
+
+                    // 공통 다이얼로그 호출 (확인 누르면 홈으로 이동)
+                    AiAnalysisHelper.showPendingDialog(context);
+
+                    // 분석이 성공적으로 접수되었으므로 상태들 리셋
+                    ref.read(taroAnalysisProvider.notifier).reset();
+                    notifier.reset();
+                    return;
+                  }
+                },
+              );
+
+              // =============================================================
+              // 🎨 UI 레이아웃
+              // =============================================================
               return Column(
                 children: [
                   // 상단 타이틀
                   _buildHeader(),
-                  
+
                   // 나머지 전체를 스크롤 가능한 영역으로
                   Expanded(
                     child: SingleChildScrollView(
@@ -151,21 +171,23 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Gap(24.h),
-                          
+
                           // 테마 입력 섹션
                           _buildThemeSection(state, notifier),
-                          
+
                           Gap(32.h),
-                          
-                          // 스프레드 선택 섹션 - 고정 높이로 단순하게
+
+                          // 스프레드 선택 섹션
                           _buildSpreadSelectionSection(state, notifier),
-                          
+
                           Gap(32.h),
-                          
-                          // 시작 버튼
-                          _buildStartButton(state, notifier),
-                          
-                          Gap(40.h), // 하단 여유 공간 더 많이
+
+                          // 시작 버튼 (분석 중일 때는 로딩 표시)
+                          analysisState.isSubmitting
+                              ? const Center(child: CircularProgressIndicator())
+                              : _buildStartButton(state, notifier),
+
+                          Gap(40.h),
                         ],
                       ),
                     ),

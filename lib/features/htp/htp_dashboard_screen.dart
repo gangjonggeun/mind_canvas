@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/features/htp/presentation/notifier/htp_analysis_notifier.dart';
 import 'package:mind_canvas/features/htp/presentation/providers/htp_session_provider.dart';
 
+import '../../core/utils/ai_analysis_helper.dart';
+import '../psy_result/data/mapper/test_result_mapper.dart';
 import '../psy_result/domain/entities/psy_result.dart';
 import '../psy_result/presentation/psy_result_screen.dart';
 import 'data/model/request/htp_basic_request.dart';
@@ -87,6 +89,39 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
     final session = ref.watch(htpSessionProvider);
     final completedCount = ref.watch(htpCompletedCountProvider);
     final canComplete = ref.watch(htpCanCompleteProvider);
+
+
+    // ✅ HTP 분석 상태 감시
+    ref.listen<HtpTestState>(htpAnalysisProvider, (previous, next) {
+      // 1. 에러 처리
+      if (next.errorMessage != null && !next.isSubmitting) {
+        AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
+        return;
+      }
+
+      // 2. 🤖 AI 분석 접수 완료 체크 (PENDING_AI)
+      // TestResultResponse의 resultKey를 확인합니다.
+      if (next.isCompleted && next.result?.resultKey == "PENDING_AI") {
+        print("🤖 HTP 분석 접수 확인 -> 공통 다이얼로그 노출");
+
+        // 아까 만든 공통 유틸리티 사용 (또는 화면 내 함수)
+        AiAnalysisHelper.showPendingDialog(context);
+
+        // 세션 정리 (홈으로 가기 직전 실행)
+        ref.read(htpSessionProvider.notifier).clearSession();
+        return;
+      }
+
+      // 3. 📊 (참고) 만약 즉시 결과가 오는 일반 테스트라면
+      if (next.isCompleted && next.result != null && next.result?.resultKey != "PENDING_AI") {
+        // TestResultMapper를 사용하여 결과 화면 이동
+        final psyResult = TestResultMapper.toEntity(next.result!);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => PsyResultScreen(result: psyResult)),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: isDarkMode
@@ -1109,118 +1144,22 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
         pressure: _getAveragePressure(session.drawings),
       );
 
-      // 3. ✅ Notifier를 통한 분석 실행 (결과 직접 받기)
-      print('🔄 분석 시작...');
-      final result = await ref.read(htpAnalysisProvider.notifier).analyzeBasic(
+      // 3. ✅ Notifier 호출 (리턴값을 기다리지 않고 상태 변화를 listen 함)
+      // 리턴 타입을 TestResultResponse로 통일했으므로 analyzeBasic 실행
+      await ref.read(htpAnalysisProvider.notifier).analyzeBasic(
         imageFiles: imageFiles,
         drawingProcess: drawingProcess,
       );
-      print('✅ 분석 완료! result: ${result != null ? "존재함" : "null"}');
 
-      // 로딩 다이얼로그 닫기
-      if (!mounted) {
-        print('⚠️ Widget dispose됨');
-        return;
-      }
-      Navigator.pop(context);
-      print('✅ 로딩 다이얼로그 닫힘');
+      // 4. ✅ 로딩 다이얼로그 닫기 (이후 처리는 ref.listen이 담당)
+      if (mounted) Navigator.pop(context);
 
-      // 4. ✅ 결과 처리
-      if (result != null) {
-        print('✅ 서버 전송 성공!');
-        print('📄 resultTag: ${result.resultTag}');
-        print('📝 resultDetails: ${result.resultDetails.length}개');
-
-        // ✅ HtpResponse → PsyResult 변환
-        print('🔄 PsyResult 변환 시작...');
-        final psyResult = _convertHtpResponseToPsyResult(result);
-        print('✅ PsyResult 변환 완료');
-        print('📌 psyResult.title: ${psyResult.title}');
-        print('📌 psyResult.sections: ${psyResult.sections.length}개');
-
-        // ❌ 여기서 세션 정리하지 않음! (이미지 유지)
-        // await ref.read(htpSessionProvider.notifier).completeSession();
-        // await ref.read(htpSessionProvider.notifier).clearSession();
-
-        if (!mounted) {
-          print('⚠️ Widget dispose됨 - Navigator 호출 불가');
-          return;
-        }
-
-        // ✅ 결과 화면으로 이동
-        print('🚀 결과 화면으로 이동 시작...');
-        print('📍 localImagePaths: ${imagePaths.keys.toList()}');
-
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              print('🏗️ PsyResultScreen 빌드 중...');
-              return PsyResultScreen(
-                result: psyResult,
-                localImagePaths: imagePaths,
-              );
-            },
-          ),
-        );
-
-        // ✅ 결과 화면에서 돌아온 후 세션 정리
-        print('🗑️ 결과 화면 종료, 세션 정리 시작...');
-        await ref.read(htpSessionProvider.notifier).completeSession();
-        await ref.read(htpSessionProvider.notifier).clearSession();
-        print('✅ 세션 정리 완료');
-
-      } else {
-        print('❌ 결과가 null입니다');
-        if (mounted) {
-          _showErrorDialog('분석 결과를 받지 못했습니다');
-        }
-      }
-    } catch (e, stackTrace) {
-      print('❌ 제출 중 예외 발생: $e');
-      print('📚 StackTrace: $stackTrace');
-
-      // 로딩 다이얼로그가 열려있으면 닫기
-      if (mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
-      if (!mounted) return;
-
-      _showErrorDialog('예상치 못한 오류가 발생했습니다:\n${e.toString()}');
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      _showErrorDialog('제출 중 오류가 발생했습니다: $e');
     }
   }
 
-  /// 🔄 HtpResponse를 PsyResult로 변환
-  PsyResult _convertHtpResponseToPsyResult(HtpResponse htpResponse) {
-    return PsyResult(
-      // ✅ 필수 필드
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: htpResponse.resultTag,
-      subtitle: htpResponse.briefDescription, // ✅ briefDescription 사용 (빈 문자열 X)
-      description: '', // ✅ 사용 안 함
-      backgroundColor: 'E8EAFF',
-
-      // ✅ 섹션 변환
-      sections: htpResponse.resultDetails.map((detail) {
-        return PsyResultSection(
-          title: detail.title,
-          content: detail.content,
-          imageUrl: detail.imageUrl,
-          highlights: [],
-        );
-      }).toList(),
-
-      type: PsyResultType.other,
-      createdAt: DateTime.now(),
-      tags: ['HTP 검사', '심리 분석', '투사 검사'],
-
-      imageUrl: null,
-      dimensionScores: null,
-      subjectiveAnswer: null,
-      totalScore: null,
-    );
-  }
 
   /// 🎨 섹션 제목에 따른 이모지 선택
   String _getSectionEmoji(String title) {

@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/network/api_response_dto.dart';
 import '../../../../../core/network/dio_provider.dart';
+import '../../../../psy_result/data/model/response/test_result_response.dart';
 import '../response/htp_response.dart';
 
 part 'htp_api_data_source.g.dart';
@@ -47,7 +48,7 @@ class HtpApiDataSource {
   ///
   /// <p><strong>응답:</strong></p>
   /// - ApiResponse<HtpResponse>
-  Future<ApiResponse<HtpResponse>> analyzeBasic(
+  Future<ApiResponse<TestResultResponse>> analyzeBasic(
       List<MultipartFile> images,
       MultipartFile request,
       String authorization,
@@ -73,9 +74,9 @@ class HtpApiDataSource {
 
       // ✅ 성공 응답 파싱
       print('✅ API 응답 수신: ${response.statusCode}');
-      return ApiResponse<HtpResponse>.fromJson(
+      return ApiResponse<TestResultResponse>.fromJson(
         response.data,
-            (json) => HtpResponse.fromJson(json as Map<String, dynamic>),
+            (json) => TestResultResponse.fromJson(json as Map<String, dynamic>),
       );
     } on DioException catch (e) {
       // ❌ 에러 응답 처리
@@ -84,13 +85,13 @@ class HtpApiDataSource {
       if (e.response != null) {
         // 서버 응답이 있는 경우
         try {
-          return ApiResponse<HtpResponse>.fromJson(
+          return ApiResponse<TestResultResponse>.fromJson(
             e.response!.data,
-                (json) => HtpResponse.fromJson(json as Map<String, dynamic>),
+                (json) => TestResultResponse.fromJson(json as Map<String, dynamic>),
           );
         } catch (_) {
           // 응답 파싱 실패 시 기본 에러 응답
-          return ApiResponse<HtpResponse>(
+          return ApiResponse<TestResultResponse>(
             success: false,
             error: ErrorInfo(
               code: 'NETWORK_ERROR',
@@ -100,7 +101,7 @@ class HtpApiDataSource {
         }
       } else {
         // 네트워크 오류 (응답 없음)
-        return ApiResponse<HtpResponse>(
+        return ApiResponse<TestResultResponse>(
           success: false,
           error: ErrorInfo(
             code: 'CONNECTION_ERROR',
@@ -119,7 +120,7 @@ class HtpApiDataSource {
   ///
   /// <p><strong>응답:</strong></p>
   /// - ApiResponse<HtpResponse>
-  Future<ApiResponse<HtpResponse>> analyzePremium(
+  Future<ApiResponse<TestResultResponse>> analyzePremium(
       List<MultipartFile> images,
       MultipartFile request,
       String authorization,
@@ -145,9 +146,9 @@ class HtpApiDataSource {
 
       // ✅ 성공 응답 파싱
       print('✅ API 응답 수신: ${response.statusCode}');
-      return ApiResponse<HtpResponse>.fromJson(
+      return ApiResponse<TestResultResponse>.fromJson(
         response.data,
-            (json) => HtpResponse.fromJson(json as Map<String, dynamic>),
+            (json) => TestResultResponse.fromJson(json as Map<String, dynamic>),
       );
     } on DioException catch (e) {
       // ❌ 에러 응답 처리
@@ -155,12 +156,12 @@ class HtpApiDataSource {
 
       if (e.response != null) {
         try {
-          return ApiResponse<HtpResponse>.fromJson(
+          return ApiResponse<TestResultResponse>.fromJson(
             e.response!.data,
-                (json) => HtpResponse.fromJson(json as Map<String, dynamic>),
+                (json) => TestResultResponse.fromJson(json as Map<String, dynamic>),
           );
         } catch (_) {
-          return ApiResponse<HtpResponse>(
+          return ApiResponse<TestResultResponse>(
             success: false,
             error: ErrorInfo(
               code: 'NETWORK_ERROR',
@@ -169,7 +170,7 @@ class HtpApiDataSource {
           );
         }
       } else {
-        return ApiResponse<HtpResponse>(
+        return ApiResponse<TestResultResponse>(
           success: false,
           error: ErrorInfo(
             code: 'CONNECTION_ERROR',

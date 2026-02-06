@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/app/widgets/coin_badge.dart';
 import 'package:mind_canvas/features/consulting/presentation/consulting_screen.dart';
 
+import '../core/services/notification_service.dart';
 import '../features/analysis/presentation/analysis_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
@@ -39,6 +40,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       const ConsultingScreen(), // 🔄 기록 → 상담으로 변경
       const ProfileScreen(),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationHandler.initialize(context, ref);
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 1. 인기 테스트 로드 (기존)
       // ref.read(testListNotifierProvider.notifier).loadPopularTests(); // HomeScreen에서 하고 있다면 제거 가능

@@ -12,7 +12,7 @@ abstract class AuthApiDataSource {
   factory AuthApiDataSource(Dio dio, {String baseUrl}) = _AuthApiDataSource;
 
 
-  @PATCH('/auth/fcm-token')
+  @PATCH('/users/fcm-token')
   // 🚨 수정 전: Future<ApiResponse<void>> updateFcmToken(...)
   // ✅ 수정 후: dynamic으로 변경
   Future<ApiResponse<dynamic>> updateFcmToken(

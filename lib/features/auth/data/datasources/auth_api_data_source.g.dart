@@ -39,7 +39,7 @@ class _AuthApiDataSource implements AuthApiDataSource {
     )
         .compose(
           _dio.options,
-          '/auth/fcm-token',
+          '/users/fcm-token',
           queryParameters: queryParameters,
           data: _data,
         )

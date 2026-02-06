@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import '../../../../core/utils/result.dart';
+import '../../../psy_result/data/model/response/test_result_response.dart';
 import '../../data/model/request/htp_basic_request.dart';
 import '../../data/model/request/htp_premium_request.dart';
 import '../../data/model/response/htp_response.dart';
@@ -37,19 +38,14 @@ class HtpUseCase {
   /// @param imageFiles 그림 파일 3장
   /// @param drawingProcess 그리기 과정 정보
   /// @return Result<HtpResponse> 분석 결과
-  Future<Result<HtpResponse>> analyzeBasic({
+  Future<Result<TestResultResponse>> analyzeBasic({
     required List<File> imageFiles,
     required DrawingProcess drawingProcess,
   }) async {
     try {
-      print('🎨 [UseCase] HTP 기본 분석 시작');
-
-      // 1. 비즈니스 규칙 검증 (UseCase 레벨)
+      // 1. 입력 검증 (이건 유지하는 게 좋습니다)
       final validationResult = _validateBasicInput(imageFiles, drawingProcess);
-      if (validationResult != null) {
-        print('❌ [UseCase] 입력 검증 실패: ${validationResult.message}');
-        return validationResult;
-      }
+      if (validationResult != null) return validationResult;
 
       // 2. Repository 호출
       final result = await _repository.analyzeBasicHtp(
@@ -57,34 +53,20 @@ class HtpUseCase {
         drawingProcess: drawingProcess,
       );
 
-      // 3. 결과 처리
+      // 3. 결과 처리 (가공 로직 제거)
       return result.fold(
         onSuccess: (data) {
-          print('✅ [UseCase] 기본 분석 성공 - 항목: ${data.resultDetails.length}개');
-
-          // 비즈니스 로직: 결과 정렬 및 가공
-          final processedData = _processAnalysisResult(data);
-
-          return Result.success(
-            processedData,
-            'HTP 기본 분석이 완료되었습니다',
-          );
+          // 💡 비동기 구조이므로 data는 PENDING_AI 상태임.
+          // 별도의 가공 없이 바로 성공 리턴.
+          return Result.success(data, '분석 요청이 접수되었습니다');
         },
         onFailure: (message, errorCode) {
-          print('❌ [UseCase] 기본 분석 실패: $message');
-
-          // 사용자 친화적 에러 메시지 변환
           final userMessage = _convertToUserFriendlyMessage(message, errorCode);
           return Result.failure(userMessage, errorCode);
         },
       );
-    } catch (e, stackTrace) {
-      print('❌ [UseCase] 예상치 못한 오류: $e');
-      print('StackTrace: $stackTrace');
-      return Result.failure(
-        '분석 중 오류가 발생했습니다\n잠시 후 다시 시도해주세요',
-        'USECASE_ERROR',
-      );
+    } catch (e) {
+      return Result.failure('분석 중 오류가 발생했습니다', 'USECASE_ERROR');
     }
   }
 
@@ -102,7 +84,7 @@ class HtpUseCase {
   /// @param imageFiles 그림 파일 3장
   /// @param request 프리미엄 분석 요청 (PDI 답변 포함)
   /// @return Result<HtpResponse> 심층 분석 결과
-  Future<Result<HtpResponse>> analyzePremium({
+  Future<Result<TestResultResponse>> analyzePremium({
     required List<File> imageFiles,
     required HtpPremiumRequest request,
   }) async {
@@ -128,10 +110,10 @@ class HtpUseCase {
           print('✅ [UseCase] 프리미엄 분석 성공 - 항목: ${data.resultDetails.length}개');
 
           // 비즈니스 로직: 프리미엄 결과 강화 처리
-          final processedData = _processPremiumResult(data);
+          // final processedData = _processPremiumResult(data);
 
           return Result.success(
-            processedData,
+            data,
             'HTP 프리미엄 분석이 완료되었습니다',
           );
         },
@@ -157,7 +139,7 @@ class HtpUseCase {
   // =============================================================
 
   /// 기본 분석 입력 검증
-  Result<HtpResponse>? _validateBasicInput(
+  Result<TestResultResponse>? _validateBasicInput(
       List<File> imageFiles,
       DrawingProcess drawingProcess,
       ) {
@@ -204,7 +186,7 @@ class HtpUseCase {
   }
 
   /// 프리미엄 분석 입력 검증
-  Result<HtpResponse>? _validatePremiumInput(
+  Result<TestResultResponse>? _validatePremiumInput(
       List<File> imageFiles,
       HtpPremiumRequest request,
       ) {
@@ -255,7 +237,7 @@ class HtpUseCase {
   }
 
   /// 개별 질문 답변 검증
-  Result<HtpResponse>? _validateQuestionAnswers(
+  Result<TestResultResponse>? _validateQuestionAnswers(
       String answer,
       String fieldName,
       ) {
@@ -275,30 +257,30 @@ class HtpUseCase {
 
     return null;
   }
-
-  /// 기본 분석 결과 가공
-  HtpResponse _processAnalysisResult(HtpResponse response) {
-    // 비즈니스 로직: 결과를 order 기준으로 정렬
-    final sortedDetails = response.sortedDetails;
-
-    return response.copyWith(
-      resultDetails: sortedDetails,
-    );
-  }
-
-  /// 프리미엄 분석 결과 가공
-  HtpResponse _processPremiumResult(HtpResponse response) {
-    // 비즈니스 로직: 프리미엄은 더 상세한 분석이므로 추가 처리
-    final sortedDetails = response.sortedDetails;
-
-    // 예: 이미지가 있는 항목을 앞으로 배치
-    final detailsWithImages = sortedDetails.where((d) => d.hasImage).toList();
-    final detailsWithoutImages = sortedDetails.where((d) => !d.hasImage).toList();
-
-    return response.copyWith(
-      resultDetails: [...detailsWithImages, ...detailsWithoutImages],
-    );
-  }
+  //
+  // /// 기본 분석 결과 가공
+  // TestResultResponse _processAnalysisResult(TestResultResponse response) {
+  //   // 비즈니스 로직: 결과를 order 기준으로 정렬
+  //   final sortedDetails = response.sortedDetails;
+  //
+  //   return response.copyWith(
+  //     resultDetails: sortedDetails,
+  //   );
+  // }
+  //
+  // /// 프리미엄 분석 결과 가공
+  // TestResultResponse _processPremiumResult(TestResultResponse response) {
+  //   // 비즈니스 로직: 프리미엄은 더 상세한 분석이므로 추가 처리
+  //   final sortedDetails = response.sortedDetails;
+  //
+  //   // 예: 이미지가 있는 항목을 앞으로 배치
+  //   final detailsWithImages = sortedDetails.where((d) => d.hasImage).toList();
+  //   final detailsWithoutImages = sortedDetails.where((d) => !d.hasImage).toList();
+  //
+  //   return response.copyWith(
+  //     resultDetails: [...detailsWithImages, ...detailsWithoutImages],
+  //   );
+  // }
 
   /// 사용자 친화적 에러 메시지 변환
   String _convertToUserFriendlyMessage(String? message, String? errorCode) {

@@ -111,7 +111,7 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
     ref.listen<TestContentState>(testContentNotifierProvider, (previous, next) {
       // 에러체크
       if (next.errorMessage != null && !next.isSubmitting) {
-        _showErrorSnackBar(next.errorMessage!);
+        AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
         return;
       }
 
@@ -188,24 +188,6 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
     );
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(20),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
 
   //==================================================================
   // 🎨 UI 부품 위젯들 (역할에 따라 완벽히 분리됨)

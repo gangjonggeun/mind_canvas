@@ -22,6 +22,46 @@ class _TestApiDataSource implements TestApiDataSource {
   final ParseErrorLogger? errorLogger;
 
   @override
+  Future<ApiResponse<TestResultResponse>> getTestResult(
+    String resultId,
+    String token,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<ApiResponse<TestResultResponse>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          '/tests/results/${resultId}',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiResponse<TestResultResponse> _value;
+    try {
+      _value = ApiResponse<TestResultResponse>.fromJson(
+        _result.data!,
+        (json) => TestResultResponse.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiResponse<TestResultResponse>> submitSubjectiveTest(
     SubjectiveTestSubmitRequest request,
     String authorization,

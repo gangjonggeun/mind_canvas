@@ -22,6 +22,11 @@ part 'test_api_data_source.g.dart'; // build_runner가 생성할 파일
 @RestApi()
 abstract class TestApiDataSource {
   factory TestApiDataSource(Dio dio, {String baseUrl}) = _TestApiDataSource;
+  @GET('/tests/results/{resultId}')
+  Future<ApiResponse<TestResultResponse>> getTestResult(
+      @Path('resultId') String resultId,
+      @Header('Authorization') String token,
+      );
 
   @POST('/tests/subjective/submit')
   Future<ApiResponse<TestResultResponse>> submitSubjectiveTest(

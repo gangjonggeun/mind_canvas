@@ -7,8 +7,10 @@ import 'package:gap/gap.dart';
 import 'package:mind_canvas/features/taro/presentation/pages/taro_result_page.dart';
 import 'package:mind_canvas/features/taro/presentation/pages/taro_consultation_setup_page.dart';
 import '../../../../core/theme/app_colors.dart'; // AppColors 경로
+import '../../../../core/utils/ai_analysis_helper.dart';
 import '../../data/dto/request/submit_taro_request.dart';
 import '../../domain/models/taro_card.dart';
+import '../providers/taro_analysis_notifier.dart';
 import '../providers/taro_consultation_provider.dart';
 import '../providers/taro_consultation_state.dart';
 import '../widgets/fan_card_deck.dart';
@@ -76,21 +78,25 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
     final availableCards = TaroCards.getShuffledDeck()
       ..removeWhere((card) => state.selectedCards.contains(card.id));
 
-    ref.listen<TaroConsultationState>(taroConsultationNotifierProvider, (
-      previous,
-      next,
-    ) {
-      if (next.status == TaroStatus.error && next.errorMessage != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
+    ref.listen<TarotAnalysisState>(taroAnalysisProvider, (previous, next) {
+      // 1. 에러 처리
+      if (next.errorMessage != null && !next.isSubmitting) {
+        AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
+        return;
       }
 
-      // 결과 완료 시 이동
-      if (next.status == TaroStatus.completed) {
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const TaroResultPage()));
+      // 2. ✅ AI 분석 접수 완료 체크
+      // 서버에서 비동기 응답 시 result.id를 "PENDING" 등으로 보내준다고 가정
+      if (next.isCompleted && next.result?.id == "PENDING") {
+        AiAnalysisHelper.showPendingDialog(context);
+        return;
+      }
+
+      // 3. 즉시 완료 시 (기존 로직)
+      if (next.isCompleted && next.result != null) {
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => TaroResultPage(result: next.result!))
+        );
       }
     });
 

@@ -32,6 +32,11 @@ TaroApiDataSource taroApiDataSource(TaroApiDataSourceRef ref) {
 abstract class TaroApiDataSource {
   factory TaroApiDataSource(Dio dio, {String baseUrl}) = _TaroApiDataSource;
 
+  @GET('/tarot/results/{resultId}')
+  Future<ApiResponse<TaroResultResponse>> getTarotResult(
+      @Path('resultId') String resultId,
+      @Header('Authorization') String token,
+      );
   /// 🔮 타로 상담 요청 (AI 분석)
   ///
   /// <p><strong>요청 예시:</strong></p>

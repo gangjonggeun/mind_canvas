@@ -34,11 +34,8 @@ class TaroConsultationNotifier extends _$TaroConsultationNotifier {
   }
 
   void reset() {
-    state = const TaroConsultationState(); // 🚀 수정됨
-    // 필요하다면 API 상태도 초기화
-    ref.read(taroAnalysisProvider.notifier).reset();
+    state = const TaroConsultationState(); // 초기 상태로
   }
-
 
   void removeCard(int positionIndex) {
     final currentCards = List<TaroCardInput>.from(state.selectedCards);
@@ -66,33 +63,28 @@ class TaroConsultationNotifier extends _$TaroConsultationNotifier {
   Future<void> submitAnalysis() async {
     if (!state.canAnalyze) return;
 
-    // 1. 상태를 '분석 중'으로 변경
     state = state.copyWith(status: TaroStatus.analyzing);
 
-    // 2. Request DTO 생성
     final request = SubmitTaroRequest(
       theme: state.theme,
-      spreadType: state.selectedSpreadType!.name, // 예: "3", "CELTIC"
+      spreadType: state.selectedSpreadType!.name,
       cards: state.selectedCards,
     );
 
-    // 3. API 호출 노티파이어(TaroAnalysis) 실행
-    // ref.read를 통해 다른 프로바이더의 함수를 실행합니다.
-    final resultEntity = await ref
-        .read(taroAnalysisProvider.notifier)
-        .analyzeTaro(request);
+    // 1. 분석 요청 실행
+    await ref.read(taroAnalysisProvider.notifier).analyzeTaro(request);
 
-    // 4. 결과에 따른 상태 업데이트
-    if (resultEntity != null) {
+    // 2. 실행 후 분석 노티파이어의 상태를 확인
+    final analysisState = ref.read(taroAnalysisProvider);
+
+    if (analysisState.isCompleted) {
       state = state.copyWith(status: TaroStatus.completed);
-    } else {
-      // 에러 메시지는 TaroAnalysis 상태에서 가져오거나 별도로 처리
+    } else if (analysisState.errorMessage != null) {
       state = state.copyWith(
         status: TaroStatus.error,
-        errorMessage: '분석에 실패했습니다. 다시 시도해주세요.',
+        errorMessage: analysisState.errorMessage,
       );
     }
   }
-
 
 }

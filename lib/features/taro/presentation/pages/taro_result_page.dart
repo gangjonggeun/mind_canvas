@@ -13,45 +13,50 @@ import '../widgets/taro_background.dart';
 /// 향상된 타로 결과 페이지
 /// TaroResultEntity를 사용하여 구조화된 결과 표시
 class TaroResultPage extends ConsumerWidget {
-  const TaroResultPage({super.key});
+  final TaroResultEntity result; // 엔티티가 없다면 DTO(TaroResultResponse)를 쓰셔도 됩니다.
+
+  // ✅ 생성자 이름을 클래스 이름과 똑같이 맞추세요.
+  const TaroResultPage({super.key, required this.result});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 만약 페이지 내에서 실시간 분석 상태도 감시하고 싶다면:
+    final analysisState = ref.watch(taroAnalysisProvider);
+
     return Scaffold(
       body: TaroBackground(
         child: SafeArea(
-          child: Consumer(
-            builder: (context, ref, child) {
-              // ✅ 수정 1: ConsultationNotifier 대신 AnalysisNotifier 구독
-              // AsyncValue<TaroResultEntity?> 타입입니다.
-              final analysisState = ref.watch(taroAnalysisProvider);
-
-              return analysisState.when(
-                // 1. 데이터가 있을 때 (성공)
-                data: (result) {
-                  if (result == null) return _buildErrorState(context, '분석 결과가 없습니다.');
-
-                  return CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(child: _buildHeader(context, result)),
-                      SliverToBoxAdapter(child: _buildCardSpread(result)),
-                      SliverToBoxAdapter(child: _buildOverallInterpretation(result)),
-                      SliverToBoxAdapter(child: _buildDetailedInterpretations(result)),
-                      SliverToBoxAdapter(child: _buildBottomActions(context, result)),
-                      SliverToBoxAdapter(child: SizedBox(height: 32.h)),
-                    ],
-                  );
-                },
-                // 2. 에러 발생 시
-                error: (err, stack) => _buildErrorState(context, err.toString()),
-                // 3. 로딩 중일 때 (사실 이 페이지 들어오기 전에 로딩이 끝나지만 안전장치)
-                loading: () => const Center(child: CircularProgressIndicator()),
-              );
-            },
-          ),
+          child: _buildBody(context, analysisState),
         ),
       ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, TarotAnalysisState state) {
+    // 1. 에러가 있는 경우
+    if (state.errorMessage != null) {
+      return _buildErrorState(context, state.errorMessage!);
+    }
+
+    // 2. 로딩 중인 경우 (제출 버튼 클릭 직후 등)
+    if (state.isSubmitting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 3. 데이터가 정상적으로 있는 경우 (생성자로 받은 result 사용)
+    // 혹은 state.result가 있다면 그것을 사용
+    final data = state.result ?? result;
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(child: _buildHeader(context, data)),
+        SliverToBoxAdapter(child: _buildCardSpread(data)),
+        SliverToBoxAdapter(child: _buildOverallInterpretation(data)),
+        SliverToBoxAdapter(child: _buildDetailedInterpretations(data)),
+        SliverToBoxAdapter(child: _buildBottomActions(context, data)),
+        SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+      ],
     );
   }
   //

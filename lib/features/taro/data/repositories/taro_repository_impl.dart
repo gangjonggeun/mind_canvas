@@ -43,6 +43,25 @@ class TaroRepositoryImpl implements TaroRepository {
        _tokenManager = tokenManager;
 
   @override
+  Future<Result<TaroResultEntity>> getTarotResultDetail(String resultId) async {
+    try {
+      final token = await _tokenManager.getValidAccessToken();
+      if (token == null) return Result.failure('인증 필요', 'AUTH_REQUIRED');
+
+      // ✅ 서버 API: GET /api/v1/tarot/results/{resultId}
+      final apiResponse = await _taroApiDataSource.getTarotResult(resultId, token);
+
+      if (apiResponse.success && apiResponse.data != null) {
+        return Result.success(apiResponse.data!.toEntity());
+      }
+      return Result.failure('결과를 찾을 수 없습니다.');
+    } catch (e) {
+      return Result.failure('데이터 로드 실패: $e');
+    }
+  }
+
+
+  @override
   Future<Result<TaroResultEntity>> analyzeTaro(
     SubmitTaroRequest request,
   ) async {

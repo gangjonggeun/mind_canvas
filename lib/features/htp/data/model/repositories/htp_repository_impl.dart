@@ -9,6 +9,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../../../../../core/auth/token_manager.dart';
 import '../../../../../core/utils/result.dart';
+import '../../../../psy_result/data/model/response/test_result_response.dart';
 import '../../../domain/repositories/htp_repository.dart';
 import '../datasources/htp_api_data_source.dart';
 import '../request/htp_basic_request.dart';
@@ -42,223 +43,130 @@ class HtpRepositoryImpl implements HtpRepository {
   // =============================================================
 // 📁 htp_repository_impl.dart
 // =============================================================
-
   @override
-  Future<Result<HtpResponse>> analyzeBasicHtp({
+  Future<Result<TestResultResponse>> analyzeBasicHtp({
     required List<File> imageFiles,
     required DrawingProcess drawingProcess,
   }) async {
     try {
-      print('🖼️ HTP 기본 분석 시작 - 이미지 수: ${imageFiles.length}');
-
-      // 1. 토큰 확인
       final validToken = await _tokenManager.getValidAccessToken();
-      if (validToken == null) {
-        print('❌ 인증이 필요합니다 - 로그인 페이지로 이동 필요');
-        return Result.failure('인증이 필요합니다', 'AUTHENTICATION_REQUIRED');
-      }
+      if (validToken == null) return Result.failure('인증이 필요합니다', 'AUTH_REQUIRED');
 
-      // 2. 이미지 파일 검증
       final validationResult = _validateImageFiles(imageFiles);
-      if (validationResult != null) {
-        print('❌ 이미지 검증 실패: ${validationResult.message}');
-        return validationResult;
-      }
+      if (validationResult != null) return validationResult;
 
-      // 3. 요청 DTO 생성
-      final request = HtpBasicRequest(
-        drawingProcess: drawingProcess,
-      );
-
-      // 4. ✅ JSON을 MultipartFile로 변환 (Content-Type 명시)
-      final requestJson = jsonEncode(request.toJson());
-      print('📄 요청 JSON: $requestJson');
-
+      final request = HtpBasicRequest(drawingProcess: drawingProcess);
       final requestMultipart = MultipartFile.fromString(
-        requestJson,
-        contentType: MediaType('application', 'json'), // ✅ 핵심!
+        jsonEncode(request.toJson()),
+        contentType: MediaType('application', 'json'),
       );
 
-      // 5. 이미지 MultipartFile 변환
       final multipartFiles = await _convertToMultipartFiles(imageFiles);
-      if (multipartFiles == null) {
-        return Result.failure('이미지 변환에 실패했습니다', 'IMAGE_CONVERSION_ERROR');
-      }
+      if (multipartFiles == null) return Result.failure('이미지 변환 실패');
 
-      // 6. API 호출
-      print('📡 API 호출 중...');
       final apiResponse = await _htpApiDataSource.analyzeBasic(
         multipartFiles,
-        requestMultipart, // ✅ MultipartFile 전달
+        requestMultipart,
         validToken,
       );
 
-      // 7. ApiResponse → Result 변환
-      if (apiResponse.success && apiResponse.data != null) {
-        final htpResponse = apiResponse.data!;
-
-        if (htpResponse.resultDetails.isEmpty) {
-          print('⚠️ 분석 결과가 비어있습니다');
-          return Result.failure('분석 결과가 생성되지 않았습니다', 'EMPTY_RESULT');
-        }
-
-        print('✅ HTP 기본 분석 성공 - 결과 항목: ${htpResponse.resultDetails.length}개');
+      if (apiResponse.success) {
+        // ✅ 비동기 접수 성공 시 PENDING_AI 더미 객체 반환
         return Result.success(
-          htpResponse,
-          'HTP 기본 분석이 완료되었습니다',
+          apiResponse.data ?? const TestResultResponse(
+            resultKey: "PENDING_AI",
+            resultTag: "HTP 분석 시작",
+            briefDescription: "AI가 그림 분석을 시작했습니다. 완료되면 알림을 드립니다.",
+            backgroundColor: "FFFFFF",
+            resultDetails: [],
+          ),
+          apiResponse.message ?? '분석이 시작되었습니다.',
         );
       } else {
-        final errorMessage = apiResponse.error?.message ??
-            apiResponse.message ??
-            'HTP 분석에 실패했습니다';
-        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
-
-        print('❌ HTP 기본 분석 실패 - $errorMessage');
-        return Result.failure(errorMessage, errorCode);
+        return Result.failure(apiResponse.message ?? 'HTP 분석 실패');
       }
     } on DioException catch (e) {
       return _handleDioException(e, 'HTP 기본 분석');
-    } catch (e, stackTrace) {
-      print('❌ 예상치 못한 오류 발생: $e');
-      print('StackTrace: $stackTrace');
-      return Result.failure('알 수 없는 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    } catch (e) {
+      return Result.failure('알 수 없는 오류 발생: $e');
     }
   }
 
+  // =============================================================
+  // 🧠 2. 프리미엄 분석 (비동기 대응)
+  // =============================================================
   @override
-  Future<Result<HtpResponse>> analyzePremiumHtp({
+  Future<Result<TestResultResponse>> analyzePremiumHtp({
     required List<File> imageFiles,
     required HtpPremiumRequest request,
   }) async {
     try {
-      print('🧠 HTP 프리미엄 분석 시작 - 이미지 수: ${imageFiles.length}');
-
-      // 1. 토큰 확인
       final validToken = await _tokenManager.getValidAccessToken();
-      if (validToken == null) {
-        print('❌ 인증이 필요합니다 - 로그인 페이지로 이동 필요');
-        return Result.failure('인증이 필요합니다', 'AUTHENTICATION_REQUIRED');
-      }
+      if (validToken == null) return Result.failure('인증이 필요합니다', 'AUTH_REQUIRED');
 
-      // 2. 이미지 파일 검증
       final validationResult = _validateImageFiles(imageFiles);
-      if (validationResult != null) {
-        print('❌ 이미지 검증 실패: ${validationResult.message}');
-        return validationResult;
-      }
-
-      // 3. ✅ JSON을 MultipartFile로 변환 (Content-Type 명시)
-      final requestJson = jsonEncode(request.toJson());
-      print('📄 요청 JSON: $requestJson');
+      if (validationResult != null) return validationResult;
 
       final requestMultipart = MultipartFile.fromString(
-        requestJson,
-        contentType: MediaType('application', 'json'), // ✅ 핵심!
+        jsonEncode(request.toJson()),
+        contentType: MediaType('application', 'json'),
       );
 
-      // 4. 이미지 MultipartFile 변환
       final multipartFiles = await _convertToMultipartFiles(imageFiles);
-      if (multipartFiles == null) {
-        return Result.failure('이미지 변환에 실패했습니다', 'IMAGE_CONVERSION_ERROR');
-      }
+      if (multipartFiles == null) return Result.failure('이미지 변환 실패');
 
-      // 5. API 호출
-      print('📡 API 호출 중 (프리미엄 분석)...');
       final apiResponse = await _htpApiDataSource.analyzePremium(
         multipartFiles,
-        requestMultipart, // ✅ MultipartFile 전달
+        requestMultipart,
         validToken,
       );
 
-      // 6. ApiResponse → Result 변환
-      if (apiResponse.success && apiResponse.data != null) {
-        final htpResponse = apiResponse.data!;
-
-        if (htpResponse.resultDetails.isEmpty) {
-          print('⚠️ 분석 결과가 비어있습니다');
-          return Result.failure('분석 결과가 생성되지 않았습니다', 'EMPTY_RESULT');
-        }
-
-        print('✅ HTP 프리미엄 분석 성공 - 결과 항목: ${htpResponse.resultDetails.length}개');
+      if (apiResponse.success) {
         return Result.success(
-          htpResponse,
-          'HTP 프리미엄 분석이 완료되었습니다',
+          apiResponse.data ?? const TestResultResponse(
+            resultKey: "PENDING_AI",
+            resultTag: "HTP 프리미엄 분석 시작",
+            briefDescription: "AI가 그림을 정밀 분석 중입니다. 완료되면 알림을 드립니다.",
+            backgroundColor: "FFFFFF",
+            resultDetails: [],
+          ),
+          apiResponse.message ?? '분석이 시작되었습니다.',
         );
       } else {
-        final errorMessage = apiResponse.error?.message ??
-            apiResponse.message ??
-            'HTP 프리미엄 분석에 실패했습니다';
-        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
-
-        print('❌ HTP 프리미엄 분석 실패 - $errorMessage');
-        return Result.failure(errorMessage, errorCode);
+        return Result.failure(apiResponse.message ?? 'HTP 프리미엄 분석 실패');
       }
     } on DioException catch (e) {
       return _handleDioException(e, 'HTP 프리미엄 분석');
-    } catch (e, stackTrace) {
-      print('❌ 예상치 못한 오류 발생: $e');
-      print('StackTrace: $stackTrace');
-      return Result.failure('알 수 없는 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    } catch (e) {
+      return Result.failure('알 수 없는 오류 발생: $e');
     }
   }
 
   // =============================================================
   // 🔧 Private 헬퍼 메서드들
   // =============================================================
-
-  /// 이미지 파일 검증
-  ///
-  /// <p><strong>검증 항목:</strong></p>
-  /// - 이미지 개수: 정확히 3장
-  /// - 파일 존재 여부
-  /// - 파일 크기: 각 5MB 이하
-  /// - 파일 형식: PNG, JPG, JPEG
-  ///
-  /// @return null이면 검증 성공, Result<HtpResponse>면 검증 실패
-  Result<HtpResponse>? _validateImageFiles(List<File> imageFiles) {
-    // 1. 이미지 개수 검증
+  Result<TestResultResponse>? _validateImageFiles(List<File> imageFiles) {
     if (imageFiles.length != _requiredImageCount) {
-      return Result.failure(
-        '이미지는 정확히 $_requiredImageCount장이어야 합니다 (현재: ${imageFiles.length}장)',
-        'INVALID_IMAGE_COUNT',
-      );
+      return Result.failure('이미지는 정확히 $_requiredImageCount장이어야 합니다.');
     }
-
-    // 2. 각 파일 검증
-    for (int i = 0; i < imageFiles.length; i++) {
-      final file = imageFiles[i];
-      final imageName = ['집', '나무', '사람'][i];
-
-      // 파일 존재 여부
-      if (!file.existsSync()) {
-        return Result.failure(
-          '$imageName 이미지 파일이 존재하지 않습니다',
-          'FILE_NOT_FOUND',
-        );
-      }
-
-      // 파일 크기 검증 (동기 방식)
-      final fileSize = file.lengthSync();
-      if (fileSize > _maxFileSize) {
-        final sizeMB = (fileSize / 1024 / 1024).toStringAsFixed(2);
-        return Result.failure(
-          '$imageName 이미지가 너무 큽니다 (${sizeMB}MB, 최대 5MB)',
-          'FILE_TOO_LARGE',
-        );
-      }
-
-      // 파일 확장자 검증
-      final extension = file.path.split('.').last.toLowerCase();
-      if (!_allowedExtensions.contains(extension)) {
-        return Result.failure(
-          '$imageName 이미지 형식이 지원되지 않습니다 (.$extension)\n'
-              '지원 형식: ${_allowedExtensions.join(', ')}',
-          'UNSUPPORTED_FILE_FORMAT',
-        );
-      }
+    for (var file in imageFiles) {
+      if (!file.existsSync()) return Result.failure('이미지 파일이 존재하지 않습니다.');
+      if (file.lengthSync() > _maxFileSize) return Result.failure('이미지 용량이 너무 큽니다 (최대 5MB).');
     }
+    return null;
+  }
 
-    return null; // 검증 성공
+
+  /// 에러 핸들러 결과 타입을 TestResultResponse로 변경
+  Result<TestResultResponse> _handleDioException(DioException e, String operation) {
+    final statusCode = e.response?.statusCode;
+    if (statusCode == 413) return Result.failure('파일 용량이 너무 큽니다.');
+    if (statusCode == 401) return Result.failure('인증 세션이 만료되었습니다.');
+
+    return Result.failure(
+      e.message ?? '$operation 중 오류가 발생했습니다.',
+      statusCode?.toString() ?? 'NETWORK_ERROR',
+    );
   }
 
   /// File → MultipartFile 변환
@@ -301,101 +209,4 @@ class HtpRepositoryImpl implements HtpRepository {
     }
   }
 
-  /// DioException 처리
-  ///
-  /// <p><strong>처리하는 에러 타입:</strong></p>
-  /// - CONNECTION_TIMEOUT: 서버 연결 시간 초과
-  /// - RECEIVE_TIMEOUT: 응답 시간 초과 (이미지 업로드 고려)
-  /// - SEND_TIMEOUT: 전송 시간 초과
-  /// - 413: 파일 크기 초과
-  /// - 401: 인증 실패
-  /// - 403: 권한 없음
-  /// - 404: 엔드포인트 없음
-  /// - 500: 서버 내부 오류
-  Result<HtpResponse> _handleDioException(DioException e, String operation) {
-    print('❌ DioException 발생 - $operation');
-    print('  Type: ${e.type}');
-    print('  Message: ${e.message}');
-    print('  Status Code: ${e.response?.statusCode}');
-
-    // 1. 네트워크 타임아웃 에러
-    if (e.type == DioExceptionType.connectionTimeout) {
-      return Result.failure(
-        '서버 연결 시간이 초과되었습니다\n네트워크 연결을 확인해주세요',
-        'CONNECTION_TIMEOUT',
-      );
-    }
-
-    if (e.type == DioExceptionType.receiveTimeout) {
-      return Result.failure(
-        '응답 시간이 초과되었습니다\n이미지가 너무 크거나 네트워크가 불안정합니다',
-        'RECEIVE_TIMEOUT',
-      );
-    }
-
-    if (e.type == DioExceptionType.sendTimeout) {
-      return Result.failure(
-        '전송 시간이 초과되었습니다\n네트워크 연결을 확인해주세요',
-        'SEND_TIMEOUT',
-      );
-    }
-
-    // 2. HTTP 상태 코드별 처리
-    final statusCode = e.response?.statusCode;
-    if (statusCode != null) {
-      switch (statusCode) {
-        case 413:
-          return Result.failure(
-            '업로드 파일이 너무 큽니다\n이미지 크기를 줄여주세요',
-            'PAYLOAD_TOO_LARGE',
-          );
-
-        case 401:
-          return Result.failure(
-            '인증이 만료되었습니다\n다시 로그인해주세요',
-            'AUTHENTICATION_EXPIRED',
-          );
-
-        case 403:
-          return Result.failure(
-            '접근 권한이 없습니다',
-            'FORBIDDEN',
-          );
-
-        case 404:
-          return Result.failure(
-            '요청한 서비스를 찾을 수 없습니다',
-            'NOT_FOUND',
-          );
-
-        case 500:
-        case 502:
-        case 503:
-          return Result.failure(
-            '서버에 일시적인 오류가 발생했습니다\n잠시 후 다시 시도해주세요',
-            'SERVER_ERROR',
-          );
-
-        default:
-          return Result.failure(
-            '알 수 없는 오류가 발생했습니다 (코드: $statusCode)',
-            'HTTP_ERROR',
-          );
-      }
-    }
-
-    // 3. 기타 네트워크 에러
-    if (e.type == DioExceptionType.connectionError) {
-      return Result.failure(
-        '네트워크 연결에 실패했습니다\n인터넷 연결을 확인해주세요',
-        'CONNECTION_ERROR',
-      );
-    }
-
-    // 4. 기본 에러
-    return Result.failure(
-      '네트워크 오류가 발생했습니다',
-      'NETWORK_ERROR',
-    );
-  }
 }

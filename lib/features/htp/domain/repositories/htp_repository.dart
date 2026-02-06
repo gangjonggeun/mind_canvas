@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import '../../../../core/utils/result.dart';
+import '../../../psy_result/data/model/response/test_result_response.dart';
 import '../../data/model/request/htp_basic_request.dart';
 import '../../data/model/request/htp_premium_request.dart';
 import '../../data/model/response/htp_response.dart';
@@ -33,7 +34,7 @@ abstract class HtpRepository {
   /// - 파일 형식: PNG, JPG, JPEG
   ///
   /// @return Result<HtpResponse> 분석 결과 또는 에러
-  Future<Result<HtpResponse>> analyzeBasicHtp({
+  Future<Result<TestResultResponse>> analyzeBasicHtp({
     required List<File> imageFiles,
     required DrawingProcess drawingProcess,
   });
@@ -45,7 +46,7 @@ abstract class HtpRepository {
   /// - request: 전체 프리미엄 분석 요청 (그리기 과정 + PDI 답변)
   ///
   /// @return Result<HtpResponse> 심층 분석 결과 또는 에러
-  Future<Result<HtpResponse>> analyzePremiumHtp({
+  Future<Result<TestResultResponse>> analyzePremiumHtp({
     required List<File> imageFiles,
     required HtpPremiumRequest request,
   });

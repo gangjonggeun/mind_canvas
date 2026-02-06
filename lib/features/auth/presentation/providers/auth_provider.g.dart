@@ -41,7 +41,7 @@ final currentUserProvider = AutoDisposeProvider<AuthUser?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUserRef = AutoDisposeProviderRef<AuthUser?>;
-String _$authNotifierHash() => r'eddf5da2a76e35f66d2e9b7ab35b62152cf7f337';
+String _$authNotifierHash() => r'34ec6636405b5f86eb68ff766192192899cd7754';
 
 /// See also [AuthNotifier].
 @ProviderFor(AuthNotifier)

@@ -300,6 +300,27 @@ class TestRepositoryImpl implements TestRepository {
     }
   }
 
+  @override
+  Future<Result<TestResultResponse>> getTestResultDetail(String resultId) async {
+    try {
+      final validToken = await _tokenManager.getValidAccessToken();
+      if (validToken == null) return Result.failure('인증이 필요합니다', 'AUTH_REQUIRED');
+
+      // ✅ getTestResult 호출
+      final apiResponse = await _testApiDataSource.getTestResult(resultId, validToken);
+
+      if (apiResponse.success && apiResponse.data != null) {
+        return Result.success(apiResponse.data!);
+      } else {
+        return Result.failure(apiResponse.message ?? '결과를 불러오지 못했습니다');
+      }
+    } on DioException catch (e) {
+      // 기존 에러 핸들러 재사용
+      return Result.failure('네트워크 오류가 발생했습니다');
+    } catch (e) {
+      return Result.failure('알 수 없는 오류 발생: $e');
+    }
+  }
 
   // =============================================================
   // 🌟 최신순 테스트 목록 조회 (기존 구현)

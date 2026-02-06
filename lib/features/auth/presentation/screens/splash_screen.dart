@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/auth/token_manager_provider.dart';
 import '../../domain/repositories/auth_repository_provider.dart';
+import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -47,39 +48,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     }
   }
-
-  /// 🔐 자동로그인 수행 (최종 버전)
   Future<bool> _performAutoLogin() async {
-    final authRepository = ref.read(authRepositoryProvider);
-    final tokenManager = ref.read(tokenManagerProvider);
+    // 🚨 기존: repository를 직접 읽음 (노티파이어가 안 깨어남)
+    // final authRepository = ref.read(authRepositoryProvider);
 
     try {
-      // 1. 저장된 토큰 복원
+      // 1. 토큰 매니저 초기화 (이건 필요함)
+      final tokenManager = ref.read(tokenManagerProvider);
       await tokenManager.initFromStorage();
 
-      // 2. 토큰이 없으면 로그인 필요
-      if (!tokenManager.isLoggedIn) {
-        print('ℹ️ 저장된 유효한 토큰 없음');
+      if (!tokenManager.isLoggedIn) return false;
+
+      // 2. ✅ [핵심] AuthNotifier를 read 합니다.
+      // 이 순간 AuthNotifier의 build()가 실행되면서 로그가 찍히고 FCM 동기화가 돌아갑니다.
+      final authUser = await ref.read(authNotifierProvider.future);
+
+      // 3. 결과 확인
+      if (authUser != null) {
+        print('✅ 자동로그인 성공 (AuthNotifier 활성화)');
+        return true;
+      } else {
+        print('❌ 자동로그인 실패');
         return false;
       }
-
-      // 3. Repository를 통한 서버 토큰 검증
-      final validationResult = await authRepository.refreshTokens();
-
-      return validationResult.fold(
-        onSuccess: (_) {
-          print('✅ 토큰 검증 성공 (자동로그인 성공)');
-          return true; // ✅ 성공시 true 반환
-        },
-        onFailure: (message, errorCode) {
-          print('❌ 토큰 검증 실패: $message ($errorCode)');
-          tokenManager.clearTokens();
-          return false; // ✅ 실패시 false 반환
-        },
-      );
     } catch (e) {
       print('❌ 자동로그인 오류: $e');
-      await tokenManager.clearTokens();
       return false;
     }
   }
