@@ -79,56 +79,56 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
     _cardAnimationController.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // ✅ Provider에서 상태 가져오기
-    final session = ref.watch(htpSessionProvider);
-    final completedCount = ref.watch(htpCompletedCountProvider);
-    final canComplete = ref.watch(htpCanCompleteProvider);
+    // 1. 분석 상태 감시
+    final analysisState = ref.watch(htpAnalysisProvider);
 
-
-    // ✅ HTP 분석 상태 감시
+    // 2. 리스너 (팝업 전용)
     ref.listen<HtpTestState>(htpAnalysisProvider, (previous, next) {
-      // 1. 에러 처리
       if (next.errorMessage != null && !next.isSubmitting) {
         AiAnalysisHelper.showErrorSnackBar(context, next.errorMessage!);
         return;
       }
 
-      // 2. 🤖 AI 분석 접수 완료 체크 (PENDING_AI)
-      // TestResultResponse의 resultKey를 확인합니다.
       if (next.isCompleted && next.result?.resultKey == "PENDING_AI") {
         print("🤖 HTP 분석 접수 확인 -> 공통 다이얼로그 노출");
-
-        // 아까 만든 공통 유틸리티 사용 (또는 화면 내 함수)
         AiAnalysisHelper.showPendingDialog(context);
-
-        // 세션 정리 (홈으로 가기 직전 실행)
         ref.read(htpSessionProvider.notifier).clearSession();
         return;
       }
-
-      // 3. 📊 (참고) 만약 즉시 결과가 오는 일반 테스트라면
-      if (next.isCompleted && next.result != null && next.result?.resultKey != "PENDING_AI") {
-        // TestResultMapper를 사용하여 결과 화면 이동
-        final psyResult = TestResultMapper.toEntity(next.result!);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => PsyResultScreen(result: psyResult)),
-        );
-      }
     });
 
-    return Scaffold(
-      backgroundColor: isDarkMode
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
-      appBar: _buildAppBar(theme, isDarkMode),
-      body: _buildBody(isDarkMode),
+    return Stack( // ✅ Stack으로 변경
+      children: [
+        Scaffold(
+          backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          appBar: _buildAppBar(theme, isDarkMode),
+          body: _buildBody(isDarkMode),
+        ),
+
+        // ✅ [핵심] 로딩 오버레이: 전송 중일 때만 화면을 덮음
+        if (analysisState.isSubmitting)
+          Container(
+            color: Colors.black.withOpacity(0.5), // 반투명 배경
+            child: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: Colors.white),
+                  SizedBox(height: 20),
+                  Text(
+                    "그림 데이터를 전송 중입니다...",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -631,38 +631,34 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
 
   /// 🎨 제출 버튼
   Widget _buildSubmitButton(bool isDarkMode) {
-    // ✅ Provider에서 실시간 상태 가져오기
     final session = ref.watch(htpSessionProvider);
+    final analysisState = ref.watch(htpAnalysisProvider);
+
     final completedCount = session?.drawings.length ?? 0;
-    final canSubmit = completedCount == 3;
+    // ✅ 전송 중일 때 버튼 비활성화
+    final isSubmitting = analysisState.isSubmitting;
+    final canSubmit = completedCount == 3 && !isSubmitting;
 
     return Container(
       width: double.infinity,
       height: 56,
       margin: const EdgeInsets.only(top: 20),
-      child: ElevatedButton.icon(
-        onPressed: canSubmit ? _submitDrawings : null,
-        icon: Icon(
-          canSubmit ? Icons.send_rounded : Icons.lock_rounded,
-          size: 20,
-        ),
-        label: Text(
-          canSubmit ? 'HTP 검사 제출하기' : '모든 그림을 완료해주세요 ($completedCount/3)',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+      child: ElevatedButton(
+        onPressed: canSubmit ? _performSubmit : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: canSubmit
-              ? const Color(0xFF38A169)
-              : (isDarkMode ? Colors.white24 : Colors.black12),
-          foregroundColor: canSubmit
-              ? Colors.white
-              : (isDarkMode ? Colors.white38 : Colors.black38),
+          backgroundColor: canSubmit ? const Color(0xFF38A169) : Colors.grey[400],
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: canSubmit ? 4 : 0,
         ),
+        child: isSubmitting
+            ? const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+            SizedBox(width: 12),
+            // Text('그림 전송 중...', style: TextStyle(color: Colors.white)),
+          ],
+        )
+            : Text('HTP 검사 제출하기 ($completedCount/3)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -1085,78 +1081,34 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
           ),
     );
   }
-
-  /// 🎨 실제 제출 처리 (Notifier 사용)
-  /// 🎨 실제 제출 처리 (Notifier 사용)
   Future<void> _performSubmit() async {
-    // 로딩 다이얼로그 표시
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
-        child: const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    '검사 결과를 전송중입니다...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
     try {
       final session = ref.read(htpSessionProvider)!;
-
-      // 1. 이미지 파일 수집
       final imageFiles = <File>[];
-      final imagePaths = <String, String>{};
 
       for (final type in [HtpType.house, HtpType.tree, HtpType.person]) {
         final drawing = session.drawings.firstWhere((d) => d.type == type);
-        if (drawing.imagePath == null) {
-          throw Exception('${type.name} 이미지를 찾을 수 없습니다');
-        }
         imageFiles.add(File(drawing.imagePath!));
-        imagePaths[type.name] = drawing.imagePath!; // ✅ 원본 경로 그대로
       }
 
-      print('📤 서버 전송 시작 - 이미지 ${imageFiles.length}개');
-
-      // 2. DrawingProcess 생성
       final drawingProcess = DrawingProcess(
         drawOrder: _getDrawOrder(session.drawings),
         timeTaken: _getTotalTime(session),
         pressure: _getAveragePressure(session.drawings),
       );
 
-      // 3. ✅ Notifier 호출 (리턴값을 기다리지 않고 상태 변화를 listen 함)
-      // 리턴 타입을 TestResultResponse로 통일했으므로 analyzeBasic 실행
+      // ✅ 무거운 showDialog()를 삭제합니다.
+      // 전송 중에는 버튼이 '전송중...'으로 바뀌어 중복 클릭을 막아줍니다.
       await ref.read(htpAnalysisProvider.notifier).analyzeBasic(
         imageFiles: imageFiles,
         drawingProcess: drawingProcess,
       );
 
-      // 4. ✅ 로딩 다이얼로그 닫기 (이후 처리는 ref.listen이 담당)
-      if (mounted) Navigator.pop(context);
+      // 업로드가 완료되면 (서버에서 200 OK를 받으면)
+      // 아래 build() 메서드의 ref.listen 이 자동으로 다이얼로그를 띄웁니다.
 
     } catch (e) {
-      if (mounted) Navigator.pop(context);
-      _showErrorDialog('제출 중 오류가 발생했습니다: $e');
+      AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류: $e');
     }
   }
 

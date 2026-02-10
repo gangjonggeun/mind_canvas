@@ -48,7 +48,7 @@ class TaroRepositoryImpl implements TaroRepository {
       final token = await _tokenManager.getValidAccessToken();
       if (token == null) return Result.failure('인증 필요', 'AUTH_REQUIRED');
 
-      // ✅ 서버 API: GET /api/v1/tarot/results/{resultId}
+      // ✅ 서버 API: GET /api/v1/taro/results/{resultId}
       final apiResponse = await _taroApiDataSource.getTarotResult(resultId, token);
 
       if (apiResponse.success && apiResponse.data != null) {
@@ -82,14 +82,18 @@ class TaroRepositoryImpl implements TaroRepository {
       );
 
       // 3. ApiResponse를 Result로 변환 (예시 코드와 동일 구조)
-      if (apiResponse.success && apiResponse.data != null) {
-        // ✅ DTO -> Entity 변환
-        // 예시의 TestContentMapper 대신, DTO 내부의 toEntity() 메서드 사용
-        final entity = apiResponse.data!.toEntity();
+      if (apiResponse.success) {
+        // ✅ 서버 응답이 성공인데 데이터가 null이면 "PENDING" 엔티티를 수동 생성해서 반환해야 함
+        final entity = apiResponse.data?.toEntity() ?? TaroResultEntity(
+          id: "PENDING", // 👈 이게 있어야 리스너가 감지함
+          overallInterpretation: "",
+          cardInterpretations: [],
+          theme: "",
+          date: DateTime.now(), spreadName: '',
+        );
 
-        // print('✅ 타로 분석 성공 - ID: ${entity.id}'); // 필요 시 주석 해제
-        return Result.success(entity, apiResponse.message ?? '타로 상담이 완료되었습니다');
-      } else {
+        return Result.success(entity);
+      }else {
         final errorMessage =
             apiResponse.error?.message ??
             apiResponse.message ??

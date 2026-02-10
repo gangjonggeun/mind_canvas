@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # 결과창에서 쓸 라이블러리
+  fl_chart: ^0.66.0 # 차트
+  share_plus: ^7.2.0 # 공유 기능
+
+
   # 🖼️ 이미지 처리 (최적화된 조합) 캐시이미지 3.4.1에서 다운그레이드함 문제생기면여기일가능성 높음
   cached_network_image: ^3.3.1
   flutter_cache_manager: ^3.3.1
@@ -50,6 +55,8 @@ dependencies:
   flutter_dotenv: ^5.1.0
   url_launcher: ^6.3.2
   firebase_messaging: ^16.1.1
+  easy_localization: ^3.0.7
+
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +79,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/result/
+    - assets/lottie/
     - assets/images/htp_pageview/
     - assets/images/taro_pageview/
     - assets/images/persona_pageview/
@@ -90,3 +99,4 @@ flutter:
     - assets/images/cover/game/
     - assets/images/cover/book/
     - .env
+    - assets/translations/

@@ -7,6 +7,7 @@ import 'package:mind_canvas/features/psytest/presentation/notifiers/test_content
 import '../../core/utils/ai_analysis_helper.dart';
 import '../psy_result/data/mapper/test_result_mapper.dart';
 import '../psy_result/presentation/psy_result_screen.dart';
+import '../psy_result/presentation/screen/psy_result_screen2.dart';
 import '../psy_result/psy_result_demo_screen.dart';
 import 'data/model/test_question.dart';
 
@@ -129,7 +130,7 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
         final psyResult = TestResultMapper.toEntity(next.testResult!);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => PsyResultScreen(result: psyResult)),
+          MaterialPageRoute(builder: (_) => PsyResultScreen2(result: psyResult)),
         );
       }
     });

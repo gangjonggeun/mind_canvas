@@ -65,7 +65,6 @@ class TestRepositoryImpl implements TestRepository {
             resultTag: "분석 중...",
             briefDescription: "AI가 답변을 분석하고 있습니다.",
             backgroundColor: "FFFFFF", // 흰색 (오류 방지용 HEX)
-
           ),
           apiResponse.message ?? '분석이 시작되었습니다.',
         );

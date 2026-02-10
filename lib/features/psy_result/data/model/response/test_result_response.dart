@@ -12,7 +12,7 @@ part 'test_result_response.g.dart';
 class TestResultResponse with _$TestResultResponse {
   const factory TestResultResponse({
     /// 🔑 결과 키
-    @JsonKey(name: 'resultKey') required String resultKey,
+    @JsonKey(name: 'resultKey') @Default('AI_RESULT')  String resultKey,
 
     /// 🏷️ 결과 태그 (제목)
     @JsonKey(name: 'resultTag') required String resultTag,
@@ -21,7 +21,7 @@ class TestResultResponse with _$TestResultResponse {
     @JsonKey(name: 'briefDescription') required String briefDescription,
 
     /// 🎨 배경색 (HEX, # 제외)
-    @JsonKey(name: 'backgroundColor') required String backgroundColor,
+    @JsonKey(name: 'backgroundColor')  @Default('FFFFFF')  String backgroundColor,
 
     /// 📊 차원별 점수 (서버에서 계산된 백분율)
     /// 예: {"E": 66, "I": 33, "S": 45, "N": 55, ...}
@@ -29,6 +29,7 @@ class TestResultResponse with _$TestResultResponse {
 
     /// 📋 결과 상세 설명 목록 (해석 포함)
     @JsonKey(name: 'resultDetails') @Default([]) List<ResultDetail> resultDetails,
+
   }) = _TestResultResponse;
 
   factory TestResultResponse.fromJson(Map<String, dynamic> json) =>

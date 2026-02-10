@@ -32,7 +32,7 @@ TaroApiDataSource taroApiDataSource(TaroApiDataSourceRef ref) {
 abstract class TaroApiDataSource {
   factory TaroApiDataSource(Dio dio, {String baseUrl}) = _TaroApiDataSource;
 
-  @GET('/tarot/results/{resultId}')
+  @GET('/taro/results/{resultId}')
   Future<ApiResponse<TaroResultResponse>> getTarotResult(
       @Path('resultId') String resultId,
       @Header('Authorization') String token,

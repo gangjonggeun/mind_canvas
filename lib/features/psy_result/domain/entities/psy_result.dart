@@ -48,7 +48,7 @@ class PsyResult {
     try {
       return Color(int.parse('FF$backgroundColor', radix: 16));
     } catch (e) {
-      return const Color(0xFFDC2626);
+      return const Color(0xFF10B981);
     }
   }
 
@@ -100,6 +100,43 @@ class PsyResult {
     }
   }
 
+
+  // 1️⃣ 한글 변환 사전 (통합 관리)
+  static const Map<String, String> _KorLabelDictionary = {
+    // 공통/일반
+    'energyScore': '에너지(E)',
+    'decisionScore': '결정성(F)',
+    'lifestyleScore': '생활성(P)',
+    'informationScore': '정보수집(N)',
+
+    'resilience': '회복탄력성',
+    'stress': '스트레스',
+
+    // MBTI 관련
+    'E': '외향형', 'I': '내향형',
+    'S': '감각형', 'N': '직관형',
+    'T': '사고형', 'F': '감정형',
+    'J': '판단형', 'P': '인식형',
+
+    // HTP / 심리 관련
+    'house': '가정운', 'tree': '무의식', 'person': '대인관계',
+    'aggression': '공격성', 'anxiety': '불안감', 'depressive': '우울감',
+
+    // 직업/가치관
+    'achievement': '성취', 'autonomy': '자율', 'creativity': '창의',
+  };
+
+  // 2️⃣ 번역된 점수 Getter (UI에서는 이걸 쓰세요!)
+  Map<String, int> get translatedScores {
+    if (dimensionScores == null) return {};
+
+    return dimensionScores!.map((key, value) {
+      // 사전에 있으면 한글로, 없으면 영어 그대로
+      final newKey = _KorLabelDictionary[key] ?? key;
+      return MapEntry(newKey, value);
+    });
+  }
+
   // ⏱️ 예상 읽기 시간 (섹션당 1분)
   int get estimatedReadingTime => sections.length + 2;
 
@@ -144,6 +181,7 @@ enum PsyResultType {
   relationship,  // 관계/연애
   value,         // 가치관
   cognitive,     // 인지/ADHD
+  projective,
   other;         // 기타
 
   // ✅ displayName 추가
@@ -159,6 +197,8 @@ enum PsyResultType {
         return '가치관 탐색';
       case PsyResultType.cognitive:
         return '인지 분석';
+      case PsyResultType.projective:
+        return '심리 분석';
       case PsyResultType.other:
         return '심리 분석';
     }
@@ -183,6 +223,7 @@ enum PsyResultType {
     if (upperKey.contains('ADHD') || upperKey.contains('COGNITIVE')) {
       return PsyResultType.cognitive;
     }
+    if (upperKey.contains('HTP')) return PsyResultType.projective;
 
     return PsyResultType.other;
   }

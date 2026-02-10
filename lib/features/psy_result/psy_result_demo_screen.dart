@@ -1,5 +1,5 @@
 // import 'package:flutter/material.dart';
-// import 'presentation/psy_result_screen.dart';
+// import 'presentation/psy_result_screen2.dart';
 // import 'psy_result_sample_data.dart';
 //
 // /// 심리테스트 결과 데모 화면 (카드뷰 기반 통합)

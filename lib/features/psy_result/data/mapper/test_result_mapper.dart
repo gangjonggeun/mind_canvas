@@ -34,9 +34,8 @@ class TestResultMapper {
       createdAt: DateTime.now(),
       tags: _generateTags(response.resultKey),
 
-      // 사용 안하는 필드들은 null/빈값
-      imageUrl: null,
-      dimensionScores: null,
+      imageUrl: response.imageUrl,
+      dimensionScores: response.dimensionScores,
       subjectiveAnswer: null,
       totalScore: null,
     );
