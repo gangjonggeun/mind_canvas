@@ -111,23 +111,23 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen>
         ),
 
         // ✅ [핵심] 로딩 오버레이: 전송 중일 때만 화면을 덮음
-        if (analysisState.isSubmitting)
-          Container(
-            color: Colors.black.withOpacity(0.5), // 반투명 배경
-            child: const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: Colors.white),
-                  SizedBox(height: 20),
-                  Text(
-                    "그림 데이터를 전송 중입니다...",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        // if (analysisState.isSubmitting)
+        //   Container(
+        //     color: Colors.black.withOpacity(0.5), // 반투명 배경
+        //     child: const Center(
+        //       child: Column(
+        //         mainAxisSize: MainAxisSize.min,
+        //         children: [
+        //           CircularProgressIndicator(color: Colors.white),
+        //           SizedBox(height: 20),
+        //           Text(
+        //             "그림 데이터를 전송 중입니다...",
+        //             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //   ),
       ],
     );
   }

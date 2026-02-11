@@ -45,7 +45,6 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     'assets/lottie/smartphone.json',
     'assets/lottie/globe.json',
     'assets/lottie/game.json',
-    'assets/lottie/email.json',
     'assets/lottie/search.json',
     // ... 추가 파일들
   ];
@@ -446,131 +445,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     );
   }
 
-  /// 📊 2. 차트 영역 (파이/도넛 차트)
-  Widget _buildChartSection() {
-    // 1. 데이터 가져오기 (한글 변환된 것)
-    final scores = widget.result.translatedScores;
-    final keys = scores.keys.toList();
-    final values = scores.values.map((e) => e.toDouble()).toList();
 
-    if (keys.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
-
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 타이틀
-            Row(
-              children: [
-                Icon(Icons.donut_large_rounded, color: widget.result.mainColor),
-                const SizedBox(width: 8),
-                const Text(
-                  "성향 분석",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // 🍩 차트와 범례를 가로로 배치 (Row)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 1. 왼쪽: 파이 차트
-                Expanded(
-                  flex: 5,
-                  child: SizedBox(
-                    height: 160, // 차트 크기
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 4, // 섹션 사이 간격 (이쁨 포인트 ✨)
-                        centerSpaceRadius: 30, // 도넛 구멍 크기
-                        startDegreeOffset: -90, // 12시 방향부터 시작
-                        sections: List.generate(keys.length, (index) {
-                          final isLarge = values[index] > 50; // 점수가 크면 강조
-                          final color =
-                              _chartColors[index % _chartColors.length];
-
-                          return PieChartSectionData(
-                            color: color,
-                            value: values[index],
-                            title: '${values[index].toInt()}',
-                            // 차트 안의 숫자
-                            radius: isLarge ? 55 : 45,
-                            // 점수가 높으면 튀어나오게 (Polar 효과)
-                            titleStyle: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            // 쉐도우나 테두리 추가 가능
-                            badgeWidget: _buildBadge(keys[index], color),
-                            badgePositionPercentageOffset: 1.6, // 배지 위치 (차트 밖)
-                          );
-                        }),
-                      ),
-                      swapAnimationDuration: const Duration(milliseconds: 800),
-                      swapAnimationCurve: Curves.easeOutCirc,
-                    ),
-                  ),
-                ),
-
-                // 2. 오른쪽: 범례 (Legend)
-                // 공간이 좁으면 차트 아래로 내려야 할 수도 있습니다.
-                // 여기서는 배지(badgeWidget)을 썼으므로 범례는 생략하거나 보조로 둡니다.
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 🏷️ 차트 밖으로 튀어나오는 라벨 (배지)
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.black87,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 
   /// 📝 3. 상세 리스트 (카드 형태)
   Widget _buildDetailList() {
@@ -589,14 +464,32 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     // 2. 없으면 키워드 매칭 로컬 이미지
     // 3. 그것도 없으면 텍스트만 표시
 
+
     Widget? imageWidget;
-    if (section.hasImage) {
-      imageWidget = Image.network(
-        section.imageUrl!,
-        height: 120,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+    if (section.hasImage && section.imageUrl != null) {
+      imageWidget = GestureDetector(
+        // 💡 클릭하면 크게 보기 기능 추가 가능
+        onTap: () => _showFullScreenImage(context, section.imageUrl!),
+        child: Container(
+          width: double.infinity,
+          height: 300, // 세로로 긴 그림을 위해 높이를 넉넉히 잡음
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F8FA), // 아주 연한 회색/베이지 배경
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0), // 그림 테두리에 여백을 줌
+            child: Image.network(
+              section.imageUrl!,
+              fit: BoxFit.contain, // ✅ 절대 자르지 않고 전체를 다 보여줌
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+            ),
+          ),
+        ),
       );
     } else {
       final localAsset = _getLocalAssetForTitle(section.title);
@@ -674,6 +567,24 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (context) => Scaffold(
+        backgroundColor: Colors.grey,
+        appBar: AppBar(backgroundColor: Colors.transparent, iconTheme: const IconThemeData(color: Colors.white)),
+        body: Center(
+          child: InteractiveViewer( // ✅ 줌인/줌아웃 가능
+            panEnabled: true,
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Image.network(url, fit: BoxFit.contain),
+          ),
+        ),
       ),
     );
   }
@@ -773,13 +684,12 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     if (title.contains('관계') ||
         title.contains('친구') ||
         title.contains('함께') ||
-        title.contains('건강')) {
+        title.contains('건강') ) {
       return 'assets/images/result/relationship.webp';
     }
     if (title.contains('성취') ||
         title.contains('목표') ||
-        title.contains('즐거움') ||
-        title.contains('즐거움')) {
+        title.contains('즐거움') ) {
       return 'assets/images/result/target.webp';
     }
     if (title.contains('직업') ||
@@ -803,7 +713,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
         title.contains('성장')) {
       return 'assets/images/result/delight.webp';
     }
-    if (title.contains('가족') || title.contains('모두') || title.contains('편안')) {
+    if (title.contains('가족') || title.contains('모두') || title.contains('편안')||title.contains('마무리')) {
       return 'assets/images/result/family.webp';
     }
 
