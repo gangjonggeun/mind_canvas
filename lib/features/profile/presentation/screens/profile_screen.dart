@@ -1,5 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mind_canvas/features/profile/presentation/pages/liked_posts_page.dart';
+import 'package:mind_canvas/features/profile/presentation/pages/my_activity_page.dart';
 import '../../data/models/user_profile.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/ink_balance_card.dart';
@@ -23,9 +26,9 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  // late AnimationController _animationController;
+  // late Animation<double> _fadeAnimation;
+  // late Animation<Offset> _slideAnimation;
 
   // Mock 데이터 - 실제로는 Provider/BLoC에서 가져옴
   final UserProfile _userProfile = const UserProfile(
@@ -60,33 +63,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
-    ));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-    ));
-
-    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -119,36 +100,82 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   void _onMenuTap(String menuId) {
     HapticFeedback.selectionClick();
-
     switch (menuId) {
-      case 'bookmarks':
-        Navigator.pushNamed(context, '/bookmarks');
+      case 'likes':
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MyActivityPage(initialIndex: 2)),
+        // );
         break;
       case 'my_records':
-        Navigator.pushNamed(context, '/my-records');
-        break;
-      case 'settings':
-        Navigator.pushNamed(context, '/settings');
-        break;
-      case 'theme':
-        _toggleTheme();
-        break;
-      case 'language':
-        Navigator.pushNamed(context, '/language-settings');
-        break;
-      case 'notifications':
-        Navigator.pushNamed(context, '/notification-settings');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyActivityPage()),
+        );// 내 기록 페이지로 이동
         break;
       case 'ink_history':
-        Navigator.pushNamed(context, '/ink-history');
+        Navigator.pushNamed(context, '/ink-history'); // 잉크 내역 페이지로 이동
+        break;
+      case 'language':
+        _showLanguageDialog(); // 언어 설정 다이얼로그
+        break;
+      case 'notifications':
+        _showNotificationDialog(); // 알림 설정 다이얼로그
         break;
       case 'help':
-        Navigator.pushNamed(context, '/help');
+        Navigator.pushNamed(context, '/help'); // 도움말 페이지
         break;
       case 'logout':
         _showLogoutDialog();
         break;
     }
+  }
+
+
+  // void _showLanguageDialog() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+  //     builder: (context) => SafeArea(
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           ListTile(title: const Text('한국어'), onTap: () => _changeLanguage(context, 'ko')),
+  //           ListTile(title: const Text('English'), onTap: () => _changeLanguage(context, 'en')),
+  //           ListTile(title: const Text('日本語'), onTap: () => _changeLanguage(context, 'ja')),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  void _changeLanguage(BuildContext context, String code) {
+    context.setLocale(Locale(code));
+    Navigator.pop(context);
+    // TODO: 서버에 유저 언어 설정 업데이트 API 호출
+  }
+
+  void _showNotificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('profile.menu.notifications'.tr()),
+        content: StatefulBuilder( // 다이얼로그 내에서 스위치 상태 변경을 위해 필요
+          builder: (context, setDialogState) {
+            return SwitchListTile(
+              title: const Text('푸시 알림 수신'),
+              value: true, // 실제로는 프로필의 notificationsEnabled 값 사용
+              onChanged: (val) {
+                setDialogState(() { /* 상태 업데이트 */ });
+              },
+            );
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인')),
+        ],
+      ),
+    );
   }
 
   void _toggleTheme() {
@@ -183,6 +210,43 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
+  void _showLanguageDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('한국어'),
+              onTap: () {
+                context.setLocale(const Locale('ko'));
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('English'),
+              onTap: () {
+                context.setLocale(const Locale('en'));
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('日本語'),
+              onTap: () {
+                context.setLocale(const Locale('ja'));
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -229,10 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         onRefresh: _onRefresh,
         color: colorScheme.primary,
         backgroundColor: colorScheme.surface,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
+
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -242,13 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   const SizedBox(height: 8),
 
                   // 프로필 헤더
-                  ProfileHeader(
-                    userProfile: _userProfile,
-                    onProfileImageTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.pushNamed(context, '/profile-image');
-                    },
-                  ),
+                  ProfileHeader(),
 
                   const SizedBox(height: 24),
 
@@ -260,13 +315,13 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                   const SizedBox(height: 24),
 
-                  // 통계 섹션
-                  StatsSection(
-                    userStats: _userStats,
-                    userProfile: _userProfile,
-                  ),
-
-                  const SizedBox(height: 24),
+                  // // 통계 섹션
+                  // StatsSection(
+                  //   userStats: _userStats,
+                  //   userProfile: _userProfile,
+                  // ),
+                  //
+                  // const SizedBox(height: 24),
 
                   // 메뉴 리스트
                   ProfileMenuList(
@@ -301,8 +356,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
             ),
-          ),
-        ),
+
+
       ),
     );
   }

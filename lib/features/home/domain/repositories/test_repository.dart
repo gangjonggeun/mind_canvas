@@ -17,7 +17,7 @@ abstract class TestRepository {
       SubjectiveTestSubmitRequest request,
       );
 
-  Future<Result<TestResultResponse>> getTestResultDetail(String resultId);
+  Future<Result<TestResultResponse>> getTestResultDetail(int resultId);
 
   /// 🎯 심리 테스트 제출
   ///

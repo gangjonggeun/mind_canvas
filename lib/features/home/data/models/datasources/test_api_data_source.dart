@@ -24,7 +24,7 @@ abstract class TestApiDataSource {
   factory TestApiDataSource(Dio dio, {String baseUrl}) = _TestApiDataSource;
   @GET('/tests/results/{resultId}')
   Future<ApiResponse<TestResultResponse>> getTestResult(
-      @Path('resultId') String resultId,
+      @Path('resultId') int resultId,
       @Header('Authorization') String token,
       );
 

@@ -11,6 +11,9 @@ import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.da
 import '../../core/theme/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/info/info_screen.dart';
+import '../profile/presentation/pages/my_activity_page.dart';
+import '../profile/presentation/providers/recent_test_results_provider.dart';
+import '../profile/presentation/widgets/test_result_item.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
 
 import '../recommendation/presentation/widgets/personalized_content_section.dart'
@@ -1058,7 +1061,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // 🎯 내 모든 기록을 볼 수 있는 통합 페이지로 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MyActivityPage()),
+                    );
+                  },
                   child: const Text(
                     '전체보기',
                     style: TextStyle(
@@ -1072,30 +1081,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        _buildRecentTestItem(
-          '🏠 HTP 심리검사',
-          '2024.07.03',
-          '분석 완료',
-          AppColors.primaryBlue,
-        ),
-        const SizedBox(height: 12),
-        _buildRecentTestItem(
-          '🎨 자유화 검사',
-          '2024.07.01',
-          '분석 중',
-          AppColors.secondaryTeal,
-        ),
-        const SizedBox(height: 12),
-        _buildRecentTestItem(
-          '👥 성격 유형 검사',
-          '2024.06.28',
-          '분석 완료',
-          AppColors.secondaryPurple,
-        ),
+        _buildRecentTestsSection(ref)
       ],
     );
   }
 
+  Widget _buildRecentTestsSection(WidgetRef ref) {
+    final recentAsync = ref.watch(recentTestResultsProvider);
+
+    return recentAsync.when(
+      data: (results) {
+        // 1. 데이터가 아예 없는 경우: 섹션 자체를 숨기거나 "첫 테스트 시작하기" 안내
+        if (results.isEmpty) {
+          return _buildEmptyTestCard();
+        }
+
+        // 2. 데이터가 있는 경우: 리스트 렌더링
+        return Column(
+          children: [
+            const SizedBox(height: 16),
+            ...results.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TestResultItem(result: item), // 👈 아까 만든 공용 위젯 재사용!
+            )).toList(),
+          ],
+        );
+      },
+      // 로딩 중 (스켈레톤 UI 등을 넣으면 좋음)
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      // 에러 발생 시
+      error: (err, stack) => const SizedBox.shrink(), // 홈에서는 에러 시 섹션을 숨기는 게 깔끔함
+    );
+  }
+
+  // 데이터가 없을 때 보여줄 예쁜 안내 카드 (선택사항)
+  Widget _buildEmptyTestCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.psychology_outlined, size: 40, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          const Text('아직 분석 결과가 없어요.', style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => {/* 테스트 탭으로 이동 */},
+            child: const Text('첫 심리테스트 시작하기'),
+          ),
+        ],
+      ),
+    );
+  }
   /// 화면 크기에 따른 반응형 랭킹 카드
   Widget _buildRankingCard({
     required int rank,

@@ -41,7 +41,7 @@ class NotificationHandler {
   }
 
   // ✅ 상세 조회 및 이동 로직 (서버 type 기준 분기)
-  static void _handleNavigation(BuildContext context, WidgetRef ref, String resultId, String type) async {
+  static void _handleNavigation(BuildContext context, WidgetRef ref, int resultId, String type) async {
     print("🚀 알림 클릭 이동 시작 - Type: $type, ID: $resultId");
 
     if (type == 'TAROT_RESULT') {
@@ -65,7 +65,7 @@ class NotificationHandler {
   }
 
   // ✅ 다이얼로그 표시 (type에 따라 제목 자동 결정)
-  static void _showResultDialog(BuildContext context, WidgetRef ref, String resultId, String type) {
+  static void _showResultDialog(BuildContext context, WidgetRef ref, int resultId, String type) {
     // type에 따른 UI 텍스트 결정
     final String title = type == 'TAROT_RESULT' ? "타로 상담" : "심리 테스트";
 

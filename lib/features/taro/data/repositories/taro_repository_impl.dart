@@ -43,7 +43,7 @@ class TaroRepositoryImpl implements TaroRepository {
        _tokenManager = tokenManager;
 
   @override
-  Future<Result<TaroResultEntity>> getTarotResultDetail(String resultId) async {
+  Future<Result<TaroResultEntity>> getTarotResultDetail(int resultId) async {
     try {
       final token = await _tokenManager.getValidAccessToken();
       if (token == null) return Result.failure('인증 필요', 'AUTH_REQUIRED');

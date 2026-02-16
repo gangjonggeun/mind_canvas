@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,7 +16,6 @@ class ProfileMenuList extends StatelessWidget {
     super.key,
     required this.onMenuTap,
   });
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -24,113 +24,88 @@ class ProfileMenuList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 주요 기능 섹션
-        Text(
-          '내 활동',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        // --- 내 활동 섹션 ---
+        _buildSectionTitle(context, 'profile.menu.section_activity'),
         const SizedBox(height: 12),
         _buildMenuSection([
-          _MenuItem(
-            id: 'bookmarks',
-            icon: Icons.bookmark_rounded,
-            title: '북마크',
-            subtitle: '저장한 콘텐츠 보기',
-            color: colorScheme.primary,
-          ),
+          // _MenuItem(
+          //   id: 'likes',
+          //   icon: Icons.favorite_rounded,
+          //   title: 'profile.menu.likes'.tr(),
+          //   subtitle: 'profile.menu.likes_sub'.tr(),
+          //   color: Colors.pinkAccent,
+          // ),
           _MenuItem(
             id: 'my_records',
             icon: Icons.history_edu_rounded,
-            title: '내 기록',
-            subtitle: '작성한 글과 댓글',
+            title: 'profile.menu.my_records'.tr(),
+            subtitle: 'profile.menu.my_records_sub'.tr(),
             color: colorScheme.secondary,
           ),
           _MenuItem(
             id: 'ink_history',
             icon: Icons.receipt_long_rounded,
-            title: '잉크 사용 내역',
-            subtitle: '충전 및 사용 기록',
+            title: 'profile.menu.ink_history'.tr(),
+            subtitle: 'profile.menu.ink_history_sub'.tr(),
             color: colorScheme.tertiary,
           ),
         ], theme, colorScheme),
 
         const SizedBox(height: 24),
 
-        // 설정 섹션
-        Text(
-          '설정',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        // --- 설정 섹션 ---
+        _buildSectionTitle(context, 'profile.menu.section_settings'),
         const SizedBox(height: 12),
         _buildMenuSection([
-          _MenuItem(
-            id: 'theme',
-            icon: Icons.palette_rounded,
-            title: '테마 설정',
-            subtitle: '다크/라이트 모드',
-            color: Colors.indigo,
-            trailing: Switch(
-              value: Theme.of(context).brightness == Brightness.dark,
-              onChanged: (value) => onMenuTap('theme'),
-            ),
-          ),
+          // 테마 설정은 일단 숨김 처리 (기획 반영)
           _MenuItem(
             id: 'language',
             icon: Icons.language_rounded,
-            title: '언어 설정',
-            subtitle: '한국어, English',
+            title: 'profile.menu.language'.tr(),
+            subtitle: 'profile.menu.language_sub'.tr(),
             color: Colors.green,
           ),
           _MenuItem(
             id: 'notifications',
             icon: Icons.notifications_rounded,
-            title: '알림 설정',
-            subtitle: '푸시 알림 관리',
+            title: 'profile.menu.notifications'.tr(),
+            subtitle: 'profile.menu.notifications_sub'.tr(),
             color: Colors.orange,
           ),
         ], theme, colorScheme),
 
         const SizedBox(height: 24),
 
-        // 기타 섹션
-        Text(
-          '기타',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        // --- 기타 섹션 ---
+        _buildSectionTitle(context, 'profile.menu.section_etc'),
         const SizedBox(height: 12),
         _buildMenuSection([
           _MenuItem(
             id: 'help',
             icon: Icons.help_outline_rounded,
-            title: '도움말',
-            subtitle: '사용법 및 FAQ',
+            title: 'profile.menu.help'.tr(),
+            subtitle: 'profile.menu.help_sub'.tr(),
             color: Colors.blue,
-          ),
-          _MenuItem(
-            id: 'settings',
-            icon: Icons.settings_rounded,
-            title: '고급 설정',
-            subtitle: '계정 및 개인정보',
-            color: Colors.grey,
           ),
         ], theme, colorScheme),
 
         const SizedBox(height: 24),
 
-        // 로그아웃
-        _buildLogoutButton(theme, colorScheme),
+        // 로그아웃 버튼 (다국어 처리)
+        _buildLogoutButton(context, theme, colorScheme),
       ],
     );
   }
+
+  Widget _buildSectionTitle(BuildContext context, String key) {
+    return Text(
+      key.tr(),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
 
   Widget _buildMenuSection(
     List<_MenuItem> items,
@@ -225,51 +200,30 @@ class ProfileMenuList extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton(ThemeData theme, ColorScheme colorScheme) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.error.withOpacity(0.2),
-          width: 1,
+  Widget _buildLogoutButton(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+    return InkWell(
+      onTap: () => onMenuTap('logout'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.error.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colorScheme.error.withOpacity(0.1)),
         ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 4,
+        child: Row(
+          children: [
+            Icon(Icons.logout_rounded, color: colorScheme.error),
+            const SizedBox(width: 12),
+            Text(
+              'profile.menu.logout'.tr(),
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: colorScheme.error.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.logout_rounded,
-            color: colorScheme.error,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          '로그아웃',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: colorScheme.error,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          '계정에서 로그아웃',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: colorScheme.error.withOpacity(0.7),
-          ),
-        ),
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onMenuTap('logout');
-        },
       ),
     );
   }

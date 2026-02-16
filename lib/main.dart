@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CoverImageHelper.init();
   await Firebase.initializeApp(); // 파이어베이스 초기화
-
+  await EasyLocalization.ensureInitialized(); // 추가
 
 
   // 🔔 권한 요청 (iOS/Android 13+)
@@ -52,7 +53,14 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const ProviderScope(child: MindCanvasApp()));
+  runApp(
+      EasyLocalization(
+        supportedLocales: [Locale('ko'), Locale('en'), Locale('ja')],
+        path: 'assets/translations', // 경로 확인
+        fallbackLocale: Locale('ko'),
+        child:  ProviderScope(child: MindCanvasApp())),
+  );
+
 
   // runApp(const ProviderScope(child: TestMindCanvasApp()));
 
@@ -75,6 +83,10 @@ class MindCanvasApp extends ConsumerWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+
           // ✅ 변경: MaterialApp → MaterialApp.router
           title: '마음색 캔버스',
           debugShowCheckedModeBanner: false,

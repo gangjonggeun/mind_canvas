@@ -34,7 +34,7 @@ class TestResultMapper {
       createdAt: DateTime.now(),
       tags: _generateTags(response.resultKey),
 
-      imageUrl: response.imageUrl,
+      imageUrl: null,
       dimensionScores: response.dimensionScores,
       subjectiveAnswer: null,
       totalScore: null,

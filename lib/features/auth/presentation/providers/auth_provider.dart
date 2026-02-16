@@ -116,7 +116,7 @@ class AuthNotifier extends _$AuthNotifier {
       final profileUseCase = ref.read(profileUseCaseProvider);
       final setupResult = await profileUseCase.setupProfile(
         nickname: nickname,
-        profileImageUrl: profileImageUrl,
+        imageFile: null,
       );
 
       return setupResult.fold(

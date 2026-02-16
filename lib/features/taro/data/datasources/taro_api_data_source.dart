@@ -34,7 +34,7 @@ abstract class TaroApiDataSource {
 
   @GET('/taro/results/{resultId}')
   Future<ApiResponse<TaroResultResponse>> getTarotResult(
-      @Path('resultId') String resultId,
+      @Path('resultId') int resultId,
       @Header('Authorization') String token,
       );
   /// 🔮 타로 상담 요청 (AI 분석)

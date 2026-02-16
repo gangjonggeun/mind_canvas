@@ -300,7 +300,7 @@ class TestRepositoryImpl implements TestRepository {
   }
 
   @override
-  Future<Result<TestResultResponse>> getTestResultDetail(String resultId) async {
+  Future<Result<TestResultResponse>> getTestResultDetail(int resultId) async {
     try {
       final validToken = await _tokenManager.getValidAccessToken();
       if (validToken == null) return Result.failure('인증이 필요합니다', 'AUTH_REQUIRED');
