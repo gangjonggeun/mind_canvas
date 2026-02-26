@@ -199,16 +199,18 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
     return AppBar(
       title: Row(
         children: [
-          Text(
-            widget.testName,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: isDarkMode ? Colors.white : const Color(0xFF2D3748),
+          Expanded(
+            child: Text(
+              widget.testName,
+              overflow: TextOverflow.ellipsis, // 길어지면 ...
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDarkMode ? Colors.white : const Color(0xFF2D3748),
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
           Text(
             '${_currentPage + 1} / $_totalPages',
             style: TextStyle(
@@ -251,10 +253,22 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
   Widget _buildBody(bool isDarkMode, TestContentState contentState) {
     return SafeArea(
       child: Column(
-        children: [
-          _buildProgressIndicator(isDarkMode),
-          Expanded(child: _buildQuestionContent(isDarkMode)),
-          _buildNavigationButtons(isDarkMode, contentState), // ✅ 전달
+        children:[
+          // 🚀 1. Expanded 안에 스크롤 뷰를 넣고, 그 안에 인디케이터와 콘텐츠를 함께 배치!
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children:[
+                  _buildProgressIndicator(isDarkMode), // 스크롤 시 위로 같이 올라감
+                  _buildQuestionContent(isDarkMode),   // 질문 영역 (Expanded 빼야 함)
+                ],
+              ),
+            ),
+          ),
+
+          // 하단 고정 버튼 영역
+          _buildNavigationButtons(isDarkMode, contentState),
         ],
       ),
     );
@@ -759,6 +773,7 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
       ref
           .read(testContentNotifierProvider.notifier)
           .submitSubjectiveTest(
+            testId: widget.testId,
             testTag: widget.testTag!, // "AI_BIG5"
             userAnswers: _answers,
           );

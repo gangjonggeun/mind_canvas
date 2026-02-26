@@ -6,6 +6,7 @@ part 'subjective_test_submit_request.g.dart';
 @freezed
 class SubjectiveTestSubmitRequest with _$SubjectiveTestSubmitRequest {
   factory SubjectiveTestSubmitRequest({
+    required int testId,
     /// 테스트 식별 태그 (예: AI_BIG5)
     required String testTag,
 

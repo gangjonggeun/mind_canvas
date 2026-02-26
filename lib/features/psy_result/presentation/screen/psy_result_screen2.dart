@@ -713,11 +713,35 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
         title.contains('성장')) {
       return 'assets/images/result/delight.webp';
     }
-    if (title.contains('가족') || title.contains('모두') || title.contains('편안')||title.contains('마무리')) {
+    if (title.contains('가족') || title.contains('모두') || title.contains('편안')||title.contains('마무리')|| title.contains('마음') || title.contains('처방')) {
       return 'assets/images/result/family.webp';
     }
+    if (title.contains('주관') || title.contains('객관') || title.contains('만의')||title.contains('길')||  title.contains('관점')) {
+      return 'assets/images/result/objectivity.webp';
+    }
+    if (title.contains('수립') || title.contains('통계') || title.contains('계획')) {
+      return 'assets/images/result/reflection.webp';
+    }
 
-    //사고, 생각 <- 생각하는 모습 추가
+    if (title.contains('무대') || title.contains('연극') || title.contains('연기') || title.contains('예술')) {
+      return 'assets/images/result/stage.webp';
+    }
+    if (title.contains('생각') || title.contains('사고') || title.contains('명상')) {
+      return 'assets/images/result/think.webp';
+    }
+    if (title.contains('세계') || title.contains('세상')) {
+      return 'assets/images/result/world.webp';
+    }
+
+    if (title.contains('나') || title.contains('자신')|| title.contains('내')|| title.contains('하나')) {
+      return 'assets/images/result/self.webp';
+    }
+
+    if (title.contains('취미') || title.contains('문화')|| title.contains('하고')||  title.contains('해야')) {
+      return 'assets/images/result/habit.webp';
+    }
+
+
 
     // 매칭되는 게 없으면 null (이미지 영역 숨김)
     return null;

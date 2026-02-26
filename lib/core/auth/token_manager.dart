@@ -12,6 +12,13 @@ class TokenManager {
   DateTime? _tokenIssuedAt;  // 토큰 발급 시간 기록
 
   bool _isRefreshing = false;
+
+
+  Future<bool> Function()? onTokenRefresh;
+
+  // 🚀 [추가] 여러 API가 동시에 갱신을 요청할 때 한 번만 갱신하기 위한 대기열 캐시
+  Future<bool>? _refreshTask;
+
   // =============================================================
   // 🏗️ 초기화 및 복원
   // =============================================================
@@ -160,35 +167,54 @@ class TokenManager {
   // 🔄 토큰 갱신 로직
   // =============================================================
 
-  /// 🔄 토큰 갱신 시도 (멍청한 버전)
+  /// 🔄 토큰 갱신 시도
   Future<bool> _attemptTokenRefresh() async {
-    // 중복 갱신 방지
-    if (_isRefreshing) {
-      print('⚠️ 이미 토큰 갱신 중...');
-      return false;
+    // 1. 이미 누군가 토큰 갱신을 요청해서 기다리고 있다면?
+    // 새로 API를 쏘지 않고, 진행 중인 갱신 작업이 끝날 때까지 같이 기다립니다. (안전성 100배 향상)
+    if (_refreshTask != null) {
+      print('⚠️ 이미 토큰 갱신 진행 중... 결과를 기다립니다.');
+      return await _refreshTask!;
     }
 
-    try {
-      _isRefreshing = true;
+    // 2. 갱신 작업 큐에 등록 후 실행
+    _refreshTask = _doRefresh();
+    final result = await _refreshTask!;
 
+    // 3. 작업이 끝나면 큐를 비워줍니다.
+    _refreshTask = null;
+    return result;
+  }
+
+  /// 실제 갱신 처리 내부 함수
+  Future<bool> _doRefresh() async {
+    try {
       if (_currentAuth == null || isRefreshTokenExpired) {
-        print('❌ 갱신할 토큰이 없거나 리프레시 토큰이 만료됨');
+        print('❌ 갱신할 토큰이 없거나 리프레시 토큰이 완전히 만료됨');
         return false;
       }
 
-      print('🔄 토큰 갱신 시도...');
+      if (onTokenRefresh == null) {
+        print('🚨 TokenManager에 onTokenRefresh 콜백이 연결되지 않았습니다!');
+        return false;
+      }
 
-      // TODO: 실제 토큰 갱신 API 호출 구현 예정
-      // 지금은 임시로 실패 반환
-      print('⚠️ 토큰 갱신 로직 미구현 - AuthRepository 연동 필요');
-      return false;
+      print('🔄 서버에 토큰 갱신 API를 요청합니다...');
 
+      // 🚀 주입받은 AuthRepository의 refreshTokens()가 여기서 실행됩니다.
+      final isSuccess = await onTokenRefresh!();
+
+      if (isSuccess) {
+        print('✅ 토큰 자동 갱신 성공!');
+        return true;
+      } else {
+        print('❌ 서버에서 토큰 갱신 거절됨');
+        await _handleTokenError();
+        return false;
+      }
     } catch (e) {
-      print('❌ 토큰 갱신 중 오류: $e');
+      print('❌ 토큰 갱신 중 치명적 오류: $e');
       await _handleTokenError();
       return false;
-    } finally {
-      _isRefreshing = false;
     }
   }
 

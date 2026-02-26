@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/providers/app_language_provider.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
 
@@ -83,6 +84,7 @@ class ProfileNotifier extends _$ProfileNotifier {
 
     result.fold(
       onSuccess: (_) {
+        ref.read(appLanguageProvider.notifier).setLanguage(languageCode);
         // 언어가 바뀌었으니 프로필 정보(혹은 다국어 데이터)를 갱신
         loadProfileSummary();
       },

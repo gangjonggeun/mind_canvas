@@ -85,17 +85,30 @@ class _PersonalizedContentSectionState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '당신을 위한 AI 추천', // 기존 텍스트 유지
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+                    Row(
+                      children:[
+                        Text(
+                          '당신을 위한 AI 추천',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // 💡 새로 추가된 물음표 아이콘
+                        GestureDetector(
+                          onTap: () => _showRecommendationInfoDialog(),
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 16,
+                            color: subTextColor,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      // 🏷️ Extension 사용 (.label)
                       '${_selectedCategory.label} 큐레이션',
                       style: TextStyle(fontSize: 14, color: subTextColor),
                       overflow: TextOverflow.ellipsis,
@@ -144,6 +157,50 @@ class _PersonalizedContentSectionState
           _buildBody(recState, isDark),
         ],
       ),
+    );
+  }
+
+  void _showRecommendationInfoDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF2D3748) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children:[
+              const Icon(Icons.leaderboard_sharp, color: Color(0xFF6B73FF)),
+              const SizedBox(width: 8),
+              Text(
+                '테스트 추천 방식',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+                '18인지, Big5, 9가지 성격, 가치관, 직업흥미 등 \n다양한 성격 테스트를 통한 컨텐츠를 추천해드립니다.\n\n'
+                '테스트를 많이 진행할수록 더욱 정교하고\n'
+                '내 취향에 딱 맞는 컨텐츠가 추천됩니다!',
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: isDark ? Colors.grey[300] : Colors.black87,
+            ),
+          ),
+          actions:[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인', style: TextStyle(color: Color(0xFF6B73FF))),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -249,8 +306,9 @@ class _PersonalizedContentSectionState
   /// 🔘 추천 요청 버튼 위젯
   Widget _buildRequestButtonState(bool isDark) {
     return Container(
-      height: 180,
+      // height: 180,
       width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
         color: isDark ? Colors.black12 : Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
@@ -261,7 +319,7 @@ class _PersonalizedContentSectionState
         children: [
           Icon(
             Icons.auto_awesome,
-            size: 40,
+            size: 36,
             color: _selectedCategory.themeColor,
           ),
           const SizedBox(height: 12),
@@ -286,7 +344,7 @@ class _PersonalizedContentSectionState
             style: ElevatedButton.styleFrom(
               backgroundColor: _selectedCategory.themeColor,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),

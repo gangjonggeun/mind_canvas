@@ -31,30 +31,30 @@ class _ProfileScreenState extends State<ProfileScreen>
   // late Animation<Offset> _slideAnimation;
 
   // Mock 데이터 - 실제로는 Provider/BLoC에서 가져옴
-  final UserProfile _userProfile = const UserProfile(
-    id: 'user_001',
-    nickname: '창의적인 몽상가',
-    prefix: '자신감있는',
-    profileImageUrl: null,
-    inkBalance: 1250,
-    level: 7,
-    totalPosts: 42,
-    totalComments: 156,
-    bookmarksCount: 23,
-    isDarkMode: false,
-    language: 'ko',
-    notificationsEnabled: true,
-    lastLoginAt: null,      // ✅ 추가
-    createdAt: null,        // ✅ 추가
-  );
-
-  final UserStats _userStats = const UserStats(
-    postsThisMonth: 12,
-    commentsThisMonth: 48,
-    inkEarnedThisMonth: 350,
-    streakDays: 7,
-    totalActiveDays: 89,
-  );
+  // final UserProfile _userProfile = const UserProfile(
+  //   id: 'user_001',
+  //   nickname: '창의적인 몽상가',
+  //   prefix: '자신감있는',
+  //   profileImageUrl: null,
+  //   inkBalance: 1250,
+  //   level: 7,
+  //   totalPosts: 42,
+  //   totalComments: 156,
+  //   bookmarksCount: 23,
+  //   isDarkMode: false,
+  //   language: 'ko',
+  //   notificationsEnabled: true,
+  //   lastLoginAt: null,      // ✅ 추가
+  //   createdAt: null,        // ✅ 추가
+  // );
+  //
+  // final UserStats _userStats = const UserStats(
+  //   postsThisMonth: 12,
+  //   commentsThisMonth: 48,
+  //   inkEarnedThisMonth: 350,
+  //   streakDays: 7,
+  //   totalActiveDays: 89,
+  // );
 
   @override
   void initState() {
@@ -309,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                   // 잉크 잔액 카드
                   InkBalanceCard(
-                    inkBalance: _userProfile.inkBalance,
+                    inkBalance: 30,
                     onRecharge: _onInkRecharge,
                   ),
 
@@ -335,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Column(
                       children: [
                         Text(
-                          'Mind Canvas',
+                          'Mind-Color Canvas',
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,

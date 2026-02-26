@@ -54,7 +54,7 @@ class ConsultingScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     // 최근 활동 섹션
-                    _buildRecentActivity(isDark),
+                    // _buildRecentActivity(isDark),
                     const SizedBox(height: 40), // 하단 여백
                   ],
                 ),
@@ -173,41 +173,41 @@ class ConsultingScreen extends StatelessWidget {
           badgeColor: const Color(0xFFFF5F6D),
         ),
         const SizedBox(height: 16),
-
-        // 마음챙김 사운드 카드
-        _buildConsultingCard(
-          context: context,
-          isDark: isDark,
-          icon: Icons.spa_outlined,
-          iconColor: const Color(0xFF38A169),
-          title: '🧘 마음챙김 사운드',
-          subtitle: '명상과 힐링 사운드로\n마음의 평온을 찾아보세요',
-          gradientColors: [
-            const Color(0xFF38A169).withOpacity(isDark ? 0.2 : 0.1),
-            const Color(0xFF2F855A).withOpacity(isDark ? 0.2 : 0.1),
-          ],
-          onTap: () => _navigateToMindfulnessSound(context),
-          badge: '신규',
-          badgeColor: const Color(0xFF38A169),
-        ),
-        const SizedBox(height: 16),
-
-        // 마음 우체통 카드
-        _buildConsultingCard(
-          context: context,
-          isDark: isDark,
-          icon: Icons.mail_outline,
-          iconColor: const Color(0xFFD69E2E),
-          title: '💌 마음 우체통',
-          subtitle: '소중한 사람에게 마음을 담은\n편지를 보내보세요',
-          gradientColors: [
-            const Color(0xFFD69E2E).withOpacity(isDark ? 0.2 : 0.1),
-            const Color(0xFFB7791F).withOpacity(isDark ? 0.2 : 0.1),
-          ],
-          onTap: () => _navigateToHeartMailbox(context),
-          badge: '신규',
-          badgeColor: const Color(0xFFD69E2E),
-        ),
+        //
+        // // 마음챙김 사운드 카드
+        // _buildConsultingCard(
+        //   context: context,
+        //   isDark: isDark,
+        //   icon: Icons.spa_outlined,
+        //   iconColor: const Color(0xFF38A169),
+        //   title: '🧘 마음챙김 사운드',
+        //   subtitle: '명상과 힐링 사운드로\n마음의 평온을 찾아보세요',
+        //   gradientColors: [
+        //     const Color(0xFF38A169).withOpacity(isDark ? 0.2 : 0.1),
+        //     const Color(0xFF2F855A).withOpacity(isDark ? 0.2 : 0.1),
+        //   ],
+        //   onTap: () => _navigateToMindfulnessSound(context),
+        //   badge: '신규',
+        //   badgeColor: const Color(0xFF38A169),
+        // ),
+        // const SizedBox(height: 16),
+        //
+        // // 마음 우체통 카드
+        // _buildConsultingCard(
+        //   context: context,
+        //   isDark: isDark,
+        //   icon: Icons.mail_outline,
+        //   iconColor: const Color(0xFFD69E2E),
+        //   title: '💌 마음 우체통',
+        //   subtitle: '소중한 사람에게 마음을 담은\n편지를 보내보세요',
+        //   gradientColors: [
+        //     const Color(0xFFD69E2E).withOpacity(isDark ? 0.2 : 0.1),
+        //     const Color(0xFFB7791F).withOpacity(isDark ? 0.2 : 0.1),
+        //   ],
+        //   onTap: () => _navigateToHeartMailbox(context),
+        //   badge: '신규',
+        //   badgeColor: const Color(0xFFD69E2E),
+        // ),
       ],
     );
   }

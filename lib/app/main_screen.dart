@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/app/widgets/coin_badge.dart';
@@ -46,12 +47,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 1. 인기 테스트 로드 (기존)
-      // ref.read(testListNotifierProvider.notifier).loadPopularTests(); // HomeScreen에서 하고 있다면 제거 가능
 
+      NotificationHandler.initialize(context, ref);
       // 2. 💰 내 정보(코인) 최신화 (이게 없어서 0이었음!)
       ref.read(userNotifierProvider.notifier).refreshProfile();
     });
+
+
   }
 
   /// 분석 화면으로 이동하는 메서드 (홈 화면에서 호출용)

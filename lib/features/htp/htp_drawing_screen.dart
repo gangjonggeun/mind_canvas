@@ -17,7 +17,6 @@ import '../home/domain/entities/recommended_content_entity.dart';
 import 'data/model/dto/htp_data_collector.dart';
 import 'domain/entities/htp_session_entity.dart';
 import 'htp_dashboard_screen.dart';
-import 'htp_dashboard_screen.dart';
 
 /// HTP 검사 그림 그리기 화면
 class HtpDrawingScreen extends StatefulWidget {

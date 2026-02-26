@@ -20,5 +20,13 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
   final tokenManager = ref.watch(tokenManagerProvider);
 
   // 의존성을 주입하여 Repository 구현체 생성
-  return AuthRepositoryImpl(dataSource, tokenManager);
+  final repository = AuthRepositoryImpl(dataSource, tokenManager);
+
+  // 🚀 [핵심 연결고리] TokenManager가 갱신이 필요할 때 Repository의 함수를 쓰도록 권한 위임
+  tokenManager.onTokenRefresh = () async {
+    final result = await repository.refreshTokens();
+    return result.isSuccess; // 성공하면 true 반환, 실패하면 false 반환
+  };
+
+  return repository;
 }

@@ -80,6 +80,7 @@ class TestContentNotifier extends _$TestContentNotifier {
   }
   /// 🧠 주관식(AI) 테스트 제출 ✅ 추가
   Future<void> submitSubjectiveTest({
+    required int testId,
     required String testTag,
     required Map<String, dynamic> userAnswers,
     // int cost = 15, // AI 테스트는 보통 비용이 더 높음
@@ -108,6 +109,7 @@ class TestContentNotifier extends _$TestContentNotifier {
       // 3. UseCase 호출
       final testContentUseCase = ref.read(testContentUseCaseProvider);
       final result = await testContentUseCase.submitSubjectiveTest(
+        testId,
         testTag,
         orderedAnswers,
       );

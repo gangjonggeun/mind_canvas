@@ -2,6 +2,7 @@ import 'package:dio/dio.dart' hide Headers;
 import 'package:retrofit/retrofit.dart';
 
 import '../../../../../core/network/api_response_dto.dart';
+import '../dto/comprehensive_analysis_response.dart';
 import '../dto/psychological_profile_response.dart';
 
 part 'user_analysis_data_source.g.dart';
@@ -13,6 +14,12 @@ part 'user_analysis_data_source.g.dart';
 @RestApi()
 abstract class UserAnalysisDataSource {
   factory UserAnalysisDataSource(Dio dio, {String baseUrl}) = _UserAnalysisDataSource;
+
+
+  @GET('/analysis/comprehensive')
+  Future<ApiResponse<ComprehensiveAnalysisResponse>> getComprehensiveAnalysis(
+      @Header('Authorization') String authorization,
+      );
 
   /// 🎯 내 심리 분석 통계 조회
   ///

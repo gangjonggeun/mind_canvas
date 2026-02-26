@@ -31,6 +31,7 @@ class TestContentUseCase {
   /// @param orderedAnswers 질문 순서대로 정렬된 답변 리스트
   /// @return AI 분석 결과
   Future<Result<TestResultResponse>> submitSubjectiveTest(
+      int testId,
       String testTag,
       List<String> orderedAnswers,
       ) async {
@@ -54,6 +55,7 @@ class TestContentUseCase {
 
       // 2. Request 생성 (서버 DTO와 매핑)
       final request = SubjectiveTestSubmitRequest(
+        testId: testId,
         testTag: testTag,
         answers: orderedAnswers,
       );

@@ -29,7 +29,7 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
     return GestureDetector(
       onTap: () async {
         // 1. 로딩 표시 (선택사항이지만 UX상 권장)
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('결과를 분석 중입니다...')));
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('결과를 분석 중입니다...')));
 
         // 2. 기존에 사용하던 레포지토리 메서드 호출
         final detailResult = await ref.read(testRepositoryProvider).getTestResultDetail(result.id);

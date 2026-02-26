@@ -3,14 +3,17 @@ import 'package:json_annotation/json_annotation.dart';
 part 'psychological_profile_response.g.dart';
 
 /// 📊 [메인 응답] 통합 심리 프로필
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class PsychologicalProfileResponse {
   final MbtiStats? mbti;
 
   // final CognitiveStats? cognitiveFunctions; // 🆕 새로 추가된 필드 (8기능 분리)
   final Big5Stats? big5;
   final EnneagramStats? enneagram;
-  final ValueStats? values; // 🆕 추가 (8기능 대체)
+  @JsonKey(name: 'values')
+  final ValueStats? values;
+  // 🆕 추가 (8기능 대체)
+  final HollandStats? holland;
 
   final String? lastUpdatedAt;
 
@@ -20,6 +23,7 @@ class PsychologicalProfileResponse {
     this.big5,
     this.enneagram,
     this.values,
+    this.holland, // 추가
     this.lastUpdatedAt,
   });
 
@@ -60,15 +64,20 @@ class MbtiStats {
 /// 🎨 [Holland] (신규)
 @JsonSerializable()
 class HollandStats {
-  final String? resultType; // "RIA"
+  // ✅ [수정] 서버 DTO 변수명: hollandCode
+  // 서버 로그: "hollandCode": "RIA"
+  @JsonKey(name: 'hollandCode')
+  final String? resultType;
+
   final String? testedAt;
 
-  final int realistic;
-  final int investigative;
-  final int artistic;
-  final int social;
-  final int enterprising;
-  final int conventional;
+  // 점수 필드명: realisticScore, investigativeScore ... (서버 로그 기준)
+  @JsonKey(name: 'realisticScore') final int realistic;
+  @JsonKey(name: 'investigativeScore') final int investigative;
+  @JsonKey(name: 'artisticScore') final int artistic;
+  @JsonKey(name: 'socialScore') final int social;
+  @JsonKey(name: 'enterprisingScore') final int enterprising;
+  @JsonKey(name: 'conventionalScore') final int conventional;
 
   HollandStats({
     this.resultType,
@@ -249,7 +258,7 @@ extension ProfileValidation on PsychologicalProfileResponse {
   bool get hasEnneagram => enneagram != null && enneagram!.mainType > 0;
 
   /// 홀랜드 데이터 유효성 (신규)
-  // bool get hasHolland => holland != null && holland!.resultType != null;
+  bool get hasHolland => holland != null && holland!.resultType != null;
 
   /// 가치관 데이터 유효성 (신규)
   bool get hasValues => values != null && values!.dominantValue != null;

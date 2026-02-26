@@ -26,28 +26,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   /// 🚀 앱 초기화 및 자동로그인 처리 (에러 처리 강화)
   Future<void> _initializeApp() async {
     try {
-      // 1. 최소 스플래시 시간 보장 (UX)
-      final splashFuture = Future.delayed(const Duration(milliseconds: 1500));
+      // 1. 가장 먼저 로컬 스토리지의 토큰 유무부터 확인합니다.
+      final tokenManager = ref.read(tokenManagerProvider);
+      await tokenManager.initFromStorage();
 
-      // 2. 토큰 복원 및 검증
+      // 🚀 2. [UX 개선] 저장된 토큰이 아예 없다면? (첫 설치 or 로그아웃 상태)
+      // 무의미한 1.5초 대기를 스킵하고 즉시 로그인 화면으로 보냅니다.
+      if (tokenManager.currentAuth == null ||
+          tokenManager.isRefreshTokenExpired) {
+        print('⚡ 토큰 없음/리프레시 만료 -> 스플래시 스킵 후 바로 로그인으로 이동');
+        if (mounted) await _navigateToNextScreen(false);
+        return;
+      }
+
+      // 3. 유효한(혹은 갱신 가능한) 토큰이 있는 경우에만 로고를 보여주며 자동 로그인 시도
+      final splashFuture = Future.delayed(
+          const Duration(milliseconds: 1000)); // 1500 -> 1000으로 약간 단축
       final authFuture = _performAutoLogin();
 
-      // 3. 병렬 처리로 성능 최적화
+      // 4. 병렬 처리로 성능 최적화
       final results = await Future.wait([splashFuture, authFuture]);
       final isLoggedIn = results[1] as bool;
 
-      // 4. 안전한 라우팅 (mounted 체크 + 에러 처리)
+      // 5. 안전한 라우팅
       if (mounted) {
         await _navigateToNextScreen(isLoggedIn);
       }
     } catch (e) {
       print('❌ 앱 초기화 실패: $e');
-      // 5. 안전한 fallback 처리
       if (mounted) {
         await _navigateToNextScreen(false); // 로그인 화면으로 이동
       }
     }
   }
+
   Future<bool> _performAutoLogin() async {
     // 🚨 기존: repository를 직접 읽음 (노티파이어가 안 깨어남)
     // final authRepository = ref.read(authRepositoryProvider);

@@ -30,6 +30,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
 
   int _currentQuestionIndex = 0;
   final Map<int, String> _answers = {};
+  final Map<int, TextEditingController> _controllers = {};
 
   // bool _isAnalyzing = false;
   // bool _showResult = false;
@@ -38,13 +39,13 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
   final List<EmotionQuestion> _questions = [
     EmotionQuestion(
       id: 0,
-      question: '오늘 하루는 어떠셨나요?',
-      hint: '전반적인 하루의 느낌을 자유롭게 적어주세요',
+      question: '오늘 하루, 당신의 마음을 가장 크게 움직인 감정은 무엇인가요?',
+      hint: '기쁨, 짜증, 우울, 편안함 등 지금 느껴지는 감정에 이름을 붙여보세요.',
       emoji: '🌅',
     ),
     EmotionQuestion(
       id: 1,
-      question: '지금 가장 강하게 느끼는 감정은 무엇인가요?',
+      question: '어떤 일이나 상황이 그 감정을 불러일으켰나요?',
       hint: '기쁨, 슬픔, 분노, 불안 등 구체적으로 표현해주세요',
       emoji: '💭',
     ),
@@ -93,11 +94,11 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _animationController.forward();
 
@@ -141,8 +142,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
         child: journalState.isLoading
             ? _buildLoadingView() // 로딩 화면 별도 구현
             : (showResult
-                  ? _buildResultView(journalState.analysisResult!)
-                  : _buildQuestionView()),
+                ? _buildResultView(journalState.analysisResult!)
+                : _buildQuestionView()),
       ),
     );
   }
@@ -214,49 +215,183 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
   Widget _buildQuestionView() {
     final currentQuestion = _questions[_currentQuestionIndex];
 
-    // 1. 키보드가 올라왔을 때의 화면 높이를 계산하기 위해 LayoutBuilder 사용
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: SingleChildScrollView(
-              // 2. 키보드가 올라왔을 때 스크롤 가능하도록 감쌈
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom, // 하단 패딩 자동 조절
-              ),
-              physics: const ClampingScrollPhysics(), // 탄성 제거 (깔끔한 스크롤)
-              child: ConstrainedBox(
-                // 3. 최소 높이를 화면 높이로 설정하여 평소에는 꽉 차게 보임
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  // 4. 내부의 Expanded가 작동하도록 IntrinsicHeight 사용
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        // 진행률 바
-                        _buildProgressBar(),
-                        const SizedBox(height: 32),
+    // 💡 빈 공간 터치 시 키보드를 부드럽게 내리기 위한 GestureDetector
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Container(
+            color: const Color(0xFFFBFBFE),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // 1. 상단: 프로그레스 바 (고정)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: _buildProgressBar(),
+                  ),
 
-                        // 질문 카드
-                        // Expanded를 사용하여 남은 공간을 차지하되,
-                        // 키보드가 올라오면 IntrinsicHeight 덕분에 스크롤 영역으로 변함
-                        Expanded(child: _buildQuestionCard(currentQuestion)),
-                        const SizedBox(height: 24),
+                  // 2. 메인: 스크롤 가능한 영역 (키보드 오버플로우 완벽 해결)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 🎨 질문 카드 (이모지 삭제됨)
+                          _buildQuestionCard(currentQuestion),
 
-                        // 네비게이션 버튼들
-                        _buildNavigationButtons(),
-                      ],
+                          const SizedBox(height: 32),
+
+                          // 📝 텍스트 입력 캔버스
+                          _buildTextInputCanvas(currentQuestion),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+
+                  // 3. 하단: 네비게이션 버튼 (키보드 위로 예쁘게 밀려 올라옴)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: _buildNavigationButtons(),
+                  ),
+                ],
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+
+  /// 🎨 몰입형 입력 캔버스 (기존 _buildQuestionCard 대체)
+  Widget _buildFocusCanvas(EmotionQuestion question) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+
+          // 💡 포인트 1: 질문 영역을 감싸는 우아한 '카드 섹션'
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white, // 카드 배경색
+              borderRadius: BorderRadius.circular(24), // 부드러운 라운딩
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF6B73FF).withOpacity(0.05), // 브랜드 컬러의 은은한 그림자
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.grey.shade100,
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 이모지
+                    Text(question.emoji, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 16),
+                    // 질문 텍스트
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          question.question,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1E293B),
+                            height: 1.4,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 힌트 텍스트 (이모지 아래 빈 공간까지 꽉 채우도록 재배치)
+                if (question.hint.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Divider(height: 1, color: Color(0xFFF1F5F9)), // 은은한 구분선
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFF94A3B8)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          question.hint,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32), // 카드와 텍스트 입력창 사이의 넉넉한 여백
+
+          // 💡 포인트 2: 박스 없는 무한 캔버스 (자유로운 글쓰기 경험 유지)
+          Expanded(
+            child: TextFormField(
+              initialValue: _answers[question.id],
+              onChanged: (value) {
+                _answers[question.id] = value;
+              },
+              maxLines: null,
+              expands: true,
+              textAlignVertical: TextAlignVertical.top,
+              cursorColor: const Color(0xFF6B73FF),
+              style: const TextStyle(
+                fontSize: 17,
+                color: Color(0xFF334155),
+                height: 1.8,
+              ),
+              decoration: const InputDecoration(
+                hintText: '자세하게 말할수록 정확도가 올라갑니다.',
+                hintStyle: TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontSize: 17,
+                  height: 1.8,
+                ),
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -297,103 +432,113 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
   /// 🎭 질문 카드
   Widget _buildQuestionCard(EmotionQuestion question) {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white, // 카드 배경색
+        borderRadius: BorderRadius.circular(24), // 부드러운 라운딩
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
+          BoxShadow(
+            color: const Color(0xFF6B73FF).withOpacity(0.05), // 브랜드 컬러의 은은한 그림자
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
+        border: Border.all(
+          color: Colors.grey.shade100,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 이모지와 질문
-          Row(
-            children: [
-              Text(question.emoji, style: const TextStyle(fontSize: 32)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  question.question,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                    height: 1.3,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // 힌트 텍스트
+          // 💡 이모지 삭제, 질문 텍스트만 깔끔하고 크게 배치
           Text(
-            question.hint,
+            question.question,
             style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF64748B),
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1E293B),
               height: 1.4,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 24),
 
-          // 답변 입력 영역
-          Expanded(
-            child: TextField(
-              controller: TextEditingController(
-                text: _answers[question.id] ?? '',
-              ),
-              onChanged: (value) {
-                _answers[question.id] = value;
-              },
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              maxLines: null,
-              expands: true,
-              textAlignVertical: TextAlignVertical.top,
-              decoration: InputDecoration(
-                hintText: '여기에 자유롭게 적어주세요...',
-                hintStyle: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 16,
+          // 💡 힌트 텍스트 (질문 아래 구분선 추가)
+          if (question.hint.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1, color: Color(0xFFF1F5F9)), // 은은한 구분선
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFF94A3B8)),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF6B73FF),
-                    width: 2,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    question.hint,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                contentPadding: const EdgeInsets.all(16),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-              ),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF2D3748),
-                height: 1.5,
-              ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
+  Widget _buildTextInputCanvas(EmotionQuestion question) {
+    return TextFormField(
+      // 💡 [핵심 해결책] 질문 ID를 Key로 부여!
+      // 질문이 바뀔 때마다 기존 텍스트를 날리고 텍스트 필드를 완전히 새로 그립니다.
+      key: ValueKey(question.id),
+
+      // 만약 '이전' 버튼을 눌러서 돌아왔을 때는 저장된 답변을 보여주고, 새 질문이면 빈칸('') 처리
+      initialValue: _answers[question.id] ?? '',
+
+      onChanged: (value) {
+        _answers[question.id] = value;
+      },
+
+      minLines: 10,
+      maxLines: null,
+      textAlignVertical: TextAlignVertical.top,
+      cursorColor: const Color(0xFF6B73FF),
+      style: const TextStyle(
+        fontSize: 17,
+        color: Color(0xFF334155),
+        height: 1.8,
+      ),
+      decoration: const InputDecoration(
+        hintText: '마음속 이야기를 자유롭게 풀어내보세요...',
+        hintStyle: TextStyle(
+          color: Color(0xFFCBD5E1),
+          fontSize: 17,
+          height: 1.8,
+        ),
+        border: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
   /// 🚀 네비게이션 버튼들
   Widget _buildNavigationButtons() {
     return Row(
@@ -427,9 +572,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
         Expanded(
           flex: _currentQuestionIndex > 0 ? 1 : 1,
           child: ElevatedButton(
-            onPressed: _isLastQuestion()
-                ? _completeQuestionnaire
-                : _goToNextQuestion,
+            onPressed:
+                _isLastQuestion() ? _completeQuestionnaire : _goToNextQuestion,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6B73FF),
               padding: const EdgeInsets.symmetric(vertical: 16),

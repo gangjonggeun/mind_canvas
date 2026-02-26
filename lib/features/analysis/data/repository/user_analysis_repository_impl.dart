@@ -3,6 +3,7 @@ import '../../../../core/auth/token_manager.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/repository/user_analysis_repository.dart';
 import '../data_source/user_analysis_data_source.dart';
+import '../dto/comprehensive_analysis_response.dart';
 import '../dto/psychological_profile_response.dart';
 
 class UserAnalysisRepositoryImpl implements UserAnalysisRepository {
@@ -10,6 +11,42 @@ class UserAnalysisRepositoryImpl implements UserAnalysisRepository {
   final TokenManager _tokenManager;
 
   UserAnalysisRepositoryImpl(this._dataSource, this._tokenManager);
+
+  @override
+  Future<Result<ComprehensiveAnalysisResponse>> getComprehensiveAnalysis() async {
+    try {
+      // 1. 토큰 가져오기 (프로젝트 방식에 맞게)
+      final validToken = await _tokenManager.getValidAccessToken();
+      if (validToken == null) {
+        // 토큰이 없거나 만료되어 갱신 실패 시
+        return Result.failure('로그인이 필요한 서비스입니다.', 'AUTHENTICATION_REQUIRED');
+      }
+      // 2. API 호출
+      // Dio Interceptor가 'Accept-Language' 헤더를 자동으로 넣어주므로
+      // 여기서 별도로 언어 설정을 할 필요가 없습니다! (서버가 알아서 영어/한국어 줌)
+      final apiResponse = await _dataSource.getComprehensiveAnalysis(validToken);
+
+      // 3. 응답 처리
+      if (apiResponse.success && apiResponse.data != null) {
+        // 성공 시 DTO 반환
+        return Result.success(apiResponse.data!);
+      } else {
+        // 서버 비즈니스 로직 에러 (예: success=false)
+        final errorMessage = apiResponse.message ?? '프로필 정보를 불러오지 못했습니다.';
+        final errorCode = apiResponse.error?.code ?? 'API_ERROR';
+
+        return Result.failure(errorMessage, errorCode);
+      }
+
+    } on DioException catch (e) {
+      // 4. Dio 에러 핸들링 (네트워크 및 HTTP 상태 코드 에러)
+      return _handleDioException(e);
+
+    } catch (e) {
+      // 5. 그 외 예상치 못한 에러
+      return Result.failure('알 수 없는 오류가 발생했습니다.', 'UNKNOWN_ERROR');
+    }
+  }
 
   @override
   Future<Result<PsychologicalProfileResponse>> getMyProfile() async {
@@ -51,7 +88,7 @@ class UserAnalysisRepositoryImpl implements UserAnalysisRepository {
   /// DioException을 처리하여 Result.failure로 변환하는 내부 로직
   /// (함수 분리가 필요 없다 하셨지만, 가독성을 위해 switch문만 내부에 둡니다.
   /// 원하시면 try-catch 안에 그대로 넣으셔도 됩니다.)
-  Result<PsychologicalProfileResponse> _handleDioException(DioException e) {
+  Result<T> _handleDioException<T>(DioException e){
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:mind_canvas/features/auth/domain/enums/login_type.dart';
 import '../../../../core/auth/token_manager.dart';
 import '../../../../core/utils/result.dart';
 
@@ -199,28 +200,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<AuthUser?>> getCurrentUser() async {
     return _safeApiCall(() async {
-      // 로그인 상태 확인
+      // 1. 로컬에 유효한 토큰이 있는지 확인
       if (!_tokenManager.isLoggedIn) {
         return null;
       }
 
-      // 서버에서 사용자 정보 조회
-      final authHeader = await _tokenManager.getValidAccessToken();
-      if (authHeader == null) {
-        return null;
-      }
+      // 2. 🚨 골칫거리였던 서버 통신(/auth/me) 삭제! 🚨
+      // final authHeader = await _tokenManager.getValidAccessToken();
+      // final apiResponse = await _dataSource.getCurrentUser(authHeader!);
 
-      final apiResponse = await _dataSource.getCurrentUser(authHeader);
+      // 3. 서버 통신 없이, TokenManager에 있는 닉네임만 꺼내서 바로 성공(Pass) 처리
+      final currentAuth = _tokenManager.currentAuth;
 
-      if (apiResponse.isSuccess && apiResponse.hasData) {
-        // TODO: Object를 AuthUser로 변환하는 로직 필요
-        final userData = apiResponse.data;
-
-        // 임시로 null 반환
-        return null;
-      } else {
-        return null;
-      }
+      // (프로필 화면에서 진짜 데이터를 가져올 것이므로, 여기선 최소한의 데이터만 리턴)
+      return AuthUser(
+        nickname: currentAuth?.nickname ?? '사용자', loginType: LoginType.google,
+        // 로그인할 때 저장해둔 닉네임
+      );
     });
   }
 

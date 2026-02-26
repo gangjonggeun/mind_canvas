@@ -253,4 +253,5 @@ enum HtpType {
   house,
   tree,
   person,
+  starrySea,
 }

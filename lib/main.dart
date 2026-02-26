@@ -38,6 +38,8 @@ void main() async {
   // Hive 초기화
   await Hive.initFlutter();
   await Hive.openBox<String>('recommendation_cache');
+  await Hive.openBox('settings');
+  await Hive.openBox('analysis_cache');
 
   try {
     await dotenv.load(fileName: ".env");

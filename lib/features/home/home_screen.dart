@@ -54,7 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
 
-    // 🔔 앱이 켜져 있을 때 알림 수신
+    // 🔔 앱이 켜져 있을 때 알림 수신 안내 메세지
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('📩 포그라운드 알림 도착: ${message.notification?.title}');
 
@@ -1029,14 +1029,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
   Widget _buildRecentTests() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children:[
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+          children:[
             const Text(
               '📈 최근 검사 기록',
               style: TextStyle(
@@ -1046,20 +1045,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             Row(
-              children: [
-                TextButton(
+              children:[
+                // 🔄 [추가] 새로고침 아이콘 버튼
+                IconButton(
                   onPressed: () {
-                    // 분석 화면으로 이동
-                    widget.onGoToAnalysis?.call();
+                    // Riverpod Provider의 상태를 무효화하여 API를 다시 호출하도록 만듭니다.
+                    ref.invalidate(recentTestResultsProvider);
+
+                    // // (선택사항) 새로고침 피드백
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   const SnackBar(
+                    //     content: Text('최근 검사 기록을 업데이트했습니다.'),
+                    //     duration: Duration(seconds: 1),
+                    //   ),
+                    // );
                   },
-                  child: const Text(
-                    '내 분석',
-                    style: TextStyle(
-                      color: AppColors.primaryBlue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  icon: const Icon(Icons.refresh, color: AppColors.primaryBlue),
+                  tooltip: '새로고침',
+                  padding: EdgeInsets.zero, // 버튼 주변 기본 여백 제거
+                  constraints: const BoxConstraints(), // 버튼 크기를 아이콘에 딱 맞춤
                 ),
+                const SizedBox(width: 4), // 아이콘과 버튼 사이 간격
+
+                // TextButton(
+                //   onPressed: () {
+                //     // 분석 화면으로 이동
+                //     widget.onGoToAnalysis?.call();
+                //   },
+                //   child: const Text(
+                //     '내 분석',
+                //     style: TextStyle(
+                //       color: AppColors.primaryBlue,
+                //       fontWeight: FontWeight.w600,
+                //     ),
+                //   ),
+                // ),
                 TextButton(
                   onPressed: () {
                     // 🎯 내 모든 기록을 볼 수 있는 통합 페이지로 이동

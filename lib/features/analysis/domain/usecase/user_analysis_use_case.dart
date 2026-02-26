@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/utils/result.dart';
+import '../../data/dto/comprehensive_analysis_response.dart';
 import '../../data/dto/psychological_profile_response.dart';
 import '../../data/provider/user_analysis_repository_provider.dart';
 import '../../domain/repository/user_analysis_repository.dart';
@@ -25,6 +26,15 @@ class UserAnalysisUseCase {
   // =============================================================
   // 🌟 내 심리 프로필 조회
   // =============================================================
+
+  Future<Result<ComprehensiveAnalysisResponse>> getComprehensiveAnalysis() async {
+    try {
+      // 필요하다면 여기서 비즈니스 로직(예: 캐싱 확인 등) 추가 가능
+      return await _repository.getComprehensiveAnalysis();
+    } catch (e) {
+      return Result.failure('분석 정보를 불러오는 중 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    }
+  }
 
   /// 내 성격 통계(MBTI, Big5 등) 조회
   ///
