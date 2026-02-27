@@ -4,39 +4,35 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mind_canvas/features/htp/presentation/providers/starry_sea_session_provider.dart';
+import 'package:mind_canvas/features/htp/presentation/providers/fbt_session_provider.dart';
 import 'package:mind_canvas/features/htp/presentation/psy_dashboard_components.dart';
 
 import 'domain/entities/htp_session_entity.dart';
 import 'htp_drawing_screen.dart';
+import 'htp_drawing_screen_v2.dart';
 
-
-
-class StarrySeaDashboardScreen extends ConsumerStatefulWidget {
-  const StarrySeaDashboardScreen({super.key});
+class FbtDashboardScreen extends ConsumerStatefulWidget {
+  const FbtDashboardScreen({super.key});
 
   @override
-  ConsumerState<StarrySeaDashboardScreen> createState() => _StarrySeaDashboardScreenState();
+  ConsumerState<FbtDashboardScreen> createState() =>
+      _StarrySeaDashboardScreenState();
 }
 
-class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScreen> {
-
-  final List<PdiQuestion> _pdiQuestions = [
-    PdiQuestion(id: 'q1', questionText: '지금 이 밤하늘을 바라보고 있으면 어떤 기분이나 느낌이 드나요?'),
-    PdiQuestion(id: 'q2', questionText: '가장 밝게 빛나는 별은 어디에 위치해 있나요?'),
-    PdiQuestion(id: 'q3', questionText: '가장 밝게 빛나는 별을 보면 누가 생각 나나요?'),
-    PdiQuestion(id: 'q4', questionText: '파도에서는 어떤 소리가 나나요? 들어가서 놀 수 있나요?'),
-    PdiQuestion(id: 'q5', questionText: '만약 당신이 지금 저 바닷가에 있다면, 모래사장에서 무엇을 하고 싶나요?'),
-    PdiQuestion(id: 'q5', questionText: '달빛에 비춰진 바다는 어떤 느낌 인가요?'),
-  ];
-
+class _StarrySeaDashboardScreenState extends ConsumerState<FbtDashboardScreen> {
   final ImagePicker _picker = ImagePicker();
 
-  /// 🌊 별바다 설정 (1개)
+  final List<PdiQuestion> _pdiQuestions = [
+    PdiQuestion(id: 'q1', questionText: '이 바다의 날씨는 어떤가요?'),
+    PdiQuestion(id: 'q2', questionText: '이곳에 누가 함께 있나요?'),
+    PdiQuestion(id: 'q3', questionText: '그림을 그리면서 어떤 기분이 들었나요?'),
+  ];
+
   final Map<String, dynamic> _config = {
-    'starrySea': { // Enum 이름과 매칭 추천
-      'title': '별이 빛나는 밤바다',
-      'icon': Icons.nights_stay_rounded,
+    'fbt': {
+      // Enum 이름과 매칭 추천
+      'title': '어항',
+      'icon': Icons.water,
       'color': const Color(0xFF5A67D8)
     },
   };
@@ -45,8 +41,7 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // ✅ 별바다 세션 시작
-      ref.read(starrySeaSessionProvider.notifier).startNewSession('user_123');
+      ref.read(fbtSessionProvider.notifier).startNewSession('user_123');
     });
   }
 
@@ -55,11 +50,33 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
-    // ✅ 별바다 타입으로 저장
-    await ref.read(starrySeaSessionProvider.notifier)
+    await ref
+        .read(fbtSessionProvider.notifier)
         .updateDrawingFromGallery(HtpType.starrySea, File(image.path));
 
     if (mounted) setState(() {});
+  }
+
+  // ✅ 다이얼로그 호출 함수
+  void _openPdiDialog() {
+    // 1. 기존 작성한 답변이 있는지 확인
+    final session = ref.read(fbtSessionProvider);
+    final initialAnswers = session?.pdiAnswers;
+
+    // 2. 다이얼로그 띄우기
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 작성 중 실수로 닫히는 것 방지
+      builder: (context) => PsyPdiDialog(
+        title: '어항',
+        questions: _pdiQuestions,
+        initialAnswers: initialAnswers,
+        onSubmit: (answers) {
+          // 3. Provider에 저장
+          ref.read(fbtSessionProvider.notifier).savePdiAnswers(answers);
+        },
+      ),
+    );
   }
 
   @override
@@ -67,8 +84,8 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    final session = ref.watch(starrySeaSessionProvider);
-    final drawing = ref.watch(starrySeaSessionProvider.notifier).getDrawing();
+    final session = ref.watch(fbtSessionProvider);
+    final drawing = ref.watch(fbtSessionProvider.notifier).getDrawing();
 
     final bool isDrawingCompleted = drawing != null;
     final bool hasPdiAnswers = session?.pdiAnswers != null && session!.pdiAnswers!.isNotEmpty;
@@ -81,7 +98,7 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      appBar: AppBar(title: const Text("별바다 그림 심리검사"), backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(title: const Text("어항 그림 심리검사"), backgroundColor: Colors.transparent, elevation: 0),
 
       // 💡 [수정1] 스크롤 영역에서는 제출 버튼 제외
       body: SingleChildScrollView(
@@ -89,8 +106,8 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
         child: Column(
           children: [
             PsyHeader(
-              title: '별이 빛나는 밤바다',
-              description: '밤하늘의 별과 바다를 자유롭게 그려주세요.',
+              title: '어항과 물고기 가족',
+              description: '어항을 그리고 안을 물고기 가족과 소품들로 자유롭게 채워보세요',
               isDarkMode: isDarkMode,
             ),
             const SizedBox(height: 30),
@@ -114,7 +131,6 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
 
             // const SizedBox(height: 16),
 
-            // 💡 [수정2] PDI 카드에 커스텀 텍스트 및 업로드 숨김 적용
             PsyTaskCard(
               title: '질문지 작성 (PDI)',
               icon: Icons.assignment_rounded,
@@ -123,10 +139,10 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
               isDarkMode: isDarkMode,
 
               // 커스텀 설정
-              actionText: '작성하기',          // "그리기" 대신 "작성하기"
-              completedActionText: '수정하기', // "수정" 대신 "수정하기"
+              actionText: '작성하기',
+              completedActionText: '수정하기',
               actionIcon: Icons.edit_document, // 붓 대신 문서 작성 아이콘
-              showUpload: false,           // 업로드 버튼 숨김!
+              showUpload: false,
 
               onStart: _openPdiDialog,
               onUpload: () {}, // showUpload가 false라 화면에 렌더링 안됨
@@ -157,13 +173,14 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
 
   void _navigateToDrawing(String title) async {
     // ✅ 기존 그리기 화면 재사용 (Type은 String이나 Enum으로 전달)
-    final drawing = ref.read(starrySeaSessionProvider.notifier).getDrawing();
+    final drawing = ref.read(fbtSessionProvider.notifier).getDrawing();
 
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HtpDrawingScreen( // 이름은 나중에 DrawingScreen으로 변경 추천
-          drawingType: 'starrySea', // String으로 전달된다면
+        builder: (context) => HtpDrawingScreenV2(
+          // 이름은 나중에 DrawingScreen으로 변경 추천
+          drawingType: 'fbt', // String으로 전달된다면
           title: title,
           existingSketchJson: drawing?.sketchJson,
         ),
@@ -173,7 +190,7 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
   }
 
   void _showPreview() {
-    final drawing = ref.read(starrySeaSessionProvider.notifier).getDrawing();
+    final drawing = ref.read(fbtSessionProvider.notifier).getDrawing();
     if (drawing == null) return;
 
     final imageFile = File(drawing.imagePath!);
@@ -314,7 +331,7 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
                       onPressed: () {
                         Navigator.pop(context); // 다이얼로그 닫기
                         // ✅ _navigateToDrawing 호출 (Sketch JSON 자동 전달됨)
-                        _navigateToDrawing('starrySea');
+                        _navigateToDrawing('fbt');
                       },
                       icon: const Icon(Icons.edit_rounded),
                       label: const Text('수정하기'),
@@ -349,28 +366,8 @@ class _StarrySeaDashboardScreenState extends ConsumerState<StarrySeaDashboardScr
     );
   }
 
-  void _openPdiDialog() {
-    // 1. 기존 작성한 답변이 있는지 확인
-    final session = ref.read(starrySeaSessionProvider);
-    final initialAnswers = session?.pdiAnswers;
-
-    // 2. 다이얼로그 띄우기
-    showDialog(
-      context: context,
-      barrierDismissible: false, // 작성 중 실수로 닫히는 것 방지
-      builder: (context) => PsyPdiDialog(
-        title: '별바다',
-        questions: _pdiQuestions,
-        initialAnswers: initialAnswers,
-        onSubmit: (answers) {
-          // 3. Provider에 저장
-          ref.read(starrySeaSessionProvider.notifier).savePdiAnswers(answers);
-        },
-      ),
-    );
-  }
   void _submitDrawings() {
     // 별바다 제출 로직 (Analysis Provider 호출 등)
-    print("별바다 제출!");
+    print("fbt 제출!");
   }
 }

@@ -2,6 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
+import 'package:mind_canvas/features/htp/fbt_dashboard_screen.dart';
+import 'package:mind_canvas/features/htp/pitr_dashboard_screen.dart';
+import 'package:mind_canvas/features/htp/starry_sea_dashboard_screen.dart';
 import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_notifier.dart';
 
 import '../htp/htp_dashboard_screen.dart';
@@ -644,6 +647,18 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
     return tag == 'HTP' || tag == 'htp';
   }
+  bool _isFbtTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    return tag == 'FBT' || tag == 'fbt';
+  }
+  bool _isStarryTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    return tag == 'STARRY' || tag == 'starry';
+  }
+  bool _isPitrTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    return tag == 'PITR' || tag == 'pitr';
+  }
 
   // ✅ 2. _startTest 함수 수정
   void _startTest(BuildContext context, TestDetailResponse testDetail) {
@@ -679,6 +694,37 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       );
       return;
     }
+
+    if (_isFbtTest(testDetail)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FbtDashboardScreen(),
+        ),
+      );
+      return;
+    }
+
+    if (_isPitrTest(testDetail)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PitrDashboardScreen(),
+        ),
+      );
+      return;
+    }
+
+    if (_isStarryTest(testDetail)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StarrySeaDashboardScreen(),
+        ),
+      );
+      return;
+    }
+
 
     // 2️⃣ 타로 테스트인 경우
     if (_isTaroTest(testDetail)) {

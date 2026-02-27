@@ -15,6 +15,7 @@ class HtpSessionEntity {
   final int? endTime;
   final List<HtpDrawingEntity> drawings;
   final bool supportsPressure;
+  final Map<String, String>? pdiAnswers;
 
   HtpSessionEntity({
     required this.sessionId,
@@ -23,6 +24,7 @@ class HtpSessionEntity {
     this.endTime,
     required this.drawings,
     required this.supportsPressure,
+    this.pdiAnswers,
   });
 
   // =============================================================
@@ -111,6 +113,7 @@ class HtpSessionEntity {
     int? endTime,
     List<HtpDrawingEntity>? drawings,
     bool? supportsPressure,
+    Map<String, String>? pdiAnswers,
   }) {
     return HtpSessionEntity(
       sessionId: sessionId ?? this.sessionId,
@@ -119,6 +122,7 @@ class HtpSessionEntity {
       endTime: endTime ?? this.endTime,
       drawings: drawings ?? this.drawings,
       supportsPressure: supportsPressure ?? this.supportsPressure,
+      pdiAnswers: pdiAnswers ?? this.pdiAnswers,
     );
   }
 }
@@ -254,4 +258,6 @@ enum HtpType {
   tree,
   person,
   starrySea,
+  pitr, //빗속의 사람
+  fbt // 어항
 }

@@ -105,10 +105,15 @@ class PsyTaskCard extends StatelessWidget {
   final PsyTaskStatus status;
   final bool isDarkMode;
 
-  // 동작 콜백
-  final VoidCallback onStart;      // 시작/수정
-  final VoidCallback onUpload;     // 업로드
-  final VoidCallback onPreview;    // 미리보기
+  final VoidCallback onStart;
+  final VoidCallback onUpload;
+  final VoidCallback onPreview;
+
+  // ✅ 추가된 옵션들 (텍스트, 아이콘, 업로드 버튼 숨김 여부)
+  final bool showUpload;
+  final String actionText;
+  final String completedActionText;
+  final IconData actionIcon;
 
   const PsyTaskCard({
     required this.title,
@@ -119,6 +124,10 @@ class PsyTaskCard extends StatelessWidget {
     required this.onStart,
     required this.onUpload,
     required this.onPreview,
+    this.showUpload = true,                  // 기본은 보이게
+    this.actionText = '그리기',                 // 기본 텍스트
+    this.completedActionText = '수정',         // 기본 완료 텍스트
+    this.actionIcon = Icons.brush,           // 기본 아이콘
     super.key,
   });
 
@@ -137,6 +146,7 @@ class PsyTaskCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // 아이콘 및 텍스트 영역 (기존과 동일)
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
@@ -155,13 +165,28 @@ class PsyTaskCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // 💡 버튼 영역 (수정됨)
           Column(
             children: [
-              _buildBtn(status == PsyTaskStatus.notStarted ? "그리기" : "수정", status == PsyTaskStatus.notStarted ? Icons.brush : Icons.edit, color, onStart, true),
+              // 1. 메인 액션 버튼 (텍스트/아이콘 동적 적용)
+              _buildBtn(
+                status == PsyTaskStatus.notStarted ? actionText : completedActionText,
+                status == PsyTaskStatus.notStarted ? actionIcon : Icons.edit,
+                color,
+                onStart,
+                true,
+              ),
               const SizedBox(height: 6),
-              _buildBtn("업로드", Icons.upload_file, Colors.grey, onUpload, false),
-              if (status == PsyTaskStatus.completed) ...[
+
+              // 2. 업로드 버튼 (showUpload가 true일 때만 렌더링)
+              if (showUpload) ...[
+                _buildBtn("업로드", Icons.upload_file, Colors.grey, onUpload, false),
                 const SizedBox(height: 6),
+              ],
+
+              // 3. 미리보기 버튼 (완료 상태일 때만)
+              if (status == PsyTaskStatus.completed) ...[
                 _buildBtn("확인", Icons.visibility, Colors.blueGrey, onPreview, false),
               ],
             ],
@@ -352,5 +377,193 @@ class PsyPreviewDialog extends StatelessWidget {
     if (label.contains('시간')) return Icons.timer_outlined;
     if (label.contains('수정')) return Icons.edit_rounded;
     return Icons.gesture_rounded;
+  }
+}
+
+
+/// PDI 질문 데이터 모델
+class PdiQuestion {
+  final String id;
+  final String questionText;
+  final String? hintText;
+  final bool isMultiline; // 여러 줄 입력 여부
+
+  PdiQuestion({
+    required this.id,
+    required this.questionText,
+    this.hintText,
+    this.isMultiline = true,
+  });
+}
+
+/// 🎨 PDI (그림 완성 후 질문) 전용 대형 다이얼로그
+class PsyPdiDialog extends StatefulWidget {
+  final String title;
+  final List<PdiQuestion> questions;
+  final Map<String, String>? initialAnswers; // 기존 답변이 있다면 불러오기
+  final Function(Map<String, String>) onSubmit;
+
+  const PsyPdiDialog({
+    required this.title,
+    required this.questions,
+    required this.onSubmit,
+    this.initialAnswers,
+    super.key,
+  });
+
+  @override
+  State<PsyPdiDialog> createState() => _PsyPdiDialogState();
+}
+
+class _PsyPdiDialogState extends State<PsyPdiDialog> {
+  // 각 질문의 답변을 저장할 컨트롤러 맵
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // 질문 개수만큼 컨트롤러 생성 및 초기값 세팅
+    for (var q in widget.questions) {
+      _controllers[q.id] = TextEditingController(
+        text: widget.initialAnswers?[q.id] ?? '',
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleSubmit() {
+    // 포커스 해제 (키보드 내리기)
+    FocusScope.of(context).unfocus();
+
+    // 입력된 데이터 Map으로 변환
+    final Map<String, String> answers = {};
+    _controllers.forEach((id, controller) {
+      answers[id] = controller.text.trim();
+    });
+
+    // 모든 답변이 작성되었는지 간단한 검사 (선택사항)
+    final isAllAnswered = answers.values.every((ans) => ans.isNotEmpty);
+    if (!isAllAnswered) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('모든 질문에 답변해주세요.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    widget.onSubmit(answers);
+    Navigator.of(context).pop(); // 다이얼로그 닫기
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // 화면 꽉 차지 않게 여백
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 500, // 태블릿 대응
+          maxHeight: MediaQuery.of(context).size.height * 0.85, // 화면의 85%까지만 커짐
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          children: [
+            // 💡 헤더 영역
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.forum_rounded, color: Color(0xFF38A169)),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${widget.title} 질문지 (PDI)',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+
+            // 💡 스크롤 가능한 폼 영역
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(24),
+                itemCount: widget.questions.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 24),
+                itemBuilder: (context, index) {
+                  final q = widget.questions[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 질문 텍스트
+                      Text(
+                        'Q${index + 1}. ${q.questionText}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.4),
+                      ),
+                      const SizedBox(height: 12),
+                      // 입력 필드
+                      TextField(
+                        controller: _controllers[q.id],
+                        maxLines: q.isMultiline ? 3 : 1, // 멀티라인 지원
+                        textInputAction: q.isMultiline ? TextInputAction.newline : TextInputAction.next,
+                        decoration: InputDecoration(
+                          hintText: q.hintText ?? '답변을 입력해주세요',
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF38A169), width: 1.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            // 💡 하단 저장 버튼
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF38A169),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('답변 저장하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -1,4 +1,3 @@
-// features/starry_sea/presentation/providers/starry_sea_session_provider.dart
 
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,15 +7,15 @@ import 'package:path_provider/path_provider.dart';
 // ✅ HTP 엔티티 재사용
 import '../../../../features/htp/domain/entities/htp_session_entity.dart';
 
-class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
+class PitrSessionNotifier extends StateNotifier<HtpSessionEntity?> {
   // ⚠️ [중요] HTP와 데이터 섞이지 않게 박스 이름 다르게 설정
-  static const String _boxName = 'starry_sea_session_box';
+  static const String _boxName = 'pitr_session_box';
   static const String _sessionKey = 'current_session';
 
   late Box<String> _box;
   late Directory _imageDir;
 
-  StarrySeaSessionNotifier() : super(null) {
+  PitrSessionNotifier() : super(null) {
     _initialize();
   }
 
@@ -26,7 +25,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
     state = state!.copyWith(pdiAnswers: answers);
     await _saveSession();
 
-    print('📝 [Provider] 별바다 PDI 답변 저장 완료: ${answers.length}개');
+    print('📝 [Provider] pitr PDI 답변 저장 완료: ${answers.length}개');
   }
 
   Future<void> _initialize() async {
@@ -39,7 +38,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
       // 이미지 디렉토리 설정
       final appDir = await getApplicationDocumentsDirectory();
 
-      _imageDir = Directory('${appDir.path}/starry_sea_temp'); // 폴더 분리
+      _imageDir = Directory('${appDir.path}/pitr_temp'); // 폴더 분리
       if (!await _imageDir.exists()) {
         await _imageDir.create(recursive: true);
       }
@@ -47,9 +46,9 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
       // 저장된 세션 복원
       await _loadSession();
 
-      print('✅ [Provider] 별바다 세션 Provider 초기화 완료');
+      print('✅ [Provider] Pitr 세션 Provider 초기화 완료');
     } catch (e) {
-      print('❌ [Provider] 별바다 초기화 실패: $e');
+      print('❌ [Provider] Pitr 초기화 실패: $e');
     }
 
 
@@ -58,7 +57,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
   Future<void> startNewSession(String userId) async {
     // ... (HTP와 동일하게 생성)
     final session = HtpSessionEntity(
-      sessionId: 'starry_${DateTime.now().millisecondsSinceEpoch}',
+      sessionId: 'pitr_${DateTime.now().millisecondsSinceEpoch}',
       userId: userId,
       startTime: DateTime.now().millisecondsSinceEpoch,
       drawings: [],
@@ -81,11 +80,12 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
     return isDrawingComplete && isPdiComplete; // 둘 다 완료되어야 true
   }
 
+
   // 헬퍼: 별바다 그림 가져오기 (타입 고정)
   HtpDrawingEntity? getDrawing() {
     if (state == null) return null;
     try {
-      return state!.drawings.firstWhere((d) => d.type == HtpType.starrySea);
+      return state!.drawings.firstWhere((d) => d.type == HtpType.pitr);
     } catch (_) {
       return null;
     }
@@ -109,9 +109,9 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
       state = state!.updateDrawing(updatedDrawing);
       await _saveSession();
 
-      print('💾 [Provider] 별바다 진행 상태: ${state!.progress * 100}%');
+      print('💾 [Provider] pitr 진행 상태: ${state!.progress * 100}%');
     } catch (e) {
-      print('❌ [Provider] 별바다 그림 업데이트 실패: $e');
+      print('❌ [Provider] pitr 그림 업데이트 실패: $e');
     }
   }
 
@@ -123,7 +123,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
       endTime: DateTime.now().millisecondsSinceEpoch,
     );
     await _saveSession();
-    print('✅ [Provider] 세션 완료: ${state!.sessionId}');
+    print('✅ [Provider] pitr 세션 완료: ${state!.sessionId}');
   }
 
   /// 세션 초기화 (전송 완료 후)
@@ -138,7 +138,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
     await _box.delete(_sessionKey);
     state = null;
 
-    print('🗑️ [Provider] 세션 초기화 완료');
+    print('🗑️ [Provider] pitr 세션 초기화 완료');
   }
 
   /// 세션 저장
@@ -217,7 +217,7 @@ class StarrySeaSessionNotifier extends StateNotifier<HtpSessionEntity?> {
 }
 
 /// Provider 정의
-final starrySeaSessionProvider =
-    StateNotifierProvider<StarrySeaSessionNotifier, HtpSessionEntity?>(
-  (ref) => StarrySeaSessionNotifier(),
+final pitrSessionProvider =
+StateNotifierProvider<PitrSessionNotifier, HtpSessionEntity?>(
+      (ref) => PitrSessionNotifier(),
 );

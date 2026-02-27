@@ -146,15 +146,26 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
             }).toList(),
 
             const SizedBox(height: 30),
-
-            // 4. 제출 버튼 (공용 컴포넌트)
-            PsySubmitButton(
-              isEnabled: completedCount == 3,
-              isSubmitting: analysisState.isSubmitting, // ✅ 로딩 상태 연결
-              text: "검사 결과 제출하기 ($completedCount/3)",
-              onPressed: _submitDrawings,
-            ),
+            //
+            // // 4. 제출 버튼 (공용 컴포넌트)
+            // PsySubmitButton(
+            //   isEnabled: completedCount == 3,
+            //   isSubmitting: analysisState.isSubmitting, // ✅ 로딩 상태 연결
+            //   text: "검사 결과 제출하기 ($completedCount/3)",
+            //   onPressed: _submitDrawings,
+            // ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: PsySubmitButton(
+            isEnabled:completedCount == 3,
+            isSubmitting: false,
+            text: "검사 결과 제출하기 ($completedCount/3)",
+            onPressed: _submitDrawings,
+          ),
         ),
       ),
     );
@@ -369,30 +380,6 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
   }
 
 
-// // 📍 정보 행 위젯 헬퍼
-//   Widget _buildInfoRow(String label, String value, IconData icon) {
-//     return Row(
-//       children: [
-//         Icon(icon, size: 20, color: Colors.grey),
-//         const SizedBox(width: 8),
-//         Text(
-//           label,
-//           style: const TextStyle(
-//             fontSize: 14,
-//             color: Colors.grey,
-//           ),
-//         ),
-//         const Spacer(),
-//         Text(
-//           value,
-//           style: const TextStyle(
-//             fontSize: 14,
-//             fontWeight: FontWeight.w600,
-//           ),
-//         ),
-//       ],
-//     );
-//   }
   /// 🎨 그림 제목 가져오기
   String _getDrawingTitle(String type) {
     switch (type) {
