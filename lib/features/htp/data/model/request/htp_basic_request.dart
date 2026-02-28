@@ -51,6 +51,8 @@ class DrawingProcess with _$DrawingProcess {
 
     /// 필압 정보 (light/medium/heavy)
     @JsonKey(name: 'pressure') required String pressure,
+    required int strokeCount,       // ✅ 추가
+    required int modificationCount, // ✅ 추가
   }) = _DrawingProcess;
 
   factory DrawingProcess.fromJson(Map<String, dynamic> json) =>

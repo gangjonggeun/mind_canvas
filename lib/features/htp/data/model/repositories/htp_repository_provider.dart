@@ -19,11 +19,13 @@ part 'htp_repository_provider.g.dart';
 /// - TokenManager (JWT 토큰)
 @riverpod
 HtpRepository htpRepository(HtpRepositoryRef ref) {
+  // 1. 의존성 조회
   final apiDataSource = ref.watch(htpApiDataSourceProvider);
   final tokenManager = ref.watch(tokenManagerProvider);
 
+  // 2. 구현체 주입
   return HtpRepositoryImpl(
-    htpApiDataSource: apiDataSource,
+    htpApiDataSource: apiDataSource, // Impl 생성자 변수명과 일치시킴
     tokenManager: tokenManager,
   );
 }

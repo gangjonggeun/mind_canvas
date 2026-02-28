@@ -84,54 +84,19 @@ class HtpUseCase {
   /// @param imageFiles 그림 파일 3장
   /// @param request 프리미엄 분석 요청 (PDI 답변 포함)
   /// @return Result<HtpResponse> 심층 분석 결과
+  @override
   Future<Result<TestResultResponse>> analyzePremium({
     required List<File> imageFiles,
     required HtpPremiumRequest request,
-  }) async {
-    try {
-      print('🧠 [UseCase] HTP 프리미엄 분석 시작');
+  }) {
+    // 🚨 프리미엄 전용 검증 (이미지 4장 + 답변 존재 여부만 체크)
+    final validation = _validatePremiumInput(imageFiles, request);
+    if (validation != null) return Future.value(validation);
 
-      // 1. 비즈니스 규칙 검증
-      final validationResult = _validatePremiumInput(imageFiles, request);
-      if (validationResult != null) {
-        print('❌ [UseCase] 입력 검증 실패: ${validationResult.message}');
-        return validationResult;
-      }
-
-      // 2. Repository 호출
-      final result = await _repository.analyzePremiumHtp(
-        imageFiles: imageFiles,
-        request: request,
-      );
-
-      // 3. 결과 처리
-      return result.fold(
-        onSuccess: (data) {
-          print('✅ [UseCase] 프리미엄 분석 성공 - 항목: ${data.resultDetails.length}개');
-
-          // 비즈니스 로직: 프리미엄 결과 강화 처리
-          // final processedData = _processPremiumResult(data);
-
-          return Result.success(
-            data,
-            'HTP 프리미엄 분석이 완료되었습니다',
-          );
-        },
-        onFailure: (message, errorCode) {
-          print('❌ [UseCase] 프리미엄 분석 실패: $message');
-
-          final userMessage = _convertToUserFriendlyMessage(message, errorCode);
-          return Result.failure(userMessage, errorCode);
-        },
-      );
-    } catch (e, stackTrace) {
-      print('❌ [UseCase] 예상치 못한 오류: $e');
-      print('StackTrace: $stackTrace');
-      return Result.failure(
-        '프리미엄 분석 중 오류가 발생했습니다\n잠시 후 다시 시도해주세요',
-        'USECASE_ERROR',
-      );
-    }
+    return _repository.analyzePremiumHtp(
+      imageFiles: imageFiles,
+      request: request,
+    );
   }
 
   // =============================================================
@@ -140,9 +105,9 @@ class HtpUseCase {
 
   /// 기본 분석 입력 검증
   Result<TestResultResponse>? _validateBasicInput(
-      List<File> imageFiles,
-      DrawingProcess drawingProcess,
-      ) {
+    List<File> imageFiles,
+    DrawingProcess drawingProcess,
+  ) {
     // 1. 이미지 개수 검증 (UseCase 레벨에서 한 번 더)
     if (imageFiles.length != 3) {
       return Result.failure(
@@ -185,102 +150,60 @@ class HtpUseCase {
     return null; // 검증 성공
   }
 
-  /// 프리미엄 분석 입력 검증
+  /// ✅ 프리미엄 분석 검증 (Premium)
+  /// - PDI 상세 내용 검증 삭제
+  /// - 이미지 개수 4장 확인
   Result<TestResultResponse>? _validatePremiumInput(
-      List<File> imageFiles,
-      HtpPremiumRequest request,
-      ) {
-    // 1. 기본 검증 (이미지 + 그리기 과정)
-    final basicValidation = _validateBasicInput(
-      imageFiles,
-      request.drawingProcess,
-    );
-    if (basicValidation != null) {
-      return basicValidation;
-    }
-
-    // 2. 공통 질문 검증
-    if (request.commonQuestions.overallFeeling.trim().isEmpty) {
+    List<File> imageFiles,
+    HtpPremiumRequest request,
+  ) {
+    // 1. 이미지 개수 검증 (집, 나무, 남, 여 = 4장)
+    if (imageFiles.length != 4) {
       return Result.failure(
-        '전체적인 느낌을 입력해주세요',
-        'MISSING_OVERALL_FEELING',
+        '프리미엄 검사는 집, 나무, 남자, 여자 그림이 모두 필요합니다 (총 4장).',
+        'INVALID_IMAGE_COUNT',
       );
     }
 
-    if (request.commonQuestions.story.trim().length < 10) {
+    // 2. 답변 존재 여부만 가볍게 체크 (내용/길이 검증 X)
+    if (request.answers.isEmpty) {
       return Result.failure(
-        '그림들의 이야기를 최소 10자 이상 작성해주세요',
-        'STORY_TOO_SHORT',
+        '질문지(PDI) 답변 데이터가 없습니다.',
+        'MISSING_PDI_ANSWERS',
       );
     }
 
-    // 3. 각 그림별 질문 검증 (최소 답변 길이)
-    final houseValidation = _validateQuestionAnswers(
-      request.houseQuestions.residents,
-      '집에 사는 사람',
-    );
-    if (houseValidation != null) return houseValidation;
+    // (선택) 답변이 모두 비어있는지 체크하고 싶다면:
+    // bool allEmpty = request.answers.values.every((v) => v.trim().isEmpty);
+    // if (allEmpty) return Result.failure('답변 내용을 입력해주세요.');
 
-    final treeValidation = _validateQuestionAnswers(
-      request.treeQuestions.condition,
-      '나무의 상태',
-    );
-    if (treeValidation != null) return treeValidation;
-
-    final personValidation = _validateQuestionAnswers(
-      request.personQuestions.identity,
-      '인물의 정체성',
-    );
-    if (personValidation != null) return personValidation;
-
-    return null; // 검증 성공
+    return null; // 검증 통과
   }
 
-  /// 개별 질문 답변 검증
-  Result<TestResultResponse>? _validateQuestionAnswers(
-      String answer,
-      String fieldName,
-      ) {
-    if (answer.trim().isEmpty) {
-      return Result.failure(
-        '$fieldName을(를) 입력해주세요',
-        'MISSING_REQUIRED_FIELD',
-      );
-    }
-
-    if (answer.trim().length < 2) {
-      return Result.failure(
-        '$fieldName은(는) 최소 2자 이상 작성해주세요',
-        'ANSWER_TOO_SHORT',
-      );
-    }
-
-    return null;
-  }
-  //
-  // /// 기본 분석 결과 가공
-  // TestResultResponse _processAnalysisResult(TestResultResponse response) {
-  //   // 비즈니스 로직: 결과를 order 기준으로 정렬
-  //   final sortedDetails = response.sortedDetails;
-  //
-  //   return response.copyWith(
-  //     resultDetails: sortedDetails,
-  //   );
-  // }
-  //
-  // /// 프리미엄 분석 결과 가공
-  // TestResultResponse _processPremiumResult(TestResultResponse response) {
-  //   // 비즈니스 로직: 프리미엄은 더 상세한 분석이므로 추가 처리
-  //   final sortedDetails = response.sortedDetails;
-  //
-  //   // 예: 이미지가 있는 항목을 앞으로 배치
-  //   final detailsWithImages = sortedDetails.where((d) => d.hasImage).toList();
-  //   final detailsWithoutImages = sortedDetails.where((d) => !d.hasImage).toList();
-  //
-  //   return response.copyWith(
-  //     resultDetails: [...detailsWithImages, ...detailsWithoutImages],
-  //   );
-  // }
+//
+// /// 기본 분석 결과 가공
+// TestResultResponse _processAnalysisResult(TestResultResponse response) {
+//   // 비즈니스 로직: 결과를 order 기준으로 정렬
+//   final sortedDetails = response.sortedDetails;
+//
+//   return response.copyWith(
+//     resultDetails: sortedDetails,
+//   );
+// }
+//
+// /// 프리미엄 분석 결과 가공
+// TestResultResponse _processPremiumResult(TestResultResponse response) {
+//   // 비즈니스 로직: 프리미엄은 더 상세한 분석이므로 추가 처리
+//   final sortedDetails = response.sortedDetails;
+//
+//   // 예: 이미지가 있는 항목을 앞으로 배치
+//   final detailsWithImages = sortedDetails.where((d) => d.hasImage).toList();
+//   final detailsWithoutImages = sortedDetails.where((d) => !d.hasImage).toList();
+//
+//   return response.copyWith(
+//     resultDetails: [...detailsWithImages, ...detailsWithoutImages],
+//   );
+// }
 
   /// 사용자 친화적 에러 메시지 변환
   String _convertToUserFriendlyMessage(String? message, String? errorCode) {

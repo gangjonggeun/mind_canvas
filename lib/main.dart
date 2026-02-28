@@ -41,6 +41,14 @@ void main() async {
   await Hive.openBox('settings');
   await Hive.openBox('analysis_cache');
 
+  await Hive.openBox<String>('htp_premium_current_session');
+
+  // 4. 🖼️ 단일 검사(별바다, PITR, 어항) 세션 박스 열기
+  // Enum의 .name 속성을 사용했으므로 아래 이름과 정확히 일치해야 합니다.
+  await Hive.openBox<String>('session_box_starrySea');
+  await Hive.openBox<String>('session_box_pitr');
+  await Hive.openBox<String>('session_box_fishbowl');
+
   try {
     await dotenv.load(fileName: ".env");
     print("✅ .env 파일 로드 성공");

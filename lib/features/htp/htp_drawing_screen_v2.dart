@@ -70,11 +70,14 @@ class HtpDrawingScreenV2 extends StatefulWidget {
   final String title;
   final String? existingSketchJson;
 
+  final Future<void> Function(HtpDrawingEntity drawing, File imageFile)? onSave;
+
   const HtpDrawingScreenV2({
     super.key,
     required this.drawingType,
     required this.title,
     this.existingSketchJson,
+    this.onSave,
   });
 
   @override
@@ -540,41 +543,46 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
       final image = await boundary!.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
-
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File(
-          '${tempDir.path}/htp_v2_${DateTime.now().millisecondsSinceEpoch}.png');
+      final tempFile = File('${tempDir.path}/htp_v2_${DateTime.now().millisecondsSinceEpoch}.png');
       await tempFile.writeAsBytes(buffer);
 
-      // 3. Provider 저장
+      // 3. Entity 생성 (기존 코드와 동일)
       final drawing = _dataCollector
           .createDrawing(
-            type: _getHtpType(widget.drawingType),
-            startTime: _drawingStartTime,
-            endTime: DateTime.now().millisecondsSinceEpoch,
-            orderIndex: 0,
-          )
+        type: _getHtpType(widget.drawingType),
+        startTime: _drawingStartTime,
+        endTime: DateTime.now().millisecondsSinceEpoch,
+        orderIndex: 0,
+      )
           .copyWith(sketchJson: sketchJson);
 
-      await ProviderScope.containerOf(context)
-          .read(htpSessionProvider.notifier)
-          .updateDrawing(drawing, tempFile);
+      // 3️⃣ 👈 [수정] 콜백이 전달되었다면 프리미엄/싱글테스트 등에 저장, 없다면 기존 베이직에 저장!
+      if (widget.onSave != null)
+        await widget.onSave!(drawing, tempFile);
 
-      Navigator.pop(context); // 임시로 바로 닫기 (성공 다이얼로그 호출 가능)
+
+      Navigator.pop(context);
     } catch (e) {
       print("저장 에러: $e");
     }
   }
 
-  HtpType _getHtpType(String drawingType) {
-    switch (drawingType.toLowerCase()) {
-      case 'house':
-        return HtpType.house;
-      case 'tree':
-        return HtpType.tree;
-      case 'person':
-        return HtpType.person;
+  HtpType _getHtpType(String typeString) {
+    switch (typeString) {
+    // Basic & Premium
+      case 'house': return HtpType.house;
+      case 'tree': return HtpType.tree;
+      case 'person': return HtpType.person;
+      case 'man': return HtpType.man;
+      case 'woman': return HtpType.woman;
+      case 'starrySea': return HtpType.starrySea;
+      case 'pitr': return HtpType.pitr;
+      case 'fishbowl': return HtpType.fishbowl;
+
+    // 예외 처리
       default:
+        print("⚠️ 알 수 없는 타입: $typeString -> 기본값 house로 처리됨");
         return HtpType.house;
     }
   }
@@ -588,7 +596,7 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
           isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('${widget.title} (V2 테스트)',
+        title: Text('${widget.title}',
             style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,

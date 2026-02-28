@@ -11,40 +11,95 @@ enum PsyTaskStatus { notStarted, inProgress, completed }
 class PsyHeader extends StatelessWidget {
   final String title;
   final String description;
+  final IconData icon; // ✅ 카드 배경에 은은하게 깔릴 아이콘 추가
   final bool isDarkMode;
 
   const PsyHeader({
     required this.title,
     required this.description,
+    required this.icon,
     required this.isDarkMode,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: isDarkMode ? Colors.white : const Color(0xFF2D3748),
-            letterSpacing: -0.8,
-          ),
-          textAlign: TextAlign.center,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        // 다크모드/라이트모드에 따른 세련된 그라데이션 배경
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+              : [const Color(0xFF3182CE), const Color(0xFF2B6CB0)], // 라이트모드는 블루톤
         ),
-        const SizedBox(height: 12),
-        Text(
-          description,
-          style: TextStyle(
-            fontSize: 16,
-            color: isDarkMode ? Colors.white70 : const Color(0xFF718096),
-            height: 1.5,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: (isDarkMode ? Colors.black : const Color(0xFF3182CE)).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 💡 배경에 은은하게 깔리는 워터마크 아이콘 (고급스러움 연출)
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Icon(
+              icon,
+              size: 120,
+              color: Colors.white.withOpacity(0.1),
+            ),
+          ),
+
+          // 텍스트 영역
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 작은 뱃지 느낌의 장식
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Mind Canvas',
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.8,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white.withOpacity(0.85),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -418,6 +473,7 @@ class PsyPdiDialog extends StatefulWidget {
 class _PsyPdiDialogState extends State<PsyPdiDialog> {
   // 각 질문의 답변을 저장할 컨트롤러 맵
   final Map<String, TextEditingController> _controllers = {};
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -439,129 +495,124 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
   }
 
   void _handleSubmit() {
-    // 포커스 해제 (키보드 내리기)
     FocusScope.of(context).unfocus();
 
-    // 입력된 데이터 Map으로 변환
+    // 👈 2. 수정: 스낵바 로직 대신 폼 검증(validate) 실행
+    if (!_formKey.currentState!.validate()) {
+      return; // 빈칸이 있으면 자동으로 TextFormField 아래에 에러 메시지가 뜹니다.
+    }
+
     final Map<String, String> answers = {};
     _controllers.forEach((id, controller) {
       answers[id] = controller.text.trim();
     });
 
-    // 모든 답변이 작성되었는지 간단한 검사 (선택사항)
-    final isAllAnswered = answers.values.every((ans) => ans.isNotEmpty);
-    if (!isAllAnswered) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('모든 질문에 답변해주세요.'), backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
     widget.onSubmit(answers);
-    Navigator.of(context).pop(); // 다이얼로그 닫기
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // ✅ Dialog 안에 Scaffold를 넣어서 키보드 리사이징 방지
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // 화면 꽉 차지 않게 여백
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: 500, // 태블릿 대응
-          maxHeight: MediaQuery.of(context).size.height * 0.85, // 화면의 85%까지만 커짐
-        ),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          children: [
-            // 💡 헤더 영역
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
+      backgroundColor: Colors.transparent, // 배경 투명 (Scaffold 색상 사용)
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Scaffold(
+          // 🌟 [핵심] 키보드가 올라와도 화면(버튼)을 밀어 올리지 않음 -> 렉 제거
+          resizeToAvoidBottomInset: false,
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+
+          // 헤더와 리스트는 Column으로 배치
+          body: Column(
+            children: [
+              // 1. 헤더 (고정)
+              Container(
+                padding: const EdgeInsets.all(20),
                 color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.forum_rounded, color: Color(0xFF38A169)),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${widget.title} (PDI)',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.forum_rounded, color: Color(0xFF38A169)),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${widget.title} 질문지 (PDI)',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
 
-            // 💡 스크롤 가능한 폼 영역
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(24),
-                itemCount: widget.questions.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 24),
-                itemBuilder: (context, index) {
-                  final q = widget.questions[index];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 질문 텍스트
-                      Text(
-                        'Q${index + 1}. ${q.questionText}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.4),
-                      ),
-                      const SizedBox(height: 12),
-                      // 입력 필드
-                      TextField(
-                        controller: _controllers[q.id],
-                        maxLines: q.isMultiline ? 3 : 1, // 멀티라인 지원
-                        textInputAction: q.isMultiline ? TextInputAction.newline : TextInputAction.next,
-                        decoration: InputDecoration(
-                          hintText: q.hintText ?? '답변을 입력해주세요',
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+              // 2. 폼 영역 (스크롤 가능)
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 100), // 하단 여백 충분히 줌
+                    itemCount: widget.questions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 24),
+                    itemBuilder: (context, index) {
+                      final q = widget.questions[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Q${index + 1}. ${q.questionText}',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF38A169), width: 1.5),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _controllers[q.id],
+                            maxLines: q.isMultiline ? 3 : 1,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? '내용을 입력해주세요' : null,
+                            decoration: InputDecoration(
+                              hintText: q.hintText ?? '답변을 입력해주세요',
+                              filled: true,
+                              fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.all(16),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-
-            // 💡 하단 저장 버튼
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF38A169),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ],
+                      );
+                    },
                   ),
-                  child: const Text('답변 저장하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+
+          // 3. 하단 버튼 (Scaffold의 bottomNavigationBar를 활용하여 바닥 고정)
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              border: Border(top: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _handleSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF38A169),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '답변 저장하기',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

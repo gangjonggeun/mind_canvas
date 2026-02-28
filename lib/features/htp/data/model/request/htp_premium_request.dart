@@ -26,23 +26,13 @@ part 'htp_premium_request.g.dart';
 ///   personQuestions: PersonQuestions(...),
 /// );
 /// ```
+
+
 @freezed
 class HtpPremiumRequest with _$HtpPremiumRequest {
   const factory HtpPremiumRequest({
-    /// 그림 그리는 과정 정보
-    @JsonKey(name: 'drawingProcess') required DrawingProcess drawingProcess,
-
-    /// 공통 질문 답변
-    @JsonKey(name: 'commonQuestions') required CommonQuestions commonQuestions,
-
-    /// 집 그림 질문 답변
-    @JsonKey(name: 'houseQuestions') required HouseQuestions houseQuestions,
-
-    /// 나무 그림 질문 답변
-    @JsonKey(name: 'treeQuestions') required TreeQuestions treeQuestions,
-
-    /// 사람 그림 질문 답변
-    @JsonKey(name: 'personQuestions') required PersonQuestions personQuestions,
+    required Map<String, String> answers,
+    required DrawingProcess drawingProcess, // ✅ 메타데이터 추가!
   }) = _HtpPremiumRequest;
 
   factory HtpPremiumRequest.fromJson(Map<String, dynamic> json) =>

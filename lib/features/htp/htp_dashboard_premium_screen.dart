@@ -1,5 +1,5 @@
 // ... imports
-// lib/features/htp/presentation/screens/htp_dashboard_screen.dart
+// lib/features/htp/presentation/screens/htp_dashboard_premium_screen.dart
 
 import 'dart:io';
 
@@ -13,7 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mind_canvas/features/htp/presentation/notifier/htp_analysis_notifier.dart';
 import 'package:mind_canvas/features/htp/presentation/notifier/psy_analysis_state.dart';
-import 'package:mind_canvas/features/htp/presentation/providers/htp_session_provider.dart';
+import 'package:mind_canvas/features/htp/presentation/providers/htp_premium_session_provider.dart';
 import 'package:mind_canvas/features/htp/presentation/psy_dashboard_components.dart'; // ✅ 이미지 피커 추가
 
 import '../../core/utils/ai_analysis_helper.dart';
@@ -22,15 +22,36 @@ import 'domain/entities/htp_session_entity.dart';
 import 'htp_drawing_screen.dart';
 import 'htp_drawing_screen_v2.dart';
 
-class HtpDashboardScreen extends ConsumerStatefulWidget {
-  const HtpDashboardScreen({super.key});
+class HtpDashboardPremiumScreen extends ConsumerStatefulWidget {
+  const HtpDashboardPremiumScreen({super.key});
 
   @override
-  ConsumerState<HtpDashboardScreen> createState() => _HtpDashboardScreenState();
+  ConsumerState<HtpDashboardPremiumScreen> createState() => _HtpDashboardPremiumScreenState();
 }
 
-class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
+class _HtpDashboardPremiumScreenState extends ConsumerState<HtpDashboardPremiumScreen> {
   final ImagePicker _picker = ImagePicker();
+
+  final List<PdiQuestion> _pdiQuestions = [
+    // Step 1: 기초 정보 (분석의 기준점 설정)
+    PdiQuestion(id: 'q1', questionText: '사용자님의 성별과 나이는 어떻게 되나요? 답변하기 어렵다면 대략적으로 작성해 주세요.'),
+
+    // Step 2: 투사 질문 (집, 나무, 사람에 대한 무의식 탐색)
+    PdiQuestion(id: 'q2', questionText: '이 집에는 누가 살고 있으며, 집안에 들어갔을 때 전체적인 분위기는 어떤가요?'),
+    PdiQuestion(id: 'q3', questionText: '이 집에서 가장 마음에 드는 곳이나, 추가로 필요한 것은 무엇인가요?'),
+    PdiQuestion(id: 'q4', questionText: '이 집에서 사용자님이 가장 좋아하거나 머물고 싶은 공간은 어디인가요?'),
+
+    PdiQuestion(id: 'q5', questionText: '이 나무는 어디에 서 있나요? 혼자 있나요, 아니면 다른 나무들과 함께 있나요?'),
+    PdiQuestion(id: 'q6', questionText: '나무 기둥에 상처나 옹이가 있다면, 그것은 왜 생겼을까요?'),
+    PdiQuestion(id: 'q7', questionText: '이 나무가 더 튼튼하고 행복하게 자라려면 무엇이 가장 필요할까요?'),
+
+    PdiQuestion(id: 'q8', questionText: '그림 속의 남성과 여성은 사용자님과 어떤 관계인가요?'),
+    PdiQuestion(id: 'q9', questionText: '이 사람들은 지금 각각 어떤 생각을 하고 있나요?'),
+
+    // Step 3: 메타 인지 (자신의 그림 과정을 돌아보는 마무리 질문)
+    PdiQuestion(id: 'q10', questionText: '그림을 그릴 때 지우개를 많이 썼거나, 망설였던 부분이 있나요? 있다면 어느 부분인가요?'),
+    PdiQuestion(id: 'q11', questionText: '그림을 그리면서 특히 강조하고 싶었거나, 가장 기억에 남는 부분은 무엇인가요?'),
+  ];
 
   /// 🎨 HTP 화면 설정값 (여기에만 HTP 관련 UI 정보가 있음)
   final Map<String, dynamic> _htpConfig = {
@@ -44,10 +65,15 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
       'icon': Icons.park_rounded,
       'color': const Color(0xFF38A169)
     },
-    'person': {
-      'title': '사람 그리기',
-      'icon': Icons.person_rounded,
-      'color': const Color(0xFF805AD5)
+    'man': {
+      'title': '남성 그리기',
+      'icon': Icons.face,
+      'color': const Color(0xFF5A67D8)
+    },
+    'woman': {
+      'title': '여성 그리기',
+      'icon': Icons.face_3,
+      'color': const Color(0xFF9F7AEA)
     },
   };
 
@@ -55,9 +81,9 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final session = ref.read(htpSessionProvider);
+      final session = ref.read(htpPremiumSessionProvider);
       if (session == null) {
-        ref.read(htpSessionProvider.notifier).startNewSession('user_123');
+        ref.read(htpPremiumSessionProvider.notifier).startNewSession('user_123');
       }
     });
   }
@@ -69,10 +95,10 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
     final htpType = _getHtpType(typeKey);
     await ref
-        .read(htpSessionProvider.notifier)
+        .read(htpPremiumSessionProvider.notifier)
         .updateDrawingFromGallery(htpType, File(image.path));
 
-    if (mounted) setState(() {}); // UI 갱신
+    // 2️⃣ setState(() {}); 👈 이 줄은 삭제하세요! (ref.watch가 알아서 화면을 새로고침해줍니다)
   }
 
   @override
@@ -80,9 +106,17 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    final session = ref.watch(htpSessionProvider);
-    final analysisState = ref.watch(htpAnalysisProvider);
-    final completedCount = session?.drawings.length ?? 0;
+    final session = ref.watch(htpPremiumSessionProvider);
+
+    // 1. 상태 계산
+    final int drawingCount = session?.drawings.length ?? 0;
+    final bool hasPdi = session?.pdiAnswers != null && session!.pdiAnswers!.isNotEmpty;
+
+    // 2. 전체 진행률 (그림 4개 + PDI 1개 = 총 5단계)
+    final int totalProgress = drawingCount + (hasPdi ? 1 : 0);
+
+    // 3. 제출 가능 여부 (그림 4개 다 그리고 && PDI도 완료해야 함)
+    final bool canSubmit = drawingCount == 4 && hasPdi;
 
     // ✅ [핵심 1] 분석/FCM 리스너 복구
     ref.listen<PsyAnalysisState>(htpAnalysisProvider, (previous, next) {
@@ -92,13 +126,13 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
       }
       if (next.isCompleted && next.result?.resultKey == "PENDING_AI") {
         AiAnalysisHelper.showPendingDialog(context);
-        ref.read(htpSessionProvider.notifier).clearSession();
+        ref.read(htpPremiumSessionProvider.notifier).clearSession();
       }
     });
 
     return Scaffold(
       backgroundColor:
-          isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
           title: const Text("HTP 심리검사"),
           backgroundColor: Colors.transparent,
@@ -110,7 +144,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
             // 1. 헤더 (공용 컴포넌트)
             PsyHeader(
               title: 'House-Tree-Person',
-              description: '순서에 상관없이 3가지 그림을 그려주세요.',
+              description: '순서에 상관없이 진행해주세요.',
               isDarkMode: isDarkMode,
               icon: Icons.home,
             ),
@@ -118,8 +152,8 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
             // 2. 진행바 (공용 컴포넌트)
             PsyProgressBar(
-              current: completedCount,
-              total: 3,
+              current: totalProgress,
+              total: 5,
               isDarkMode: isDarkMode,
             ),
             const SizedBox(height: 30),
@@ -131,7 +165,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
               final htpType = _getHtpType(typeKey);
               final drawing =
-                  ref.watch(htpSessionProvider.notifier).getDrawing(htpType);
+              ref.watch(htpPremiumSessionProvider.notifier).getDrawing(htpType);
               final status = drawing != null
                   ? PsyTaskStatus.completed
                   : PsyTaskStatus.notStarted;
@@ -149,7 +183,23 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
               );
             }).toList(),
 
-            const SizedBox(height: 30),
+            PsyTaskCard(
+              title: '질문지 작성 (PDI)',
+              icon: Icons.assignment_rounded,
+              color: const Color(0xFFD69E2E),
+              status: hasPdi ? PsyTaskStatus.completed : PsyTaskStatus.notStarted,
+              isDarkMode: isDarkMode,
+
+              // 커스텀 설정
+              actionText: '작성하기',
+              completedActionText: '수정하기',
+              actionIcon: Icons.edit_document, // 붓 대신 문서 작성 아이콘
+              showUpload: false,
+
+              onStart: _openPdiDialog,
+              onUpload: () {}, // showUpload가 false라 화면에 렌더링 안됨
+              onPreview: _openPdiDialog,
+            ),
             //
             // // 4. 제출 버튼 (공용 컴포넌트)
             // PsySubmitButton(
@@ -165,9 +215,9 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           child: PsySubmitButton(
-            isEnabled:completedCount == 3,
+            isEnabled: canSubmit,
             isSubmitting: false,
-            text: "검사 결과 제출하기 ($completedCount/3)",
+            text: "검사 결과 제출하기 ($totalProgress/5)",
             onPressed: _submitDrawings,
           ),
         ),
@@ -176,10 +226,29 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
   }
 
   // --- 기존 헬퍼 메서드들 (네비게이션 등) ---
+  void _openPdiDialog() {
+    // 1. 기존 작성한 답변이 있는지 확인
+    final session = ref.read(htpPremiumSessionProvider);
+    final initialAnswers = session?.pdiAnswers;
 
+    // 2. 다이얼로그 띄우기
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 작성 중 실수로 닫히는 것 방지
+      builder: (context) => PsyPdiDialog(
+        title: '그림 완성 후',
+        questions: _pdiQuestions,
+        initialAnswers: initialAnswers,
+        onSubmit: (answers) {
+          // 3. Provider에 저장
+          ref.read(htpPremiumSessionProvider.notifier).savePdiAnswers(answers);
+        },
+      ),
+    );
+  }
   void _navigateToDrawing(String type, String title) async {
     final htpType = _getHtpType(type);
-    final drawing = ref.read(htpSessionProvider.notifier).getDrawing(htpType);
+    final drawing = ref.read(htpPremiumSessionProvider.notifier).getDrawing(htpType);
 
     await Navigator.push(
       context,
@@ -190,7 +259,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
           existingSketchJson: drawing?.sketchJson,
           // 4️⃣ 👈 [핵심 추가] 닫히기 전에 Premium Provider에 저장하도록 연결!
           onSave: (newDrawing, file) async {
-            await ref.read(htpSessionProvider.notifier).updateDrawing(newDrawing, file);
+            await ref.read(htpPremiumSessionProvider.notifier).updateDrawing(newDrawing, file);
           },
         ),
       ),
@@ -199,7 +268,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
   void _showPreview(String type) {
     final htpType = _getHtpType(type);
-    final drawing = ref.read(htpSessionProvider.notifier).getDrawing(htpType);
+    final drawing = ref.read(htpPremiumSessionProvider.notifier).getDrawing(htpType);
 
     if (drawing == null || drawing.imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -395,8 +464,10 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         return '집';
       case 'tree':
         return '나무';
-      case 'person':
-        return '사람';
+      case 'man':
+        return '남성';
+      case 'woman':
+        return '여성';
       default:
         return '그림';
     }
@@ -404,8 +475,8 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
   /// 🎨 검사 제출
   void _submitDrawings() {
-    final session = ref.read(htpSessionProvider);
-    if (session == null || session.drawings.length != 3) {
+    final session = ref.read(htpPremiumSessionProvider);
+    if (session == null || session.drawings.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -459,19 +530,17 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
           ),
     );
   }
-
   Future<void> _performSubmit() async {
     try {
-      final session = ref.read(htpSessionProvider)!;
+      final session = ref.read(htpPremiumSessionProvider)!;
       final imageFiles = <File>[];
 
-      await _saveImagesToGallery(session.drawings);
-
-      for (final type in [HtpType.house, HtpType.tree, HtpType.person]) {
+      for (final type in[HtpType.house, HtpType.tree, HtpType.man, HtpType.woman]) {
         final drawing = session.drawings.firstWhere((d) => d.type == type);
         imageFiles.add(File(drawing.imagePath!));
       }
 
+      // ✅ 1. 메타데이터 생성 (기존에 작성해두신 헬퍼 메서드 사용)
       final drawingProcess = DrawingProcess(
         drawOrder: _getDrawOrder(session.drawings),
         timeTaken: _getTotalTime(session),
@@ -480,15 +549,15 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         modificationCount: _getTotalModificationCount(session.drawings),
       );
 
-      // ✅ 무거운 showDialog()를 삭제합니다.
-      // 전송 중에는 버튼이 '전송중...'으로 바뀌어 중복 클릭을 막아줍니다.
-      await ref.read(htpAnalysisProvider.notifier).analyzeBasic(
-        imageFiles: imageFiles,
-        drawingProcess: drawingProcess,
-      );
+      // ✅ 2. 갤러리 저장 (선택)
+      await _saveImagesToGallery(session.drawings);
 
-      // 업로드가 완료되면 (서버에서 200 OK를 받으면)
-      // 아래 build() 메서드의 ref.listen 이 자동으로 다이얼로그를 띄웁니다.
+      // ✅ 3. Notifier 호출 시 drawingProcess도 같이 넘겨줌!
+      await ref.read(htpAnalysisProvider.notifier).analyzePremium(
+        imageFiles: imageFiles,
+        pdiAnswers: session.pdiAnswers!,
+        drawingProcess: drawingProcess, // 여기 추가!
+      );
 
     } catch (e) {
       AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류: $e');
@@ -580,8 +649,12 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         return HtpType.house;
       case 'tree':
         return HtpType.tree;
+      case 'man':
+        return HtpType.man;     // 👈 [추가] 프리미엄용 남성
+      case 'woman':
+        return HtpType.woman;   // 👈[추가] 프리미엄용 여성
       case 'person':
-        return HtpType.person;
+        return HtpType.person;  // (베이직 하위호환용)
       default:
         return HtpType.house;
     }

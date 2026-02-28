@@ -2,12 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/core/theme/app_colors.dart';
-import 'package:mind_canvas/features/htp/fbt_dashboard_screen.dart';
-import 'package:mind_canvas/features/htp/pitr_dashboard_screen.dart';
-import 'package:mind_canvas/features/htp/starry_sea_dashboard_screen.dart';
+import 'package:mind_canvas/features/htp/htp_dashboard_premium_screen.dart';
+import 'package:mind_canvas/features/htp/single_test_dashboard_screen.dart';
 import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_notifier.dart';
 
 import '../htp/htp_dashboard_screen.dart';
+import '../htp/presentation/enum/single_test_type.dart';
 import '../psytest/psy_test_screen.dart';
 import '../taro/presentation/pages/taro_consultation_setup_page.dart';
 import 'data/models/response/test_detail_response.dart';
@@ -647,6 +647,11 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
     return tag == 'HTP' || tag == 'htp';
   }
+
+  bool _isPremumHtpTest(TestDetailResponse testDetail) {
+    final tag = testDetail.psychologyTag?.toUpperCase().trim();
+    return tag == "HTP_PREMIUM";
+  }
   bool _isFbtTest(TestDetailResponse testDetail) {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
     return tag == 'FBT' || tag == 'fbt';
@@ -683,7 +688,6 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
         duration: const Duration(seconds: 1),
       ),
     );
-
     // 1️⃣ HTP 테스트인 경우
     if (_isHtpTest(testDetail)) {
       Navigator.push(
@@ -695,11 +699,22 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       return;
     }
 
+    if (
+    _isPremumHtpTest(testDetail)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HtpDashboardPremiumScreen(),
+        ),
+      );
+      return;
+    }
+
     if (_isFbtTest(testDetail)) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => FbtDashboardScreen(),
+          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.fishbowl),
         ),
       );
       return;
@@ -709,7 +724,7 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => PitrDashboardScreen(),
+          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.pitr),
         ),
       );
       return;
@@ -719,7 +734,7 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => StarrySeaDashboardScreen(),
+          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.starrySea),
         ),
       );
       return;

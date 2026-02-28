@@ -259,5 +259,7 @@ enum HtpType {
   person,
   starrySea,
   pitr, //빗속의 사람
-  fbt // 어항
+  fishbowl, // 어항
+  man,
+  woman
 }

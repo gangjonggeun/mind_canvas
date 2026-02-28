@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mind_canvas/features/htp/presentation/notifier/psy_analysis_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/utils/result.dart';
@@ -10,26 +11,23 @@ import '../../data/model/request/htp_premium_request.dart';
 import '../../domain/usecases/htp_use_case_provider.dart';
 
 part 'htp_analysis_notifier.g.dart';
-part 'htp_analysis_notifier.freezed.dart';
-@freezed
-class HtpTestState with _$HtpTestState {
-  const factory HtpTestState({
-    @Default(false) bool isSubmitting,
-    @Default(false) bool isCompleted,
-    TestResultResponse? result, // ✅ TestResultResponse로 통합
-    String? errorMessage,
-  }) = _HtpTestState;
-
-  factory HtpTestState.initial() => const HtpTestState();
-}
-
+// @freezed
+// class HtpTestState with _$HtpTestState {
+//   const factory HtpTestState({
+//     @Default(false) bool isSubmitting,
+//     @Default(false) bool isCompleted,
+//     TestResultResponse? result, // ✅ TestResultResponse로 통합
+//     String? errorMessage,
+//   }) = _HtpTestState;
+//
+//   factory HtpTestState.initial() => const HtpTestState();
+// }
+//
 
 @riverpod
 class HtpAnalysis extends _$HtpAnalysis {
   @override
-  HtpTestState build() {
-    return HtpTestState.initial();
-  }
+  PsyAnalysisState build() => PsyAnalysisState.initial(); // 공용 State 사용
 
   /// 🖼️ 1. HTP 기본 분석 (Basic)
   Future<void> analyzeBasic({
@@ -51,17 +49,28 @@ class HtpAnalysis extends _$HtpAnalysis {
   /// 🧠 2. HTP 프리미엄 분석 (Premium)
   Future<void> analyzePremium({
     required List<File> imageFiles,
-    required HtpPremiumRequest request,
+    required Map<String, String> pdiAnswers,
+    required DrawingProcess drawingProcess, // ✅ 추가
   }) async {
     state = state.copyWith(isSubmitting: true, isCompleted: false, errorMessage: null);
 
-    final useCase = ref.read(htpUseCaseProvider);
-    final result = await useCase.analyzePremium(
-      imageFiles: imageFiles,
-      request: request,
-    );
+    try {
+      // ✅ DTO 생성 시 두 데이터 모두 포함
+      final requestDTO = HtpPremiumRequest(
+        answers: pdiAnswers,
+        drawingProcess: drawingProcess,
+      );
 
-    _handleResult(result);
+      final useCase = ref.read(htpUseCaseProvider);
+      final result = await useCase.analyzePremium(
+        imageFiles: imageFiles,
+        request: requestDTO,
+      );
+
+      _handleResult(result);
+    } catch (e) {
+      state = state.copyWith(isSubmitting: false, errorMessage: "요청 생성 중 오류: $e");
+    }
   }
 
   /// 🛠️ 공통 결과 처리 로직
@@ -87,6 +96,6 @@ class HtpAnalysis extends _$HtpAnalysis {
   }
 
   void reset() {
-    state = HtpTestState.initial();
+    state = PsyAnalysisState.initial();
   }
 }

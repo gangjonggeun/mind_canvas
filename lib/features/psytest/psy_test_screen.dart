@@ -254,20 +254,18 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
     return SafeArea(
       child: Column(
         children:[
-          // 🚀 1. Expanded 안에 스크롤 뷰를 넣고, 그 안에 인디케이터와 콘텐츠를 함께 배치!
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController, // 👈 [추가] 여기로 컨트롤러 이동!
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children:[
-                  _buildProgressIndicator(isDarkMode), // 스크롤 시 위로 같이 올라감
-                  _buildQuestionContent(isDarkMode),   // 질문 영역 (Expanded 빼야 함)
+                  _buildProgressIndicator(isDarkMode),
+                  _buildQuestionContent(isDarkMode),
                 ],
               ),
             ),
           ),
-
-          // 하단 고정 버튼 영역
           _buildNavigationButtons(isDarkMode, contentState),
         ],
       ),
@@ -328,17 +326,25 @@ class _PsyTestScreenState extends ConsumerState<PsyTestScreen>
   /// 🎨 질문 콘텐츠 영역
   Widget _buildQuestionContent(bool isDarkMode) {
     if (_currentPage >= _questionPages.length) {
-      return _buildCompletionScreen(isDarkMode);
+      return _buildCompletionScreen(isDarkMode); // 완료 화면은 별도 처리
     }
 
     final currentQuestions = _questionPages[_currentPage];
+
+    // ✅ 애니메이션 빌더
     return AnimatedBuilder(
       animation: _pageAnimation,
       builder: (context, child) {
         return Opacity(
           opacity: _pageAnimation.value,
           child: ListView.builder(
-            controller: _scrollController,
+            // 🚨 [수정 1] 스크롤은 부모(SingleChildScrollView)가 함
+            physics: const NeverScrollableScrollPhysics(),
+            // 🚨 [수정 2] 내용물 크기만큼만 높이 잡기
+            shrinkWrap: true,
+
+            // controller: _scrollController, 👈 [삭제] 부모가 스크롤하므로 필요 없음
+
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: currentQuestions.length,
             itemBuilder: (context, index) {
