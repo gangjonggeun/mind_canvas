@@ -401,95 +401,92 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         return '그림';
     }
   }
+  Future<void> _submitDrawings() async {
+    final session = ref.read(htpSessionProvider); // 또는 singleTestSessionProvider
+    if (session == null || session.drawings.isEmpty) return;
 
-  /// 🎨 검사 제출
-  void _submitDrawings() {
-    final session = ref.read(htpSessionProvider);
-    if (session == null || session.drawings.length != 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Text('모든 그림을 완성해주세요'),
-            ],
-          ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
+    // 1️⃣ 갤러리 저장 여부 묻기
+    bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.collections_rounded, color: Color(0xFF38A169)),
+            SizedBox(width: 10),
+            Text('그림 저장'),
+          ],
         ),
-      );
-      return;
+        content: const Text(
+          '그린 그림들을 갤러리에 저장하시겠습니까?\n분석 결과 페이지에서도 확인할 수 있습니다.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // 저장 안 함
+            child: const Text('아니요', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true), // 저장함
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF38A169),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('네, 저장할게요', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    // 2️⃣ 사용자가 '네'를 선택한 경우에만 저장 로직 실행
+    if (shouldSave == true) {
+      await _saveImagesToGallery(session.drawings);
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false, // 외부 클릭 방지
-      builder: (context) =>
-          AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.send_rounded, color: Color(0xFF38A169)),
-                SizedBox(width: 8),
-                Text('검사 제출'),
-              ],
-            ),
-            content: const Text(
-              'HTP 심리검사를 제출하시겠습니까?\n제출 후에는 수정할 수 없습니다.',
-              style: TextStyle(height: 1.5),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context); // 다이얼로그 닫기
-                  await _performSubmit(); // 실제 제출 수행
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF38A169),
-                ),
-                child: const Text('제출하기'),
-              ),
-            ],
-          ),
-    );
+    // 3️⃣ 최종 제출 다이얼로그 (수정할 수 없다는 안내) 띄우기
+    _showFinalConfirmDialog();
   }
 
+  /// 💾 최종 서버 제출 전 확인 및 실제 전송 호출
+  void _showFinalConfirmDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('검사 제출'),
+        content: const Text('분석을 시작할까요?\n제출 후에는 그림을 수정할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performSubmit(); // 실제 서버 전송 로직 실행
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38A169)),
+            child: const Text('제출하기', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
   Future<void> _performSubmit() async {
     try {
-      final session = ref.read(htpSessionProvider)!;
-      final imageFiles = <File>[];
+      final session = ref.read(htpSessionProvider)!; // 싱글은 singleTestSessionProvider
+      final imageFiles = session.drawings.map((d) => File(d.imagePath!)).toList();
 
-      await _saveImagesToGallery(session.drawings);
+      // 🚀 단 한 줄로 모든 데이터 가공 완료! (프리미엄, 베이직, 싱글 모두 동일하게 작동)
+      final drawingProcess = DrawingProcess.fromEntities(session.drawings);
 
-      for (final type in [HtpType.house, HtpType.tree, HtpType.person]) {
-        final drawing = session.drawings.firstWhere((d) => d.type == type);
-        imageFiles.add(File(drawing.imagePath!));
-      }
 
-      final drawingProcess = DrawingProcess(
-        drawOrder: _getDrawOrder(session.drawings),
-        timeTaken: _getTotalTime(session),
-        pressure: _getAveragePressure(session.drawings),
-        strokeCount: _getTotalStrokeCount(session.drawings),
-        modificationCount: _getTotalModificationCount(session.drawings),
-      );
-
-      // ✅ 무거운 showDialog()를 삭제합니다.
-      // 전송 중에는 버튼이 '전송중...'으로 바뀌어 중복 클릭을 막아줍니다.
-      await ref.read(htpAnalysisProvider.notifier).analyzeBasic(
+      // AI에 전송
+      await ref.read(htpAnalysisProvider.notifier).analyzeBasic( // 프리미엄/싱글 맞게 변경
         imageFiles: imageFiles,
         drawingProcess: drawingProcess,
       );
-
-      // 업로드가 완료되면 (서버에서 200 OK를 받으면)
-      // 아래 build() 메서드의 ref.listen 이 자동으로 다이얼로그를 띄웁니다.
-
     } catch (e) {
       AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류: $e');
     }

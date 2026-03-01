@@ -7,6 +7,19 @@
         <string>https</string>
         <string>http</string>
     </array>
+
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-3940256099942544~1458002511</string>
+
+    <!-- 2. Ad Network (광고 네트워크 허용) -->
+    <key>SKAdNetworkItems</key>
+    <array>
+      <dict>
+        <key>SKAdNetworkIdentifier</key>
+        <string>cstr6suwn9.skadnetwork</string>
+      </dict>
+    </array>
+
     <key>NSPhotoLibraryUsageDescription</key>
     <string>프로필 사진 변경을 위해 갤러리 접근 권한이 필요합니다.</string>
     <key>NSCameraUsageDescription</key>

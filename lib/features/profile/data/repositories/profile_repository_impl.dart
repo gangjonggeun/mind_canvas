@@ -123,6 +123,43 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Result.failure('잉크 내역 조회 중 오류 발생: $e');
     }
   }
+  @override
+  Future<Result<bool>> claimAdReward() async {
+    try {
+      final token = await _getBearerToken();
+      final response = await _apiDataSource.claimAdReward(token);
+
+      if (response.isSuccess) {
+        return Result.success(true);
+      } else {
+        return Result.failure(response.errorMessage ?? '광고 보상을 획득하지 못했습니다.');
+      }
+    } catch (e) {
+      return Result.failure('광고 보상 처리 중 오류 발생: $e');
+    }
+  }
+  // 2. ProfileRepositoryImpl에 추가
+  Future<Result<bool>> verifyPayment(String merchantUid, String portoneId) async {
+    try {
+      final token = await _getBearerToken();
+      final body = {
+        'merchantUid': merchantUid,
+        'portoneId': portoneId,
+      };
+
+      final response = await _apiDataSource.verifyPayment(token, body);
+
+      if (response.isSuccess) {
+        return Result.success(true);
+      } else {
+        return Result.failure(response.errorMessage ?? '결제 검증 실패');
+      }
+    } catch (e) {
+      return Result.failure('결제 검증 중 오류: $e');
+    }
+  }
+
+
 
   // 👇 구현 완료: 내 심리 테스트 결과 조회
   @override

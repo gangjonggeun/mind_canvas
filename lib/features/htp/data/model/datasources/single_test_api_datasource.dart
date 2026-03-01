@@ -56,11 +56,11 @@ class SingleTestApiDataSource {
   }
 
   Future<ApiResponse<TestResultResponse>> analyzeStarrySea(File image, String json, String token) =>
-      _analyze(path: '/api/v1/analyze/starry-sea', imageFile: image, requestJson: json, accessToken: token);
+      _analyze(path: '/analyze/starry-sea', imageFile: image, requestJson: json, accessToken: token);
 
   Future<ApiResponse<TestResultResponse>> analyzePitr(File image, String json, String token) =>
-      _analyze(path: '/api/v1/analyze/pitr', imageFile: image, requestJson: json, accessToken: token);
+      _analyze(path: '/analyze/pitr', imageFile: image, requestJson: json, accessToken: token);
 
   Future<ApiResponse<TestResultResponse>> analyzeFishbowl(File image, String json, String token) =>
-      _analyze(path: '/api/v1/analyze/fishbowl', imageFile: image, requestJson: json, accessToken: token);
+      _analyze(path: '/analyze/fishbowl', imageFile: image, requestJson: json, accessToken: token);
 }

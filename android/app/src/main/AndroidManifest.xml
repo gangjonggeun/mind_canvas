@@ -37,13 +37,19 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:label="mind_canvas"
+        android:label="Mind Canvas"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="false"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         tools:targetApi="31">
+
+        <!-- ✅ 1. 위치 이동: application 시작 직후로 옮기세요 (activity 밖으로!) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="high_importance_channel" />
@@ -65,7 +71,8 @@
 
 
 
-            <!-- Flutter 앱의 메인 진입점 설정 -->
+
+
             <meta-data
                 android:name="io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode"
                 android:value="transparent" />

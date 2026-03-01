@@ -19,6 +19,8 @@ abstract class ProfileRepository {
     required String nickname,
     File? imageFile,
   });
+  Future<Result<bool>> claimAdReward();
+  Future<Result<bool>> verifyPayment(String merchantUid, String portoneId);
 
   /// 📊 프로필 요약 정보 조회
   Future<Result<ProfileSummaryResponse>> getProfileSummary();

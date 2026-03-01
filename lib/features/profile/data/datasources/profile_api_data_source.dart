@@ -23,6 +23,18 @@ abstract class ProfileApiDataSource {
       @Body() FormData body, // 👈 여기가 핵심 변경점
       );
 
+  @POST('/api/v1/payments/ad-reward')
+  Future<ApiResponse<dynamic>> claimAdReward(
+      @Header('Authorization') String token,
+      );
+
+
+  @POST('/api/v1/payments/verify')
+  Future<ApiResponse<dynamic>> verifyPayment(
+      @Header('Authorization') String token,
+      @Body() Map<String, dynamic> body,
+      );
+
   @GET('/profile/summary')
   Future<ApiResponse<ProfileSummaryResponse>> getProfileSummary(
     @Header('Authorization') String authorization,

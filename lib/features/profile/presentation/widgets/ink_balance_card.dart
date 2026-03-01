@@ -5,11 +5,15 @@ import 'package:flutter/services.dart';
 class InkBalanceCard extends StatelessWidget {
   final int inkBalance;
   final VoidCallback? onRecharge;
+  final int dailyAdCount;
+  final VoidCallback? onWatchAd;
 
   const InkBalanceCard({
     super.key,
     required this.inkBalance,
+    required this.dailyAdCount, // ✅ 필수 인자로 추가
     this.onRecharge,
+    this.onWatchAd,
   });
 
   @override
@@ -103,7 +107,8 @@ class InkBalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRechargeButton(ThemeData theme, ColorScheme colorScheme, Color primaryColor) {
+  Widget _buildRechargeButton(
+      ThemeData theme, ColorScheme colorScheme, Color primaryColor) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -112,10 +117,14 @@ class InkBalanceCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [primaryColor, primaryColor.withOpacity(0.8)]),
+          gradient: LinearGradient(
+              colors: [primaryColor, primaryColor.withOpacity(0.8)]),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: primaryColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
           ],
         ),
         child: Text(
@@ -129,7 +138,10 @@ class InkBalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildQuickActions(
+      BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+    final bool isMaxAds = dailyAdCount >= 5; // 5회 제한 체크
+
     return Row(
       children: [
         Expanded(
@@ -144,14 +156,16 @@ class InkBalanceCard extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _buildQuickActionButton(
-            icon: Icons.ads_click_rounded,
-            label: 'profile.watch_ad'.tr(), // 텍스트 변경
+            icon: isMaxAds ? Icons.check_circle_rounded : Icons.ads_click_rounded,
+            label: isMaxAds ? '오늘 완료' : '${'profile.watch_ad'.tr()} ($dailyAdCount/5)',
             onTap: () {
               HapticFeedback.selectionClick();
-              // 광고 로직
+              // ✅ 여기서 다이얼로그 호출용 콜백을 실행합니다.
+              onWatchAd?.call();
             },
             theme: theme,
             colorScheme: colorScheme,
+            isActive: !isMaxAds,
           ),
         ),
       ],
@@ -164,29 +178,39 @@ class InkBalanceCard extends StatelessWidget {
     required VoidCallback onTap,
     required ThemeData theme,
     required ColorScheme colorScheme,
+    bool isActive = true, // ✅ 상태 추가
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: colorScheme.onSurfaceVariant, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
+      child: Opacity(
+        opacity: isActive ? 1.0 : 0.5, // ✅ 완료 시 흐릿하게
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isActive
+                      ? colorScheme.onSurface
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

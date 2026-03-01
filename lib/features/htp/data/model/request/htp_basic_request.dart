@@ -4,6 +4,8 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../domain/entities/htp_session_entity.dart';
+
 part 'htp_basic_request.freezed.dart';
 part 'htp_basic_request.g.dart';
 
@@ -51,10 +53,59 @@ class DrawingProcess with _$DrawingProcess {
 
     /// 필압 정보 (light/medium/heavy)
     @JsonKey(name: 'pressure') required String pressure,
-    required int strokeCount,       // ✅ 추가
-    required int modificationCount, // ✅ 추가
+
+    required String strokeCount,
+    required String modificationCount,
   }) = _DrawingProcess;
 
   factory DrawingProcess.fromJson(Map<String, dynamic> json) =>
       _$DrawingProcessFromJson(json);
+
+
+  factory DrawingProcess.fromEntities(List<HtpDrawingEntity> drawings) {
+    if (drawings.isEmpty) {
+      return const DrawingProcess(
+        drawOrder: '없음',
+        timeTaken: '0분 0초',
+        pressure: 'medium',
+        strokeCount: '0회',
+        modificationCount: '0회',
+      );
+    }
+
+    // 1. 그린 시간순으로 정렬 (이 순서가 기준이 됩니다)
+    final sorted = List<HtpDrawingEntity>.from(drawings)
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    // 2. 그리기 순서 (예: house-tree-person)
+    final drawOrder = sorted.map((d) => d.type.name).join('-');
+
+    // 3. 소요 시간 나열 (예: "1분 8초, 1분 0초, 3분 12초")
+    final timeTaken = sorted.map((d) {
+      int durationMs = d.endTime - d.startTime;
+      if (durationMs < 0) durationMs = 0; // 에러 방지용
+
+      int totalSec = (durationMs / 1000).round();
+      return '${totalSec ~/ 60}분 ${totalSec % 60}초';
+    }).join(', ');
+
+    // 4. 평균 필압 나열 (예: "medium, light, heavy")
+    final pressure = sorted.map((d) {
+      if (d.averagePressure < 0.4) return 'light';
+      if (d.averagePressure < 0.7) return 'medium';
+      return 'heavy';
+    }).join(', ');
+
+    // 5. 획수 및 지우개 횟수 나열 (예: "11회, 19회, 20회")
+    final strokeCount = sorted.map((d) => '${d.strokeCount}회').join(', ');
+    final modificationCount = sorted.map((d) => '${d.modificationCount}회').join(', ');
+
+    return DrawingProcess(
+      drawOrder: drawOrder,
+      timeTaken: timeTaken,
+      pressure: pressure,
+      strokeCount: strokeCount,
+      modificationCount: modificationCount,
+    );
+  }
 }

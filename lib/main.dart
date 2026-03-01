@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dart';
@@ -13,13 +14,14 @@ import 'package:flutter/services.dart';
 import 'app/main_screen.dart';
 import 'core/router/app_router.dart';
 import 'core/utils/cover_image_helper.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CoverImageHelper.init();
   await Firebase.initializeApp(); // 파이어베이스 초기화
   await EasyLocalization.ensureInitialized(); // 추가
-
+  await MobileAds.instance.initialize();
 
   // 🔔 권한 요청 (iOS/Android 13+)
   await FirebaseMessaging.instance.requestPermission(

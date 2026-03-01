@@ -16,6 +16,14 @@ class ProfileUseCase {
 
   ProfileUseCase(this._profileRepository);
 
+
+  Future<Result<bool>> verifyPayment(String merchantUid, String portoneId) {
+    return _profileRepository.verifyPayment(merchantUid, portoneId);
+  }
+
+  Future<Result<bool>> claimAdReward() {
+    return _profileRepository.claimAdReward();
+  }
   // =============================================================
   // 📝 프로필 설정
   // =============================================================

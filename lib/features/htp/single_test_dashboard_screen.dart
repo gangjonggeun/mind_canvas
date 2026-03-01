@@ -381,55 +381,118 @@ class _SingleTestDashboardScreenState
     );
   }
 
+
+
+
   Future<void> _submitDrawings() async {
-    final session = ref.read(singleTestSessionProvider(widget.testType));
+    final session = ref.read(singleTestSessionProvider(widget.testType));// 또는 singleTestSessionProvider
     if (session == null || session.drawings.isEmpty) return;
 
-    final drawing = session.drawings.first;
-
-    // 1. 갤러리 저장 (선택 사항)
-    await _saveImagesToGallery(session.drawings);
-
-    // 2. 🚀 메타데이터 생성 (단일 그림 기준)
-    final drawingProcess = DrawingProcess(
-      drawOrder: drawing.type.name, // 단일 그림이므로 해당 그림 이름만 넣음
-      timeTaken: _getTotalTime(session),
-      pressure: _getAveragePressure(session.drawings),
-      strokeCount: _getTotalStrokeCount(session.drawings),
-      modificationCount: _getTotalModificationCount(session.drawings),
+    // 1️⃣ 갤러리 저장 여부 묻기
+    bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.collections_rounded, color: Color(0xFF38A169)),
+            SizedBox(width: 10),
+            Text('그림 저장'),
+          ],
+        ),
+        content: const Text(
+          '그린 그림들을 갤러리에 저장하시겠습니까?\n분석 결과 페이지에서도 확인할 수 있습니다.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // 저장 안 함
+            child: const Text('아니요', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true), // 저장함
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF38A169),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('네, 저장할게요', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
 
-    // 3. 통합 분석 Notifier 호출 (메타데이터 포함)
-    await ref.read(singleTestAnalysisProvider.notifier).submitTest(
-      testType: widget.testType,
-      imageFile: File(drawing.imagePath!),
-      pdiAnswers: session.pdiAnswers ?? {},
-      drawingProcess: drawingProcess, // ✅ 메타데이터 추가!
+    // 2️⃣ 사용자가 '네'를 선택한 경우에만 저장 로직 실행
+    if (shouldSave == true) {
+      await _saveImagesToGallery(session.drawings);
+    }
+
+    // 3️⃣ 최종 제출 다이얼로그 (수정할 수 없다는 안내) 띄우기
+    _showFinalConfirmDialog();
+  }
+
+  /// 💾 최종 서버 제출 전 확인 및 실제 전송 호출
+  void _showFinalConfirmDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('검사 제출'),
+        content: const Text('분석을 시작할까요?\n제출 후에는 그림을 수정할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performSubmit(); // 실제 서버 전송 로직 실행
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38A169)),
+            child: const Text('제출하기', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
-  int _getTotalStrokeCount(List<HtpDrawingEntity> drawings) {
-    return drawings.fold(0, (sum, d) => sum + d.strokeCount);
+
+
+  Future<void> _performSubmit() async {
+    try {
+      // 1. 세션 상태 가져오기 및 Null / 빈 값 체크 (에러 1 해결 ✅)
+      final session = ref.read(singleTestSessionProvider(widget.testType));
+      if (session == null || session.drawings.isEmpty) {
+        AiAnalysisHelper.showErrorSnackBar(context, '분석할 그림이 없습니다.');
+        return;
+      }
+
+      // 단일 테스트이므로 첫 번째(유일한) 그림 가져오기
+      final drawing = session.drawings.first;
+
+      // 2. 🚀 데이터 가공 로직 (아까 만든 공통 팩토리 재사용!)
+      // 싱글이든 다중이든 session.drawings만 던져주면 알아서 계산합니다.
+      final drawingProcess = DrawingProcess.fromEntities(session.drawings);
+
+
+      // 3. AI 분석 요청 (에러 2, 3 해결 ✅)
+      // 싱글 테스트 Notifier의 파라미터 스펙에 정확히 맞춥니다.
+      await ref.read(singleTestAnalysisProvider.notifier).submitTest(
+        testType: widget.testType,              // 현재 진행 중인 테스트 타입 (starrySea 등)
+        imageFile: File(drawing.imagePath!),    // List가 아닌 단일 파일 전달
+        pdiAnswers: session.pdiAnswers ?? {},   // 세션에 저장된 PDI 답변 전달
+        drawingProcess: drawingProcess,         // 깔끔하게 가공된 메타데이터
+      );
+
+      // (참고: 로딩 다이얼로그나 결과창 이동은 ref.listen에서 처리)
+
+    } catch (e) {
+      debugPrint("❌ 제출 중 에러 발생: $e");
+      AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류가 발생했습니다: $e');
+    }
   }
 
-  int _getTotalModificationCount(List<HtpDrawingEntity> drawings) {
-    return drawings.fold(0, (sum, d) => sum + d.modificationCount);
-  }
-  // 💡 헬퍼 메서드 (프리미엄에 있던 거 그대로 가져오시면 됩니다)
-  String _getTotalTime(HtpSessionEntity session) {
-    if (session.endTime == null) return '측정 불가';
-    final totalSeconds = ((session.endTime! - session.startTime) / 1000).round();
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    return '$minutes분 $seconds초';
-  }
 
-  String _getAveragePressure(List<HtpDrawingEntity> drawings) {
-    if (drawings.isEmpty) return 'medium';
-    final avgPressure = drawings.map((d) => d.averagePressure).reduce((a, b) => a + b) / drawings.length;
-    if (avgPressure < 0.3) return 'light';
-    if (avgPressure < 0.7) return 'medium';
-    return 'heavy';
-  }
 
   Future<void> _saveImagesToGallery(List<HtpDrawingEntity> drawings) async {
     try {

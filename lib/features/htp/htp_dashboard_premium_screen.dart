@@ -474,103 +474,119 @@ class _HtpDashboardPremiumScreenState extends ConsumerState<HtpDashboardPremiumS
   }
 
   /// 🎨 검사 제출
-  void _submitDrawings() {
-    final session = ref.read(htpPremiumSessionProvider);
-    if (session == null || session.drawings.length != 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Text('모든 그림을 완성해주세요'),
-            ],
-          ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
+  Future<void> _submitDrawings() async {
+    final session = ref.read(htpPremiumSessionProvider); // 또는 singleTestSessionProvider
+    if (session == null || session.drawings.isEmpty) return;
+
+    // 1️⃣ 갤러리 저장 여부 묻기
+    bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.collections_rounded, color: Color(0xFF38A169)),
+            SizedBox(width: 10),
+            Text('그림 저장'),
+          ],
         ),
-      );
-      return;
+        content: const Text(
+          '그린 그림들을 갤러리에 저장하시겠습니까?\n분석 결과 페이지에서도 확인할 수 있습니다.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // 저장 안 함
+            child: const Text('아니요', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true), // 저장함
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF38A169),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('네, 저장할게요', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    // 2️⃣ 사용자가 '네'를 선택한 경우에만 저장 로직 실행
+    if (shouldSave == true) {
+      await _saveImagesToGallery(session.drawings);
     }
 
+    // 3️⃣ 최종 제출 다이얼로그 (수정할 수 없다는 안내) 띄우기
+    _showFinalConfirmDialog();
+  }
+
+  /// 💾 최종 서버 제출 전 확인 및 실제 전송 호출
+  void _showFinalConfirmDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // 외부 클릭 방지
-      builder: (context) =>
-          AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.send_rounded, color: Color(0xFF38A169)),
-                SizedBox(width: 8),
-                Text('검사 제출'),
-              ],
-            ),
-            content: const Text(
-              'HTP 심리검사를 제출하시겠습니까?\n제출 후에는 수정할 수 없습니다.',
-              style: TextStyle(height: 1.5),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context); // 다이얼로그 닫기
-                  await _performSubmit(); // 실제 제출 수행
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF38A169),
-                ),
-                child: const Text('제출하기'),
-              ),
-            ],
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('검사 제출'),
+        content: const Text('분석을 시작할까요?\n제출 후에는 그림을 수정할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performSubmit(); // 실제 서버 전송 로직 실행
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38A169)),
+            child: const Text('제출하기', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
+
   Future<void> _performSubmit() async {
     try {
-      final session = ref.read(htpPremiumSessionProvider)!;
-      final imageFiles = <File>[];
+      // 1. 세션 상태 가져오기
+      final session = ref.read(htpPremiumSessionProvider);
 
-      for (final type in[HtpType.house, HtpType.tree, HtpType.man, HtpType.woman]) {
-        final drawing = session.drawings.firstWhere((d) => d.type == type);
-        imageFiles.add(File(drawing.imagePath!));
+      // 방어 로직: 세션이 없거나, 그림 4개가 다 안 그려졌거나, PDI가 없는 경우 튕겨냄
+      if (session == null || session.drawings.length < 4 || session.pdiAnswers == null) {
+        AiAnalysisHelper.showErrorSnackBar(context, '모든 그림과 질문지 작성을 완료해주세요.');
+        return;
       }
 
-      // ✅ 1. 메타데이터 생성 (기존에 작성해두신 헬퍼 메서드 사용)
-      final drawingProcess = DrawingProcess(
-        drawOrder: _getDrawOrder(session.drawings),
-        timeTaken: _getTotalTime(session),
-        pressure: _getAveragePressure(session.drawings),
-        strokeCount: _getTotalStrokeCount(session.drawings),
-        modificationCount: _getTotalModificationCount(session.drawings),
-      );
+      // 2. 이미지 파일 리스트 추출
+      // (만약 서버에서 집->나무->남자->여자 순서를 엄격히 요구한다면 아래 주석처리된 방식을 사용하세요)
+      final imageFiles = session.drawings.map((d) => File(d.imagePath!)).toList();
+      // 순서 보장형 추출이 필요하다면:
+      // final imageFiles = <File>[];
+      // for (final type in[HtpType.house, HtpType.tree, HtpType.man, HtpType.woman]) {
+      //   final drawing = session.drawings.firstWhere((d) => d.type == type);
+      //   imageFiles.add(File(drawing.imagePath!));
+      // }
 
-      // ✅ 2. 갤러리 저장 (선택)
-      await _saveImagesToGallery(session.drawings);
+      // 3. 🚀 데이터 가공 로직 (아까 만든 공통 팩토리 재사용!)
+      // 프리미엄의 그림 4개를 던져주면 알아서 총 시간, 획수, 평균 필압을 뽑아줍니다.
+      final drawingProcess = DrawingProcess.fromEntities(session.drawings);
 
-      // ✅ 3. Notifier 호출 시 drawingProcess도 같이 넘겨줌!
+      // 4. AI 분석 요청 (프리미엄 전용 Notifier)
       await ref.read(htpAnalysisProvider.notifier).analyzePremium(
-        imageFiles: imageFiles,
-        pdiAnswers: session.pdiAnswers!,
-        drawingProcess: drawingProcess, // 여기 추가!
+        imageFiles: imageFiles,              // 그림 4장
+        pdiAnswers: session.pdiAnswers!,     // ✅ 프리미엄 핵심: PDI 답변 포함!
+        drawingProcess: drawingProcess,      // 깔끔하게 가공된 메타데이터
       );
+
+      // (참고: 로딩 다이얼로그나 결과창 이동은 ref.listen에서 처리)
 
     } catch (e) {
-      AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류: $e');
+      debugPrint("❌ 프리미엄 제출 중 에러 발생: $e");
+      AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류가 발생했습니다: $e');
     }
   }
 
-  int _getTotalStrokeCount(List<HtpDrawingEntity> drawings) {
-    return drawings.fold(0, (sum, d) => sum + d.strokeCount);
-  }
-
-  int _getTotalModificationCount(List<HtpDrawingEntity> drawings) {
-    return drawings.fold(0, (sum, d) => sum + d.modificationCount);
-  }
 
   Future<void> _saveImagesToGallery(List<HtpDrawingEntity> drawings) async {
     try {
@@ -607,40 +623,6 @@ class _HtpDashboardPremiumScreenState extends ConsumerState<HtpDashboardPremiumS
         print("Gal 에러: ${e.type}");
       }
     }
-  }
-
-  String _getAveragePressure(List<HtpDrawingEntity> drawings) {
-    if (drawings.isEmpty) return 'medium';
-
-    final avgPressure = drawings
-        .map((d) => d.averagePressure)
-        .reduce((a, b) => a + b) / drawings.length;
-
-    if (avgPressure < 0.3) return 'light';
-    if (avgPressure < 0.7) return 'medium';
-    return 'heavy';
-  }
-
-
-// 📍 헬퍼 메서드들 (기존과 동일)
-  String _getDrawOrder(List<HtpDrawingEntity> drawings) {
-    final sortedDrawings = List<HtpDrawingEntity>.from(drawings)
-      ..sort((a, b) => a.startTime.compareTo(b.startTime));
-
-    return sortedDrawings.map((d) => d.type.name).join('-');
-  }
-
-  String _getTotalTime(HtpSessionEntity session) {
-    if (session.endTime == null) {
-      return '측정 불가';
-    }
-
-    final totalSeconds = ((session.endTime! - session.startTime) / 1000)
-        .round();
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-
-    return '$minutes분 $seconds초';
   }
 
   HtpType _getHtpType(String type) {

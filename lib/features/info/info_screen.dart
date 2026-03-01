@@ -654,11 +654,11 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
   }
   bool _isFbtTest(TestDetailResponse testDetail) {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
-    return tag == 'FBT' || tag == 'fbt';
+    return tag == 'FBT' || tag == 'FISHBOWL';
   }
   bool _isStarryTest(TestDetailResponse testDetail) {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();
-    return tag == 'STARRY' || tag == 'starry';
+    return tag == 'STARRY_SEA' || tag == 'STARRY';
   }
   bool _isPitrTest(TestDetailResponse testDetail) {
     final tag = testDetail.psychologyTag?.toUpperCase().trim();

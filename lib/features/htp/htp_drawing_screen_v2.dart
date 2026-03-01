@@ -26,7 +26,9 @@ enum PenType {
   brush('붓', Icons.brush, 1.5, 0.8), // 붓 (속도에 따라 확 얇아짐 -> 붓글씨 느낌)
   marker('마커', Icons.highlight, 2.5, 0.0), // 마커 (굵기 일정)
   pencil('연필', Icons.create, 0.6, 0.1), // 연필 (얇고 거의 일정함)
-  spray('스프레이', Icons.scatter_plot, 3.0, 0.0);
+  spray('스프레이', Icons.scatter_plot, 3.0, 0.0),
+  eraser('지우개', Icons.cleaning_services_rounded, 4.0, 0.0);
+
 
   final String name;
   final IconData icon;
@@ -95,6 +97,10 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
   double _baseStrokeWidth = 4.0;
   double _transparency = 0.0;
 
+  Offset? _lastPoint;
+  int? _lastTime;
+  double _currentStrokePressureSum = 0.0;
+  int _currentStrokePointCount = 0;
 
   // ✅ HTP 필수 색상 팔레트 (살구색 포함 14색)
   final List<Color> _presetColors = [
@@ -462,24 +468,47 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
     RenderBox box = _canvasKey.currentContext?.findRenderObject() as RenderBox;
     Offset point = box.globalToLocal(details.globalPosition);
 
-    // 👇 [핵심] 투명도 0이면 opacity 1.0(불투명), 100이면 opacity 0.05(거의 투명)
     double actualOpacity = 1.0 - (_transparency / 100.0);
-    actualOpacity = actualOpacity.clamp(0.05, 1.0); // 완전히 안 보이는 현상 방지
+    actualOpacity = actualOpacity.clamp(0.05, 1.0);
 
-    // 색상에 투명도 적용
+    // ✅ 지우개일 때는 투명도 무시, 일반 펜일 때는 선택된 색상 적용
     final activeColor = _isEraserMode ? Colors.white : _currentColor.withOpacity(actualOpacity);
 
-    _currentStroke.value = Stroke(
-      [PointVector(point.dx, point.dy)],
+    _currentStroke.value = Stroke([PointVector(point.dx, point.dy)],
       activeColor,
       _isEraserMode ? _baseStrokeWidth * 4.0 : _baseStrokeWidth * _currentPenType.sizeMultiplier,
-      _isEraserMode ? PenType.marker : _currentPenType,
+      _isEraserMode ? PenType.eraser : _currentPenType, // ✅ 지우개 타입 주입
     );
-    _undoHistory.clear();
+
+
+    _lastPoint = details.globalPosition;
+    _lastTime = DateTime.now().millisecondsSinceEpoch;
+    _currentStrokePressureSum = 0.0;
+    _currentStrokePointCount = 0;
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (_currentStroke.value == null) return;
+
+    // 💡 1. 속도 기반으로 필압 계산 로직 추가
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+    final currentPoint = details.globalPosition;
+
+    if (_lastPoint != null && _lastTime != null) {
+      final dt = currentTime - _lastTime!;
+      if (dt > 0) {
+        final distance = (currentPoint - _lastPoint!).distance;
+        final speed = distance / dt; // 픽셀/ms
+
+        // HtpDataCollector의 static 헬퍼 사용
+        final pressure = HtpDataCollector.calculatePressureFromSpeed(speed);
+        _currentStrokePressureSum += pressure;
+        _currentStrokePointCount++;
+      }
+    }
+    _lastPoint = currentPoint;
+    _lastTime = currentTime;
+
     RenderBox box = _canvasKey.currentContext?.findRenderObject() as RenderBox;
     Offset point = box.globalToLocal(details.globalPosition);
 
@@ -490,42 +519,56 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
   void _onPanEnd(DragEndDetails details) {
     if (_currentStroke.value != null) {
-      // 완료된 선을 전체 목록에 추가
-      _strokes.value = [..._strokes.value, _currentStroke.value!];
-      _currentStroke.value = null;
+      // 💡 2. 계산된 평균 필압을 Collector에 전달
+      double avgPressure = 0.5; // 기본값
+      if (_currentStrokePointCount > 0) {
+        avgPressure = _currentStrokePressureSum / _currentStrokePointCount;
+      }
 
-      // HTP 분석용 데이터 기록
-      _dataCollector.addStroke(0.5); // 필압 기본값 처리
+      setState(() {
+        _strokes.value =[..._strokes.value, _currentStroke.value!];
+        _undoHistory.clear();
+      });
+
+      _currentStroke.value = null;
+      _dataCollector.addStroke(avgPressure); // ✅ 이제 0.5 대신 진짜 계산된 필압 전달!
       if (_isEraserMode) _dataCollector.addModification();
     }
   }
 
-  // --------------------------------------------------
-  // 4. 액션 버튼 로직 (Undo, Redo, Clear, Save)
-  // --------------------------------------------------
   void _undo() {
     if (_strokes.value.isNotEmpty) {
       final strokes = List<Stroke>.from(_strokes.value);
-      _undoHistory.add(strokes.removeLast());
-      _strokes.value = strokes;
+      final last = strokes.removeLast();
+
+      setState(() { // ✅ setState 추가
+        _undoHistory.add(last);
+        _strokes.value = strokes;
+      });
+
       _dataCollector.addModification();
     }
   }
 
   void _redo() {
     if (_undoHistory.isNotEmpty) {
-      final strokes = List<Stroke>.from(_strokes.value);
-      strokes.add(_undoHistory.removeLast());
-      _strokes.value = strokes;
+      setState(() { // ✅ setState 추가
+        final lastRedo = _undoHistory.removeLast();
+        _strokes.value = [..._strokes.value, lastRedo];
+      });
+
       _dataCollector.addModification();
     }
   }
 
   void _clearCanvas() {
-    _strokes.value = [];
-    _undoHistory.clear();
+    setState(() { // ✅ setState 추가
+      _strokes.value =[];
+      _undoHistory.clear();
+    });
     _dataCollector.addModification();
   }
+
 
   void _toggleEraser() {
     setState(() => _isEraserMode = !_isEraserMode);
@@ -651,7 +694,7 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                     child: Stack(
                       children: [
                         // 투명한 배경을 깔아둬야 터치가 빈 공간에서도 먹힙니다.
-                        Container(color: Colors.transparent),
+                        Container(color: Colors.white),
 
                         // 1. 이미 그려진 완료된 획들
                         ValueListenableBuilder<List<Stroke>>(
@@ -746,10 +789,20 @@ class FreehandPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+
+    // canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+
     for (final stroke in strokes) {
-      final paint = Paint()
-        ..color = stroke.color // 투명도가 이미 포함된 색상
-        ..style = PaintingStyle.fill;
+      final paint = Paint()..style = PaintingStyle.fill;
+
+      // 지우개 처리
+      if (stroke.penType == PenType.eraser) {
+        paint.blendMode = BlendMode.srcOver;
+        paint.color = Colors.white;
+      } else {
+        paint.blendMode = BlendMode.srcOver;
+        paint.color = stroke.color;
+      }
 
       // 💦 [핵심] 스프레이 렌더링 로직
       if (stroke.penType == PenType.spray) {
@@ -791,6 +844,7 @@ class FreehandPainter extends CustomPainter {
       path.close();
       canvas.drawPath(path, paint);
     }
+
   }
 
   @override

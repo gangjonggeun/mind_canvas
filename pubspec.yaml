@@ -60,7 +60,9 @@ dependencies:
   easy_localization: ^3.0.7
   perfect_freehand: ^2.5.2+1
   gal: ^2.3.2
-
+  portone_flutter: ^0.12.1
+  google_mobile_ads: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +83,13 @@ dev_dependencies:
 
   riverpod_generator: ^2.4.0
   mockito: ^5.4.4
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/icon/app_icon.png" # 👈 아이콘 경로
+  adaptive_icon_background: "#FFFFFF" # 안드로이드 배경색 (흰색 추천)
+  adaptive_icon_foreground: "assets/images/icon/app_icon.png"
 
 flutter:
   uses-material-design: true
