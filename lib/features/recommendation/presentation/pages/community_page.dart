@@ -6,6 +6,7 @@ import 'package:mind_canvas/features/recommendation/presentation/pages/user_prof
 
 import '../../data/dto/embedded_content.dart';
 import '../../data/dto/post_response.dart';
+import '../../domain/usecase/community_use_case.dart';
 import '../provider/channel_notifier.dart';
 import '../provider/post_notifier.dart';
 import '../widgets/category_popup_menu.dart';
@@ -64,7 +65,7 @@ class _CommunityPageState extends ConsumerState<CommunityPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'MindCanvas', // 로고나 앱 이름
+          '게시판', // 로고나 앱 이름
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -73,18 +74,18 @@ class _CommunityPageState extends ConsumerState<CommunityPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {
-              // TODO: 검색 화면 이동
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {
-              // TODO: 알림 화면 이동
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.search, color: Colors.black),
+          //   onPressed: () {
+          //     // TODO: 검색 화면 이동
+          //   },
+          // ),
+          // IconButton(
+          //   icon: const Icon(Icons.notifications_none, color: Colors.black),
+          //   onPressed: () {
+          //     // TODO: 알림 화면 이동
+          //   },
+          // ),
         ],
       ),
       body: RefreshIndicator(
@@ -145,7 +146,7 @@ class _CommunityPageState extends ConsumerState<CommunityPage> {
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final post = postState.posts[index];
-                  return PostCard(post: post);
+                  return PostCard(key: ValueKey('post_${post.id}'), post: post);
                 }, childCount: postState.posts.length),
               ),
 
@@ -208,6 +209,7 @@ class _ChannelBarSection extends ConsumerWidget {
     final channelState = ref.watch(channelNotifierProvider);
     final currentChannel = ref.watch(postNotifierProvider).currentChannel;
     final myChannels = channelState.myChannels;
+    final postState = ref.watch(postNotifierProvider);
 
     if (channelState.isLoading && myChannels.isEmpty) {
       return const SizedBox(
@@ -249,6 +251,32 @@ class _ChannelBarSection extends ConsumerWidget {
                     channel: item.channel, // 'FREE' or 'INTP'...
                     forceRefresh: true,
                   );
+            },
+            onLongPress: () {
+              if (item.channel == 'FREE') return;
+
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: Colors.white,
+                  title: Text('$displayName 채널 삭제'),
+                  content: const Text('이 커뮤니티 목록에서 삭제하시겠습니까?'),
+                  actions:[
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        ref.read(channelNotifierProvider.notifier).leaveChannel(item.channel);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('채널이 삭제되었습니다.')));
+                      },
+                      child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
             },
             child: Column(
               children: [
@@ -655,3 +683,149 @@ class _ActionIcon extends StatelessWidget {
   }
 }
 
+
+// 🛑 신고 사유 리스트
+const Map<String, String> reportReasons = {
+  'SPAM': '스팸 및 도배',
+  'INAPPROPRIATE_CONTENT': '음란물 또는 부적절한 콘텐츠',
+  'HATE_SPEECH': '혐오 발언 및 모욕',
+  'HARASSMENT': '괴롭힘 및 폭력성',
+  'OTHER': '기타 사유',
+};
+
+class CommunityActionHelper {
+  /// 📌 1. 우측 상단 `...` 클릭 시 열리는 BottomSheet
+  static void showPostOptions(BuildContext context, WidgetRef ref, int targetId, int userId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:[
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.report_problem_outlined, color: Colors.red),
+                title: const Text('이 게시글 신고하기', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showReportDialog(context, ref, targetId, 'POST');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.block, color: Colors.black87),
+                title: const Text('이 사용자 차단하기'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showBlockDialog(context, ref, userId);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 📌 2. 신고하기 다이얼로그
+  static void _showReportDialog(BuildContext context, WidgetRef ref, int targetId, String targetType) {
+    String selectedReason = 'SPAM'; // 기본값
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title: const Text('신고 사유 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: reportReasons.entries.map((entry) {
+                  return RadioListTile<String>(
+                    title: Text(entry.value, style: const TextStyle(fontSize: 14)),
+                    value: entry.key,
+                    groupValue: selectedReason,
+                    activeColor: Colors.black,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (value) {
+                      setState(() => selectedReason = value!);
+                    },
+                  );
+                }).toList(),
+              ),
+              actions:[
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                  onPressed: () async {
+                    // TODO: 로딩 표시기 추가 (Double Submit 방지)
+                    Navigator.pop(context);
+                    await ref.read(communityUseCaseProvider).reportContent(
+                      targetId: targetId, targetType: targetType, reason: selectedReason,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.')),
+                    );
+                  },
+                  child: const Text('신고하기'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 📌 3. 차단하기 다이얼로그
+  static void _showBlockDialog(BuildContext context, WidgetRef ref, int userId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('사용자 차단', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text(
+            '차단하시겠습니까?\n차단된 사용자의 게시글과 댓글은 더 이상 보이지 않으며, 차단 해제는 설정에서 가능합니다.',
+            style: TextStyle(height: 1.5),
+          ),
+          actions:[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('취소', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+              onPressed: () async {
+                Navigator.pop(context);
+                await ref.read(communityUseCaseProvider).blockUser(userId);
+                // TODO: 게시글 목록 새로고침 호출 (차단한 유저 글 숨기기)
+                ref.read(postNotifierProvider.notifier).fetchPosts(forceRefresh: true);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('해당 사용자가 차단되었습니다.')),
+                );
+              },
+              child: const Text('차단하기'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

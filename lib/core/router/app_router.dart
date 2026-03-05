@@ -15,16 +15,30 @@ import '../../features/home/home_screen.dart';
 import '../../features/home/presentation/screen/popular_test_ranking_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../auth/token_manager_provider.dart';
-
-/// 🧭 앱 라우터 Provider
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    // 🚀 초기 경로를 스플래시로 설정
     initialLocation: '/splash',
 
-    // 🔍 디버그 로깅 (개발 시에만)
-    debugLogDiagnostics: true,
+    // 🛡️ [핵심] 라우트 가드: 토큰 상태를 감시하고 진입을 통제합니다.
+    redirect: (context, state) {
+      final tokenManager = ref.read(tokenManagerProvider);
+      final isLoggedIn = tokenManager.isLoggedIn;
 
+      final isSplash = state.matchedLocation == '/splash';
+      final isLogin = state.matchedLocation == '/login';
+
+      // 1. 로그인 안 되어 있는데 홈이나 메인으로 가려고 하면 -> 로그인 화면으로 튕김
+      if (!isLoggedIn && !isSplash && !isLogin) {
+        return '/login';
+      }
+
+      // 2. 로그인 되어 있는데 로그인/스플래시 화면으로 가려고 하면 -> 홈으로 보내줌
+      if (isLoggedIn && (isLogin || isSplash)) {
+        return '/main';
+      }
+
+      return null; // 통과
+    },
     // 📋 라우트 정의
     routes: [
       // 🌟 스플래시 화면 (앱 시작점)
@@ -103,11 +117,5 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ),
 
-    // 🛡️ 라우트 가드 (추후 확장 가능)
-    redirect: (context, state) {
-      // 현재는 스플래시에서 모든 검증을 처리하므로 null 반환
-      // 추후 필요시 인증 체크 로직 추가 가능
-      return null;
-    },
   );
 });

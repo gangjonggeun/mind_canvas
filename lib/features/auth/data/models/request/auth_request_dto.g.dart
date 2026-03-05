@@ -39,9 +39,9 @@ _$AppleLoginRequestImpl _$$AppleLoginRequestImplFromJson(Map json) =>
       json,
       ($checkedConvert) {
         final val = _$AppleLoginRequestImpl(
-          idToken: $checkedConvert('idToken', (v) => v as String),
-          deviceId: $checkedConvert('deviceId', (v) => v as String?),
+          identityToken: $checkedConvert('identityToken', (v) => v as String),
           fcmToken: $checkedConvert('fcmToken', (v) => v as String?),
+          userJson: $checkedConvert('userJson', (v) => v as String?),
         );
         return val;
       },
@@ -50,9 +50,31 @@ _$AppleLoginRequestImpl _$$AppleLoginRequestImplFromJson(Map json) =>
 Map<String, dynamic> _$$AppleLoginRequestImplToJson(
         _$AppleLoginRequestImpl instance) =>
     <String, dynamic>{
-      'idToken': instance.idToken,
+      'identityToken': instance.identityToken,
+      'fcmToken': instance.fcmToken,
+      'userJson': instance.userJson,
+    };
+
+_$GuestLoginRequestImpl _$$GuestLoginRequestImplFromJson(Map json) =>
+    $checkedCreate(
+      r'_$GuestLoginRequestImpl',
+      json,
+      ($checkedConvert) {
+        final val = _$GuestLoginRequestImpl(
+          deviceId: $checkedConvert('deviceId', (v) => v as String),
+          fcmToken: $checkedConvert('fcmToken', (v) => v as String?),
+          language: $checkedConvert('language', (v) => v as String?),
+        );
+        return val;
+      },
+    );
+
+Map<String, dynamic> _$$GuestLoginRequestImplToJson(
+        _$GuestLoginRequestImpl instance) =>
+    <String, dynamic>{
       'deviceId': instance.deviceId,
       'fcmToken': instance.fcmToken,
+      'language': instance.language,
     };
 
 _$RefreshTokenRequestImpl _$$RefreshTokenRequestImplFromJson(Map json) =>

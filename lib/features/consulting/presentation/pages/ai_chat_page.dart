@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../generated/l10n.dart';
 import '../providers/therapy_notifier.dart';
 
 /// 💬 AI 상담 채팅 페이지
@@ -146,8 +147,8 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'AI 상담사',
+              Text(
+                S.of(context).consulting_ai_chat_name,
                 style: TextStyle(
                   color: Color(0xFF2D3748),
                   fontSize: 16,
@@ -155,7 +156,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
                 ),
               ),
               Text(
-                isLoading ? '입력 중...' : '온라인', // ✅ 상태에 따라 변경
+                isLoading ? S.of(context).consulting_ai_chat_loading : S.of(context).consulting_ai_chat_online, // ✅ 상태에 따라 변경
                 style: TextStyle(
                   color: isLoading
                       ? const Color(0xFF6B73FF)
@@ -184,14 +185,19 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
     final List<Widget> uiMessages = [
       _buildMessageBubble(
         isFromAi: true,
-        content: '안녕하세요! 저는 마인드 캔버스의 AI 상담사입니다. 🤗\n\n오늘 어떤 이야기를 나누고 싶으신가요?',
+        content: S.of(context).consulting_ai_chat_chat1,
+        type: MessageType.text,
+      ),
+      _buildMessageBubble(
+        isFromAi: true,
+        content: S.of(context).consulting_ai_chat_chat2,
         type: MessageType.text,
       ),
       _buildMessageBubble(
         isFromAi: true,
         content: '',
         type: MessageType.suggestions,
-        suggestions: ['😊 오늘 기분이 어때요?', '💭 고민이 있어요', '😴 스트레스를 받고 있어요'],
+        suggestions: [S.of(context).consulting_ai_chat_option__1, S.of(context).consulting_ai_chat_option_2, S.of(context).consulting_ai_chat_option_3],
       ),
     ];
 
@@ -325,8 +331,8 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '💡 이런 주제로 대화해보는 건 어떨까요?',
+              Text(
+                S.of(context).consulting_ai_chat_rec,
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF64748B),
@@ -479,8 +485,8 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
                 child: TextField(
                   controller: _messageController,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    hintText: '메시지를 입력하세요...',
+                  decoration: InputDecoration(
+                    hintText: S.of(context).consulting_ai_chat_enter_message,
                     hintStyle: TextStyle(
                       color: Color(0xFF94A3B8),
                       fontSize: 15,
@@ -605,8 +611,8 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '채팅 옵션',
+            Text(
+              S.of(context).consulting_ai_chat_option,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -616,20 +622,20 @@ class _AiChatPageState extends ConsumerState<AiChatPage>
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.refresh, color: Color(0xFF6B73FF)),
-              title: const Text('대화 초기화'),
+              title:  Text(S.of(context).consulting_ai_chat_option_reset),
               onTap: () {
                 Navigator.pop(context);
                 _resetChat();
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.save, color: Color(0xFF4ECDC4)),
-              title: const Text('대화 저장'),
-              onTap: () {
-                Navigator.pop(context);
-                _saveChat();
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.save, color: Color(0xFF4ECDC4)),
+            //   title: const Text('대화 저장'),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     _saveChat();
+            //   },
+            // ),
           ],
         ),
       ),

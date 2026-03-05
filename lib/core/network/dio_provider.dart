@@ -3,6 +3,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../providers/app_language_provider.dart';
+import 'interceptors/auth_Interceptor.dart';
 import 'interceptors/coin_sync_interceptor.dart';
 
 part 'dio_provider.g.dart';
@@ -42,6 +43,7 @@ Dio dio(DioRef ref) {
     },
   ));
   dio.interceptors.add(CoinSyncInterceptor(ref));
+  dio.interceptors.add(AuthInterceptor(ref: ref, dio: dio));
 
   // 1. 로깅 인터셉터 (디버그 모드만)
   dio.interceptors.add(PrettyDioLogger(

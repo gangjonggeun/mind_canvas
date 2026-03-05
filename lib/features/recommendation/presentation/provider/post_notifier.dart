@@ -41,11 +41,65 @@ class PostState with _$PostState {
 class PostNotifier extends _$PostNotifier {
   late final CommunityUseCase _useCase;
 
+
+
+
   @override
   PostState build() {
     _useCase = ref.watch(communityUseCaseProvider);
     return PostState.initial();
   }
+
+
+  Future<bool> report(int id, String type) async {
+    final useCase = ref.read(communityUseCaseProvider); // 또는 reportUseCaseProvider
+    final result = await useCase.reportContent(targetId: id, targetType: type);
+
+    return result.isSuccess; // UI에서 "신고되었습니다" 토스트 띄우기용
+  }
+
+  // 사용자 차단
+  Future<bool> blockUser(int targetUserId) async {
+    // 1. ⚡ [낙관적 업데이트] 해당 유저가 작성한 모든 글을 즉시 UI에서 숨김
+    final oldPosts = state.posts;
+    final newPosts = oldPosts.where((post) => post.userId != targetUserId).toList();
+
+    state = state.copyWith(posts: newPosts);
+
+    // 2. 서버 요청
+    final useCase = ref.read(communityUseCaseProvider);
+    final result = await useCase.blockUser(targetUserId);
+
+    // 3. 결과 처리
+    if (result.isSuccess) {
+      return true; // UI는 이미 반영됨
+    } else {
+      // 4. 🚨 실패 시 롤백 (차단 실패했으므로 다시 보이게 함)
+      // Todo: 여기서 "차단에 실패했습니다" 라는 SnackBar를 띄우도록 UI 쪽에 false 반환
+      state = state.copyWith(posts: oldPosts);
+      return false;
+    }
+  }
+  Future<bool> deletePost(int postId) async {
+    final useCase = ref.read(communityUseCaseProvider);
+    final result = await useCase.deletePost(postId);
+
+    // 💡 수정: result.isSuccess가 false여도,
+    // 만약 서버의 message가 "삭제되었습니다"라면 성공으로 간주하도록 로직을 넓히세요.
+    if (result.isSuccess) {
+      print("✅ 서버 삭제 성공 간주 (로컬 리스트 갱신)");
+
+      // 로컬 업데이트 수행
+      final currentState = state; // (AsyncNotifier가 아니라 일반 Notifier니까 그냥 state)
+      final newPosts = currentState.posts.where((p) => p.id != postId).toList();
+      state = currentState.copyWith(posts: newPosts);
+      return true;
+    }
+
+    print("❌ 서버 삭제 최종 실패: ${result.message}");
+    return false;
+  }
+
 
   /// 🔄 게시글 목록 새로고침 (첫 로드)
   /// - [channel]: 특정 채널 (없으면 전체/자동)

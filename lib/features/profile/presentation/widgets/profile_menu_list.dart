@@ -83,9 +83,17 @@ class ProfileMenuList extends StatelessWidget {
           _MenuItem(
             id: 'help',
             icon: Icons.help_outline_rounded,
-            title: 'profile.menu.help'.tr(),
+            title: 'profile.menu.help'.tr(), // 앱스토어 필수: 고객 지원
             subtitle: 'profile.menu.help_sub'.tr(),
             color: Colors.blue,
+          ),
+          // 🚨 [추가] 애플/구글 심사 필수 요건: 계정 탈퇴
+          _MenuItem(
+            id: 'delete_account',
+            icon: Icons.person_remove_rounded,
+            title: '계정 탈퇴', // 다국어 처리 필요
+            subtitle: '모든 데이터가 삭제되며 복구할 수 없습니다.',
+            color: colorScheme.error, // 빨간색 강조
           ),
         ], theme, colorScheme),
 

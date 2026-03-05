@@ -16,9 +16,11 @@ class AuthResponse with _$AuthResponse {
     @JsonKey(name: 'nickname') String? nickname,
     // 💰 [신규 추가] 서버에서 내려오는 코인 잔액
     @JsonKey(name: 'coins') @Default(0) int coins,
-
+    @JsonKey(name: 'userId') required int userId,
     // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
     @JsonKey(includeFromJson: false, includeToJson: false)
+
+
     DateTime? issuedAt,
   }) = _AuthResponse;
 

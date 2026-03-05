@@ -262,6 +262,7 @@ abstract class BaseViewPagerCard extends StatelessWidget {
 
 /// 타로 심리상담 페이지
 class TaroPageViewItem extends BaseViewPagerCard {
+
   const TaroPageViewItem({super.key});
 
   @override

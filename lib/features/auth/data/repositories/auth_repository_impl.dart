@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:mind_canvas/features/auth/domain/enums/login_type.dart';
 import '../../../../core/auth/token_manager.dart';
@@ -23,6 +26,35 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenManager _tokenManager;
 
   AuthRepositoryImpl(this._dataSource, this._tokenManager);
+
+
+  @override
+  Future<Result<void>> deleteAccount() async {
+    try {
+      // 1. 보안 저장소에서 액세스 토큰 가져오기
+      final token = await _tokenManager.getValidAccessToken();
+
+      if (token == null) {
+        print("액세스토큰 가져오기 실패");
+        return Results.failure('auth 레포 deleteAccount 액세스토큰 가져오기 실패');
+      }
+      // 2. API 호출 (Bearer는 안 붙여도 인터셉터가 처리함)
+      final response = await _dataSource.deleteAccount(token!);
+
+      // 3. 응답 처리
+      if (response.success) {
+        return Results.success(null);
+      } else {
+        return Results.failure(response.error?.message ?? '계정 탈퇴 실패');
+      }
+    } on DioException catch (e) {
+      print('❌ 계정 탈퇴 API 통신 에러: $e');
+      return Results.failure('서버와의 통신에 실패했습니다.');
+    } catch (e) {
+      print('❌ 계정 탈퇴 처리 중 알 수 없는 에러: $e');
+      return Results.failure('계정 탈퇴 중 오류가 발생했습니다.');
+    }
+  }
 
   // =============================================================
   // 🔐 로그인 메서드들
@@ -104,7 +136,38 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     });
   }
+  @override
+  Future<Result<AuthResponse>> loginWithApple(
+      String identityToken, {
+        String? fcmToken,
+      }) async {
+    return _safeApiCall(() async {
+      // 1. 요청 객체 생성
+      final request = AppleLoginRequest(
+        identityToken: identityToken,
+        fcmToken: fcmToken,
+      );
 
+      // 2. API 호출
+      final apiResponse = await _dataSource.loginWithApple(request);
+
+      // 3. 성공 시 토큰 저장
+      if (apiResponse.isSuccess && apiResponse.hasData) {
+        final authResponse = apiResponse.data!;
+        await _tokenManager.saveAuthResponse(authResponse);
+        return authResponse;
+      } else {
+        throw DioException(
+          requestOptions: RequestOptions(path: '/auth/apple'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/apple'),
+            statusCode: 400,
+            data: {'error_description': apiResponse.errorMessage ?? 'Apple 로그인에 실패했습니다'},
+          ),
+        );
+      }
+    });
+  }
 
   /**
    *  자동로그인에서 사용 해당 리프레시 토큰 토큰매니져에서 가져오고 바디로
@@ -149,20 +212,21 @@ class AuthRepositoryImpl implements AuthRepository {
    * */
   Future<String?> _getDeviceId() async {
     try {
-      // device_info_plus 패키지 사용 예시
-      // final deviceInfo = DeviceInfoPlugin();
-      // if (Platform.isAndroid) {
-      //   final androidInfo = await deviceInfo.androidInfo;
-      //   return androidInfo.id;
-      // } else if (Platform.isIOS) {
-      //   final iosInfo = await deviceInfo.iosInfo;
-      //   return iosInfo.identifierForVendor;
-      // }
-      return null; // 임시로 null 반환
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return androidInfo.id; // 안드로이드 고유 ID
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return iosInfo.identifierForVendor; // iOS 벤더 고유 식별자
+      }
+      return 'unknown_device';
     } catch (e) {
+      print('디바이스 ID 추출 실패: $e');
       return null;
     }
   }
+
 
   @override
   Future<Result<void>> logout({bool logoutFromAllDevices = false}) async {
@@ -255,11 +319,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> saveAuthTokens({
     required String accessToken,
     required String refreshToken,
+    required int userId
   }) async {
     // TokenManager를 통해 저장
     final authResponse = AuthResponse(
       accessToken: accessToken,
       refreshToken: refreshToken,
+      userId: userId,
     );
     await _tokenManager.saveAuthResponse(authResponse);
   }
@@ -279,19 +345,41 @@ class AuthRepositoryImpl implements AuthRepository {
     return _tokenManager.isTokenExpired;
   }
 
-  // =============================================================
-  // 🚨 미구현 메서드들 (TODO)
-  // =============================================================
-
-  // Repository에서 미구현 API 처리
   @override
-  Future<Result<AuthResponse>> loginWithApple() async {
-    return Results.failure('Apple 로그인은 아직 구현되지 않았습니다', 'NOT_IMPLEMENTED');
-  }
+  Future<Result<AuthResponse>> loginAsGuest(String languageCode, {String? fcmToken}) async {
+    return _safeApiCall(() async {
+      // 1. 디바이스 ID 추출 (필수)
+      final deviceId = await _getDeviceId();
+      if (deviceId == null) {
+        throw Exception("기기 식별자를 가져올 수 없어 게스트 로그인이 불가능합니다.");
+      }
 
-  @override
-  Future<Result<AuthResponse>> loginAsGuest() async {
-    return Results.failure('게스트 로그인은 아직 구현되지 않았습니다', 'NOT_IMPLEMENTED');
+      // 2. 요청 객체 생성
+      final request = GuestLoginRequest(
+        deviceId: deviceId,
+        fcmToken: fcmToken,
+        language: languageCode, // 예: 'ko'
+      );
+
+      // 3. API 호출
+      final apiResponse = await _dataSource.loginAsGuest(request);
+
+      // 4. 성공 시 토큰 저장
+      if (apiResponse.isSuccess && apiResponse.hasData) {
+        final authResponse = apiResponse.data!;
+        await _tokenManager.saveAuthResponse(authResponse);
+        return authResponse;
+      } else {
+        throw DioException(
+          requestOptions: RequestOptions(path: '/auth/guest'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/guest'),
+            statusCode: 400,
+            data: {'error_description': apiResponse.errorMessage ?? '게스트 로그인에 실패했습니다'},
+          ),
+        );
+      }
+    });
   }
 
   // =============================================================

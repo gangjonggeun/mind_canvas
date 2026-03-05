@@ -9,8 +9,11 @@ import '../../../../core/network/api_response_dto.dart'; // 프로젝트 공통 
 import '../../../../core/network/dio_provider.dart';
 import '../../../../core/network/page_response.dart';
 import '../dto/channel_recommendation_response.dart';
+import '../dto/comment_request.dart';
+import '../dto/comment_response.dart';
 import '../dto/create_post_request.dart';
 import '../dto/post_response.dart';
+import '../dto/report_request.dart';
 
 
 part 'community_data_source.g.dart';
@@ -25,6 +28,54 @@ CommunityDataSource communityDataSource(CommunityDataSourceRef ref) {
 @RestApi()
 abstract class CommunityDataSource {
   factory CommunityDataSource(Dio dio, {String baseUrl}) = _CommunityDataSource;
+
+  @DELETE('/community/channels/{channel}')
+  Future<ApiResponse<dynamic>> leaveChannel(
+      @Header('Authorization') String token,
+      @Path('channel') String channel,
+      );
+
+  @POST('/community/reports')
+  Future<ApiResponse<dynamic>> reportContent(
+      @Header('Authorization') String token,
+      @Body() ReportRequest request,
+      );
+
+  // 🚫 차단하기 (URL 파라미터로 처리 가정)
+  @POST('/community/users/{userId}/block')
+  Future<ApiResponse<dynamic>> blockUser(
+      @Header('Authorization') String token,
+      @Path('userId') int userId, // 차단할 유저 ID
+      );
+
+  @DELETE('/community/posts/{postId}')
+  Future<ApiResponse<dynamic>> deletePost(
+      @Header('Authorization') String token,
+      @Path('postId') int postId,
+      );
+
+  // 🗑️ 댓글 삭제 (아까 구현 안 된 부분)
+  @DELETE('/community/comments/{commentId}')
+  Future<ApiResponse<dynamic>> deleteComment(
+      @Header('Authorization') String token,
+      @Path('commentId') int commentId,
+      );
+
+  @GET('/community/posts/{postId}/comments')
+  Future<ApiResponse<PageResponse<CommentResponse>>> getComments(
+      @Header('Authorization') String token,
+      @Path('postId') int postId, {
+        @Query('page') int page = 0,
+        @Query('size') int size = 20,
+      });
+
+  // ✍️ 댓글 작성
+  @POST('/community/posts/{postId}/comments')
+  Future<ApiResponse<int>> createComment(
+      @Header('Authorization') String token,
+      @Path('postId') int postId,
+      @Body() CommentRequest request,
+      );
 
   // ===========================================================================
   // 📝 게시글 관련 (CommunityController)

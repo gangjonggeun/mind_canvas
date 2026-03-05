@@ -6,7 +6,7 @@ part of 'dio_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioHash() => r'f57d6b0f0ec03e1617cfd50c79d9907f8462e5e9';
+String _$dioHash() => r'7453722562b85b40f30835ff69e736c598cee6ea';
 
 /// 🌐 Dio HTTP 클라이언트 Provider
 ///

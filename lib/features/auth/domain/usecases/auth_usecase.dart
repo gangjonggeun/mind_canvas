@@ -52,15 +52,16 @@ class AuthUseCase {
   }
 
   /// 🍎 Apple 로그인 (미구현)
-  Future<Result<AuthResponse>> loginWithApple() async {
+  Future<Result<AuthResponse>> loginWithApple(String identityToken, {String? fcmToken}) async {
     try {
       _logLoginAttempt(LoginType.apple);
 
-      final result = await _authRepository.loginWithApple();
+      // Repository에 토큰 전달
+      final result = await _authRepository.loginWithApple(identityToken, fcmToken: fcmToken);
 
       return result.fold(
         onSuccess: (authResponse) {
-          _logLoginSuccess(LoginType.apple, 'unknown');
+          _logLoginSuccess(LoginType.apple, 'unknown'); // sub나 이메일이 있다면 넣어도 됨
           return Results.success(authResponse);
         },
         onFailure: (message, code) {
@@ -73,13 +74,17 @@ class AuthUseCase {
       return Results.failure('Apple 로그인 중 오류가 발생했습니다.');
     }
   }
+  Future<Result<void>> deleteAccount() async {
+    // 필요하다면 여기서 추가적인 비즈니스 검증 로직을 넣을 수 있습니다.
+    return await _authRepository.deleteAccount();
+  }
 
   /// 👥 게스트 로그인 (미구현)
-  Future<Result<AuthResponse>> loginAsGuest() async {
+  Future<Result<AuthResponse>> loginAsGuest(String languageCode, {String? fcmToken}) async {
     try {
       _logLoginAttempt(LoginType.guest);
 
-      final result = await _authRepository.loginAsGuest();
+      final result = await _authRepository.loginAsGuest(languageCode, fcmToken: fcmToken);
 
       return result.fold(
         onSuccess: (authResponse) {
@@ -96,6 +101,8 @@ class AuthUseCase {
       return Results.failure('게스트 로그인 중 오류가 발생했습니다.');
     }
   }
+
+
 
   // =============================================================
   // 👤 사용자 정보 관련

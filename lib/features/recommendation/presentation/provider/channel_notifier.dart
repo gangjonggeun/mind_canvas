@@ -28,6 +28,33 @@ class ChannelNotifier extends _$ChannelNotifier {
     loadChannels();
     return ChannelState.initial();
   }
+  Future<void> leaveChannel(String channelCode) async {
+    // 1. ⚡ [낙관적 업데이트] API 호출 전에 UI부터 지워버림!
+    final oldChannels = state.myChannels;
+    final newChannels = oldChannels.where((c) => c.channel != channelCode).toList();
+
+    // 즉시 반영
+    state = state.copyWith(myChannels: newChannels);
+
+    // 2. 서버 요청
+    final useCase = ref.read(communityUseCaseProvider);
+    final result = await useCase.leaveChannel(channelCode);
+
+    result.fold(
+      onSuccess: (_) {
+        // 이미 UI는 지워졌으므로 아무것도 안 해도 됨 (성공)
+        print("✅ 채널 삭제 성공 (서버 동기화 완료)");
+      },
+      onFailure: (message, code) {
+        // 3. 만약 진짜 네트워크 오류가 나면? -> 다시 롤백 (원상복구)
+        print("❌ 채널 삭제 실패: $message");
+        state = state.copyWith(
+          myChannels: oldChannels, // 롤백
+          errorMessage: message,
+        );
+      },
+    );
+  }
 
   /// 📢 채널 목록 불러오기 (내 채널 & 추천 채널 병렬 요청)
   /// 📢 채널 목록 불러오기

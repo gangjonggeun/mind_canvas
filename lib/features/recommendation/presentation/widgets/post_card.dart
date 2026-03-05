@@ -4,18 +4,25 @@ import 'package:intl/intl.dart';
 import 'package:mind_canvas/features/recommendation/presentation/pages/expandable_post_text.dart';
 import 'package:mind_canvas/features/recommendation/presentation/pages/user_profile_avatar.dart';
 
+import '../../../../app/presentation/notifier/user_notifier.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/dto/embedded_content.dart';
 import '../../data/dto/post_response.dart';
+import '../pages/community_action_helper.dart';
+import '../pages/post_detail_bottom_sheet.dart';
 import '../provider/channel_notifier.dart';
 import '../provider/post_notifier.dart';
 import '../widgets/category_popup_menu.dart';
 import '../widgets/like_button.dart';
 
-
 class PostCard extends ConsumerWidget {
   final PostResponse post;
+  final bool isDetailMode;
 
-  const PostCard({required this.post});
+  const PostCard(
+      {required this.post,
+      this.isDetailMode = false, // 기본값 false
+      super.key});
 
   String _getChannelDisplayName(String channelCode) {
     if (channelCode == 'FREE') return '자유 광장';
@@ -26,21 +33,28 @@ class PostCard extends ConsumerWidget {
     if (channelCode == 'FREE') return Colors.black;
     final hash = channelCode.hashCode;
     final colors = [
-      const Color(0xFFE57373), const Color(0xFFBA68C8), const Color(0xFF64B5F6),
-      const Color(0xFF4DB6AC), const Color(0xFFFFB74D), const Color(0xFFA1887F),
+      const Color(0xFFE57373),
+      const Color(0xFFBA68C8),
+      const Color(0xFF64B5F6),
+      const Color(0xFF4DB6AC),
+      const Color(0xFFFFB74D),
+      const Color(0xFFA1887F),
       const Color(0xFF90A4AE)
     ];
     return colors[hash.abs() % colors.length];
   }
 
-
   // 📝 카테고리 한글 변환
   String _getCategoryName(String categoryCode) {
     switch (categoryCode) {
-      case 'CHAT': return '잡담';
-      case 'QUESTION': return '질문';
-      case 'REVIEW': return '리뷰';
-      default: return '기타';
+      case 'CHAT':
+        return '잡담';
+      case 'QUESTION':
+        return '질문';
+      case 'REVIEW':
+        return '리뷰';
+      default:
+        return '기타';
     }
   }
 
@@ -61,133 +75,157 @@ class PostCard extends ConsumerWidget {
     final channelName = post.channel == 'FREE' ? '자유 광장(ALL)' : post.channel;
     final channelColor = _getChannelColor(post.channel);
     final categoryName = _getCategoryName(post.category);
+    final userState = ref.watch(userNotifierProvider);
+    final int myId = userState?.id ?? -1;
 
     return Container(
+      key: ValueKey('post_${post.id}'),
+
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. 헤더 (프로필, 닉네임, 정보)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                UserProfileAvatar(
-                  imageUrl: post.authorProfileImage,
-                  userId: post.userId,
-                  radius: 20, // 조금 더 키움
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 닉네임
-                      Text(
-                        post.authorNickname ?? '익명',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                      const SizedBox(height: 2),
+      // ✅ 1. 여기서 전체 Column을 GestureDetector로 감쌉니다!
+      child: GestureDetector(
+        onTap: isDetailMode
+            ? null
+            : () => PostDetailBottomSheet.show(context, post),
+        behavior: HitTestBehavior.opaque, // ⭐️ 빈 공간(여백) 터치도 모두 인식하게 해줌
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. 헤더 (프로필, 닉네임, 정보)
+            // 💡 안쪽에 있는 IconButton(...)은 자체 클릭 이벤트를 가져가므로 전체 터치가 무시되고 정상 작동합니다.
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  UserProfileAvatar(
+                      imageUrl: post.authorProfileImage,
+                      userId: post.userId,
+                      radius: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children:[
+                        Text(
+                          post.authorNickname ?? '익명',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children:[
+                            Text(channelName, style: TextStyle(color: channelColor, fontWeight: FontWeight.w700, fontSize: 12)),
+                            const SizedBox(width: 6),
+                            Text(categoryName, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                            const SizedBox(width: 4),
+                            Text('• $timeAgo', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.more_horiz, color: Colors.grey.shade600),
+                    onPressed: () => CommunityActionHelper.showPostOptions(
+                        context,
+                        ref,
+                        post, // PostResponse 객체 전체 넘기기 (id, userId 포함됨)
+                        myId  // 내 ID 넘기기
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                      // ✅ [수정] 채널명(색상) • 카테고리(회색) • 시간
-                      Row(
-                        children: [
-                          Text(
-                            channelName,
-                            style: TextStyle(
-                              color: channelColor, // 채널 고유 색상
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            categoryName,
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '• $timeAgo',
-                            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-                          ),
-                        ],
+            // 2. 본문 (제목 + 내용)
+            // ❌ 기존에 여기에 있던 GestureDetector는 삭제합니다! (중복 방지)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(post.title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          height: 1.3)),
+                  const SizedBox(height: 8),
+                  ExpandablePostText(text: post.content ?? '', maxLines: 5),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 3. 이미지/임베드 (기존 동일)
+            if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                width: double.infinity,
+                height: 250,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  image: DecorationImage(image: NetworkImage(post.imageUrl!), fit: BoxFit.cover),
+                ),
+              ),
+            if (post.embeddedContent != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _EmbeddedContentCard(content: post.embeddedContent!),
+              ),
+
+
+            const SizedBox(height: 8),
+            const Divider(height: 1, color: Colors.black12),
+
+            // 4. 하단 액션
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+              child: Row(
+                children: [
+                  // 💡 좋아요 버튼도 자체 클릭 이벤트가 있어서 전체 터치보다 우선 작동합니다.
+                  LikeButton(
+                    isLiked: post.isLiked,
+                    likeCount: post.likeCount,
+                    onTap: (isLiked) => ref
+                        .read(postNotifierProvider.notifier)
+                        .toggleLike(post.id),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // 댓글 버튼 표시 (클릭 이벤트는 이제 전체 카드가 처리하므로 눈에 보여주기만 하면 됨)
+                  Row(
+                    children: [
+                      const Icon(Icons.chat_bubble_outline,
+                          size: 22, color: Colors.black87),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatCount(post.commentCount),
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
-                ),
-                Icon(Icons.more_horiz, color: Colors.grey.shade400),
-              ],
-            ),
-          ),
 
-          // 2. 본문 (제목 + 내용)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, height: 1.3),
-                ),
-                const SizedBox(height: 8),
-                ExpandablePostText(text: post.content!, maxLines: 5),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // 3. 이미지/임베드
-          if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              width: double.infinity,
-              height: 250,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                image: DecorationImage(image: NetworkImage(post.imageUrl!), fit: BoxFit.cover),
+                  const Spacer(),
+                  // 디테일 모드가 아닐 때만 북마크 표시
+                  // if (!isDetailMode)
+                  //   const Icon(Icons.bookmark_border, color: Colors.grey),
+                ],
               ),
             ),
-          if (post.embeddedContent != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _EmbeddedContentCard(content: post.embeddedContent!),
-            ),
-
-          const SizedBox(height: 8),
-          const Divider(height: 1, color: Colors.black12),
-
-          // 4. 하단 액션 (좋아요 연결)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-            child: Row(
-              children: [
-                // ✅ [연결] 좋아요 버튼
-                LikeButton(
-                  // DTO에 isLiked 필드가 없으면 기본 false
-                  // (서버 DTO에 @JsonProperty("isLiked") boolean isLiked 추가 권장)
-                  isLiked: post.isLiked,
-                  likeCount: post.likeCount,
-                  onTap: (isLiked) {
-                    // ✅ Notifier 호출 -> API 전송
-                    ref.read(postNotifierProvider.notifier).toggleLike(post.id);
-                  },
-                ),
-
-                const Spacer(),
-                const Icon(Icons.bookmark_border, color: Colors.grey),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -200,7 +238,6 @@ class PostCard extends ConsumerWidget {
     return '${diff.inDays}일 전';
   }
 }
-
 
 // =============================================================================
 // 🎬 [Widget] 임베디드 콘텐츠 카드 (영화/책 첨부)
@@ -287,4 +324,3 @@ class _EmbeddedContentCard extends StatelessWidget {
     );
   }
 }
-

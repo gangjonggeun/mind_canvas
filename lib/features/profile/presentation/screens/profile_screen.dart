@@ -16,8 +16,10 @@ import 'package:portone_flutter/model/payment_data.dart';
 // import '../providers/profile_notifier.dart';
 
 import '../../../../app/presentation/notifier/user_notifier.dart';
+import '../../../../core/auth/auth_storage.dart';
 import '../../../../core/providers/app_language_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/screens/login_screen.dart';
 import '../../data/models/user_profile.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
 import '../providers/ink_history_provider.dart';
@@ -72,8 +74,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   void _onMenuTap(String menuId) {
     HapticFeedback.selectionClick();
     switch (menuId) {
-      case 'likes':
-        // 좋아요 목록 이동
+      case 'delete_account':
+        _showDeleteAccountDialog(context, ref);
         break;
       case 'my_records':
         Navigator.push(context,
@@ -89,7 +91,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         _showNotificationDialog();
         break;
       case 'help':
-        Navigator.pushNamed(context, '/help');
+      // launchUrl(Uri.parse('https://your-notion-support-page.com'));
         break;
       case 'logout':
         _showLogoutDialog();
@@ -241,34 +243,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ? FilledButton.styleFrom(backgroundColor: Colors.red)
                 : null,
             onPressed: () async {
-              Navigator.pop(context); // 다이얼로그 닫기
+              // 1. 다이얼로그 닫기
+              Navigator.pop(context);
 
-              // 화면 터치 막기 (로딩 인디케이터 표시)
+              // 2. [핵심] 성공 여부와 상관없이 무조건 로컬 토큰 삭제부터 진행
+              // 이래야 서버 에러로 무한로딩 걸릴 일이 없음
+              await AuthStorage.clearAll();
+
+              // 3. 로딩 인디케이터 표시
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (_) =>
-                    const Center(child: CircularProgressIndicator()),
+                builder: (_) => const Center(child: CircularProgressIndicator()),
               );
 
-              // 🚪 로그아웃 API 호출
-              final result =
-                  await ref.read(authNotifierProvider.notifier).logout();
+              // 4. 서버 로그아웃 API 호출 (성공/실패 따지지 않음)
+              try {
+                await ref.read(authNotifierProvider.notifier).logout();
+              } catch (e) {
+                print("서버 로그아웃 API 호출 에러 (무시함): $e");
+              }
 
-              // 로딩 닫기
-              if (mounted) Navigator.pop(context);
+              // 5. 로딩창 닫기
+              if (context.mounted) Navigator.pop(context);
 
-              result.fold(
-                onSuccess: (_) {
-                  // 성공 시 홈화면 혹은 인트로/로그인 화면으로 보내고 스택 전부 제거
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (route) => false);
-                },
-                onFailure: (msg, code) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(msg), backgroundColor: Colors.red));
-                },
-              );
+              // 6. 무조건 로그인 화면으로 이동
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              }
             },
             child: Text(isGuest ? '기록 지우고 나가기' : '로그아웃'),
           ),
@@ -277,8 +279,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
+  Future<void> _showDeleteAccountDialog(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('계정 탈퇴', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+        content: const Text('정말 탈퇴하시겠습니까?\n\n탈퇴 시 모든 정보가 삭제되며, 게시글은 "알 수 없는 사용자"로 남게 됩니다. 이 작업은 되돌릴 수 없습니다.'),
+        actions:[
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('탈퇴하기', style: TextStyle(color: Colors.white))
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // 로딩 인디케이터 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // 🎯 [수정됨] UseCase 대신 AuthNotifier의 deleteAccount 호출
+    final result = await ref.read(authNotifierProvider.notifier).deleteAccount();
+
+    // 로딩 다이얼로그 닫기
+    if (context.mounted) Navigator.pop(context);
+
+    result.fold(
+      onSuccess: (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('계정이 성공적으로 삭제되었습니다.')));
+          // 성공 시 모든 스택 지우고 로그인 창으로!
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        }
+      },
+      onFailure: (msg, _) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('탈퇴 실패: $msg')));
+        }
+      },
+    );
+  }
   // ==============================================================
-  // 🌐 언어 설정 로직 (UI + Riverpod + EasyLocalization)
+  // 🌐 언어 설정 로직 (UI + Riverpod )
   // ==============================================================
   void _showLanguageDialog() {
     showModalBottomSheet(
@@ -299,7 +348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
             _buildLanguageTile('한국어', 'ko'),
             _buildLanguageTile('English', 'en'),
-            _buildLanguageTile('日本語', 'ja'),
+            // _buildLanguageTile('日本語', 'ja'),
             const SizedBox(height: 10),
           ],
         ),
@@ -676,7 +725,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
 
             // TODO: 서버의 '광고 보상 API' 호출
-            // final result = await ref.read(profileUseCaseProvider).claimAdReward();
+            final result = await ref.read(profileUseCaseProvider).claimAdReward();
 
             Navigator.pop(context); // 로딩 닫기
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('광고 시청 완료! 잉크 20개가 지급되었습니다.')));

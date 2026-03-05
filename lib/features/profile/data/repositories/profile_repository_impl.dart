@@ -71,23 +71,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Result<SetupProfileResponse>> setupProfile({
     required String nickname,
-    File? imageFile, // 👈 파일 객체 받음
+    bool? isTermsAgreed, // 👈 1. 파라미터 추가
+    File? imageFile,
   }) async {
     try {
       final token = await _getBearerToken();
 
       // 1. FormData 생성 (Multipart 요청 준비)
       final map = <String, dynamic>{
-        'nickname': nickname, // @RequestParam("nickname")에 매핑
+        'nickname': nickname,
+        // 👇 2. 핵심 포인트: boolean을 문자열 'true' / 'false'로 변환해서 FormData에 추가!
+        'isTermsAgreed': isTermsAgreed.toString(),
       };
 
       if (imageFile != null) {
-        // 2. 파일이 있으면 MultipartFile로 변환하여 추가
-        // 백엔드의 @RequestPart("profileImage") 이름과 맞춰야 함
         map['profileImage'] = await MultipartFile.fromFile(
           imageFile.path,
-          // 필요하다면 contentType 지정 (예: image/jpeg, image/webp)
-          // contentType: MediaType('image', 'jpeg'),
         );
       }
 

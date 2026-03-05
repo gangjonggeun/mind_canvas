@@ -11,6 +11,7 @@ import 'package:mind_canvas/features/home/presentation/widgets/home_viewpager.da
 import '../../core/theme/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/info/info_screen.dart';
+import '../../generated/l10n.dart';
 import '../profile/presentation/pages/my_activity_page.dart';
 import '../profile/presentation/providers/recent_test_results_provider.dart';
 import '../profile/presentation/widgets/test_result_item.dart';
@@ -118,269 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       MaterialPageRoute(builder: (context) => const RecommendationScreen()),
     );
   }
-  //
-  // /// 🧠 심리 팁 인사이트 섹션
-  // Widget _buildPsychologyInsights() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           const Text(
-  //             '💡 심리 인사이트',
-  //             style: TextStyle(
-  //               fontSize: 20,
-  //               fontWeight: FontWeight.bold,
-  //               color: AppColors.textPrimary,
-  //             ),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {},
-  //             child: const Text(
-  //               '더보기',
-  //               style: TextStyle(
-  //                 color: AppColors.primaryBlue,
-  //                 fontWeight: FontWeight.w500,
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       const SizedBox(height: 16),
-  //
-  //       // ===== 🧠 첫 번째 인사이트: 심리 학자의 조언 =====
-  //       _buildPsychologyInsightCard(
-  //         title: '대인 관계 회복',
-  //         subtitle: '전문가의 심리학 지식으로\n더 깊이 있는 자아 이해를 도와드려요',
-  //         imageUrl:
-  //             'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&h=150&fit=crop&auto=format',
-  //         gradient: const LinearGradient(
-  //           begin: Alignment.centerLeft,
-  //           end: Alignment.centerRight,
-  //           colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-  //         ),
-  //         badgeText: '전문가',
-  //       ),
-  //
-  //       const SizedBox(height: 12),
-  //
-  //       // ===== 🌌 두 번째 인사이트: 일상 심리학 =====
-  //       _buildPsychologyInsightCard(
-  //         title: '일상 심리학',
-  //         subtitle: '매일 만나는 상황에서\n심리학적 원리를 찾아보세요',
-  //         imageUrl:
-  //             'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&h=150&fit=crop&auto=format',
-  //         gradient: const LinearGradient(
-  //           begin: Alignment.centerLeft,
-  //           end: Alignment.centerRight,
-  //           colors: [Color(0xFF26C6DA), Color(0xFF00BCD4)],
-  //         ),
-  //         badgeText: '일상',
-  //       ),
-  //
-  //       const SizedBox(height: 12),
-  //
-  //       // ===== 💭 세 번째 인사이트: 마음 챙기기 =====
-  //       _buildPsychologyInsightCard(
-  //         title: '마음 챙기기',
-  //         subtitle: '스트레스와 불안에서 벗어나\n평온한 마음을 찾아보세요',
-  //         imageUrl:
-  //             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=150&fit=crop&auto=format',
-  //         gradient: const LinearGradient(
-  //           begin: Alignment.centerLeft,
-  //           end: Alignment.centerRight,
-  //           colors: [Color(0xFFFF8A65), Color(0xFFFFB74D)],
-  //         ),
-  //         badgeText: '힐링',
-  //       ),
-  //     ],
-  //   );
-  // }
-  //
-  // /// 심리 인사이트 카드 빌더
-  // Widget _buildPsychologyInsightCard({
-  //   required String title,
-  //   required String subtitle,
-  //   required String imageUrl,
-  //   required Gradient gradient,
-  //   required String badgeText,
-  // }) {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       print('심리 인사이트 클릭: $title');
-  //     },
-  //     child: Container(
-  //       width: double.infinity,
-  //       height: 110,
-  //       decoration: BoxDecoration(
-  //         borderRadius: BorderRadius.circular(16),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.black.withOpacity(0.08),
-  //             blurRadius: 12,
-  //             offset: const Offset(0, 4),
-  //           ),
-  //         ],
-  //       ),
-  //       child: ClipRRect(
-  //         borderRadius: BorderRadius.circular(16),
-  //         child: Stack(
-  //           children: [
-  //             // ===== 🖼️ 배경 이미지 (고선명도 최적화) =====
-  //             Positioned.fill(
-  //               child: CachedNetworkImage(
-  //                 imageUrl: imageUrl,
-  //                 fit: BoxFit.cover,
-  //                 filterQuality: FilterQuality.high,
-  //                 placeholder: (context, url) => Container(
-  //                   decoration: BoxDecoration(gradient: gradient),
-  //                   child: const Center(
-  //                     child: CircularProgressIndicator(
-  //                       strokeWidth: 2,
-  //                       color: Colors.white,
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 errorWidget: (context, url, error) => Container(
-  //                   decoration: BoxDecoration(gradient: gradient),
-  //                   child: Column(
-  //                     mainAxisAlignment: MainAxisAlignment.center,
-  //                     children: [
-  //                       Icon(
-  //                         Icons.broken_image_outlined,
-  //                         color: Colors.white.withOpacity(0.7),
-  //                         size: 24,
-  //                       ),
-  //                       const SizedBox(height: 4),
-  //                       Text(
-  //                         '이미지 로딩 실패',
-  //                         style: TextStyle(
-  //                           color: Colors.white.withOpacity(0.7),
-  //                           fontSize: 10,
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //
-  //             // ===== 🎨 그라데이션 오버레이 (더 부드럽게) =====
-  //             Positioned.fill(
-  //               child: Container(
-  //                 decoration: BoxDecoration(
-  //                   gradient: LinearGradient(
-  //                     begin: Alignment.centerLeft,
-  //                     end: Alignment.centerRight,
-  //                     stops: const [0.0, 0.5, 1.0],
-  //                     colors: [
-  //                       Colors.black.withOpacity(0.6),
-  //                       Colors.black.withOpacity(0.2),
-  //                       Colors.transparent,
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //
-  //             // ===== 📝 주요 컨텐츠 영역 =====
-  //             Positioned(
-  //               left: 20,
-  //               right: 70,
-  //               top: 0,
-  //               bottom: 0,
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   // 🏷️ 배지
-  //                   Container(
-  //                     padding: const EdgeInsets.symmetric(
-  //                       horizontal: 10,
-  //                       vertical: 4,
-  //                     ),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.white.withOpacity(0.25),
-  //                       borderRadius: BorderRadius.circular(12),
-  //                       border: Border.all(
-  //                         color: Colors.white.withOpacity(0.4),
-  //                         width: 1,
-  //                       ),
-  //                     ),
-  //                     child: Text(
-  //                       badgeText,
-  //                       style: const TextStyle(
-  //                         color: Colors.white,
-  //                         fontSize: 10,
-  //                         fontWeight: FontWeight.w700,
-  //                         letterSpacing: 0.5,
-  //                       ),
-  //                     ),
-  //                   ),
-  //
-  //                   const SizedBox(height: 8),
-  //
-  //                   // 📝 메인 타이틀
-  //                   Text(
-  //                     title,
-  //                     style: const TextStyle(
-  //                       color: Colors.white,
-  //                       fontSize: 16,
-  //                       fontWeight: FontWeight.bold,
-  //                       height: 1.2,
-  //                     ),
-  //                     maxLines: 1,
-  //                     overflow: TextOverflow.ellipsis,
-  //                   ),
-  //
-  //                   const SizedBox(height: 4),
-  //
-  //                   // 📄 서브 타이틀
-  //                   Text(
-  //                     subtitle,
-  //                     style: TextStyle(
-  //                       color: Colors.white.withOpacity(0.9),
-  //                       fontSize: 12,
-  //                       height: 1.3,
-  //                       fontWeight: FontWeight.w500,
-  //                     ),
-  //                     maxLines: 2,
-  //                     overflow: TextOverflow.ellipsis,
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //
-  //             // ===== 🔜 오른쪽 아이콘 영역 =====
-  //             Positioned(
-  //               right: 20,
-  //               top: 0,
-  //               bottom: 0,
-  //               child: Column(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   Container(
-  //                     padding: const EdgeInsets.all(8),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.white.withOpacity(0.15),
-  //                       borderRadius: BorderRadius.circular(20),
-  //                     ),
-  //                     child: const Icon(
-  //                       Icons.lightbulb_outline,
-  //                       color: Colors.white,
-  //                       size: 20,
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+
 
   /// 🏆 인기 테스트 랭킹 섹션 (반응형) - Consumer 버전
   Widget _buildTestRanking() {
@@ -390,8 +129,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '🏆 인기 테스트 랭킹',
+            Text(
+              S.of(context).home_popular,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -406,8 +145,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 );
               },
-              child: const Text(
-                '더보기',
+              child: Text(
+                S.of(context).home_more,
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.w500,
@@ -458,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     height: 100,
                     child: Center(
                       child: Text(
-                        '진행 중인 랭킹이 없습니다.',
+                        S.of(context).home_noTest,
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -488,7 +227,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Icon(Icons.error_outline, size: 32, color: Colors.red[400]),
             const SizedBox(height: 8),
             Text(
-              '데이터 로드 실패',
+              S.of(context).home_data_fail,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -508,7 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ref.read(testListNotifierProvider.notifier).loadPopularTests();
               },
               icon: Icon(Icons.refresh, size: 16),
-              label: Text('다시 시도'),
+              label: Text(S.of(context).home_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
@@ -621,7 +360,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              '인기 테스트 불러오는 중...',
+              S.of(context).home_load_test,
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
@@ -637,8 +376,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '✨ 당신을 위한 추천',
+            Text(
+              S.of(context).home_recomend,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -653,8 +392,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 );
               },
-              child: const Text(
-                '전체보기',
+              child: Text(
+                S.of(context).home_all,
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.w500,
@@ -700,8 +439,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '당신을 위한 테스트',
+                        Text(
+                          S.of(context).home_foryour,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -709,8 +448,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '당신의 성향에 맞는 심리검사를 추천해드려요',
+                        Text(
+                          S.of(context).home_foryour_content,
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
@@ -928,7 +667,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '이미지 로딩 실패',
+                          S.of(context).home_image_load_fail,
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.7),
                             fontSize: 10,
@@ -996,8 +735,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 width: 1,
                               ),
                             ),
-                            child: const Text(
-                              '심리테스트',
+                            child:  Text(
+                              S.of(context).home_test,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -1036,8 +775,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children:[
-            const Text(
-              '📈 최근 검사 기록',
+            Text(
+              S.of(context).home_recent_insp,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -1061,7 +800,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // );
                   },
                   icon: const Icon(Icons.refresh, color: AppColors.primaryBlue),
-                  tooltip: '새로고침',
+                  tooltip: S.of(context).home_refresh,
                   padding: EdgeInsets.zero, // 버튼 주변 기본 여백 제거
                   constraints: const BoxConstraints(), // 버튼 크기를 아이콘에 딱 맞춤
                 ),
@@ -1088,8 +827,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       MaterialPageRoute(builder: (context) => const MyActivityPage()),
                     );
                   },
-                  child: const Text(
-                    '전체보기',
+                  child: Text(
+                    S.of(context).home_all_see,
                     style: TextStyle(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.w500,
@@ -1152,11 +891,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Icon(Icons.psychology_outlined, size: 40, color: Colors.grey[300]),
           const SizedBox(height: 12),
-          const Text('아직 분석 결과가 없어요.', style: TextStyle(color: Colors.grey)),
+          Text(S.of(context).home_no_analy, style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => {/* 테스트 탭으로 이동 */},
-            child: const Text('첫 심리테스트 시작하기'),
+            child: Text(S.of(context).home_start_test),
           ),
         ],
       ),
@@ -1243,7 +982,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                     child: Text(
-                      '$rank위',
+                      S.of(context).home_rank(rank),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: AppDimensions.getRankingCardRankBadgeFontSize(
@@ -1281,8 +1020,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
 
                   // 참여자 수만 표시
-                  Text(
-                    '${_formatParticipantCount(participantCount)}명 참여',
+                  Text(//'${_formatParticipantCount(participantCount)}명 참여'
+                    S.of(context).home_count(_formatParticipantCount(participantCount)),
                     style: TextStyle(
                       fontSize: AppDimensions.getRankingCardParticipantFontSize(
                         context,
@@ -1316,9 +1055,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 참여자 수 포맷팅
   String _formatParticipantCount(int count) {
     if (count >= 10000) {
-      return '${(count / 10000).toStringAsFixed(1)}만';
+      return S.of(context).home_count_people_tenthousand((count / 10000).toStringAsFixed(1)); //'${(count / 10000).toStringAsFixed(1)}만'
     } else if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}천';
+      return S.of(context).home_count_people_thousand((count / 1000).toStringAsFixed(1)); //'${(count / 1000).toStringAsFixed(1)}천'
     } else {
       return count.toString();
     }
@@ -1512,7 +1251,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '정확도 $accuracy',
+                          S.of(context).home_accuracy(accuracy),
                           style: TextStyle(
                             fontSize:
                                 AppDimensions.getRankingCardParticipantFontSize(

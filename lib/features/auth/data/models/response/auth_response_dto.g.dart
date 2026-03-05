@@ -21,6 +21,7 @@ _$AuthResponseImpl _$$AuthResponseImplFromJson(Map json) => $checkedCreate(
               $checkedConvert('token_type', (v) => v as String? ?? 'Bearer'),
           nickname: $checkedConvert('nickname', (v) => v as String?),
           coins: $checkedConvert('coins', (v) => (v as num?)?.toInt() ?? 0),
+          userId: $checkedConvert('userId', (v) => (v as num).toInt()),
         );
         return val;
       },
@@ -42,4 +43,5 @@ Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
       'token_type': instance.tokenType,
       'nickname': instance.nickname,
       'coins': instance.coins,
+      'userId': instance.userId,
     };

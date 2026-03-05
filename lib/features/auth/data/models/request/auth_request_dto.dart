@@ -21,13 +21,25 @@ class GoogleLoginRequest with _$GoogleLoginRequest {
 @freezed
 class AppleLoginRequest with _$AppleLoginRequest {
   const factory AppleLoginRequest({
-    required String idToken, // 🔑 핵심! 서버에서 검증할 토큰
-    String? deviceId, // 📱 기기 식별 (선택)
+    required String identityToken, // 🔥 필수: 애플이 준 JWT 토큰
     String? fcmToken,
+    String? userJson, // 선택: 최초 로그인 시 이름 등을 보낼 때 (지금은 null 가능)
   }) = _AppleLoginRequest;
 
   factory AppleLoginRequest.fromJson(Map<String, dynamic> json) =>
       _$AppleLoginRequestFromJson(json);
+}
+
+@freezed
+class GuestLoginRequest with _$GuestLoginRequest {
+  const factory GuestLoginRequest({
+    required String deviceId, // 🔥 필수: 서버에서 이걸로 기존 게스트 찾음
+    String? fcmToken,
+    String? language,
+  }) = _GuestLoginRequest;
+
+  factory GuestLoginRequest.fromJson(Map<String, dynamic> json) =>
+      _$GuestLoginRequestFromJson(json);
 }
 
 /// 🔄 토큰 갱신 요청 DTO
@@ -78,20 +90,4 @@ extension GoogleLoginRequestExtension on GoogleLoginRequest {
     return idToken.isNotEmpty;
   }
 
-}
-
-extension AppleLoginRequestExtension on AppleLoginRequest {
-  /// apple 로그인 유효성 검사
-  bool get isValid {
-    return idToken.isNotEmpty;
-  }
-
-  /// API 전송용 Map으로 변환
-  Map<String, dynamic> toApiJson() {
-    return {
-      'id_token': idToken,
-      if (deviceId != null) 'device_id': deviceId,
-      if (fcmToken != null) 'fcm_token': fcmToken,
-    };
-  }
 }

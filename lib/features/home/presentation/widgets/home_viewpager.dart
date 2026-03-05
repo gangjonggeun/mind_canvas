@@ -148,7 +148,6 @@ class _HomeViewPagerState extends State<HomeViewPager> {
               // HTP 심리검사
               GestureDetector(
                 onTap: () {
-                  // ⚠️ TODO: 실제 DB의 'HTP 테스트' ID 입력 (예: 11)
                   _navigateToTestInfo(context,3);
                 },
                 child: const HTPPageViewItem(),

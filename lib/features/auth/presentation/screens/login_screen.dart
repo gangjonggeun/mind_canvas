@@ -1,14 +1,21 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/profile/domain/usecases/profile_usecase.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/main_screen.dart';
+import '../../../../core/providers/app_language_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 // 🎯 Profile 관련 import 추가
+import '../../../../generated/l10n.dart';
 import '../../../profile/domain/usecases/profile_usecase_provider.dart';
 import '../../domain/entities/auth_user_entity.dart';
 import '../../domain/enums/login_type.dart'; // ✅ LoginType용
@@ -44,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   late Animation<Offset> _slideAnimation;
 
   // 🌐 현재 언어 상태
-  String _currentLanguage = 'KO';
+  String _currentLanguage = 'ko';
 
   @override
   void initState() {
@@ -94,6 +101,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    _currentLanguage = ref.watch(appLanguageProvider);
     // 🎯 인증 상태 리스너
     ref.listen<AsyncValue<AuthUser?>>(authNotifierProvider, (previous, next) {
 
@@ -208,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       child: Column(
         children: [
           Text(
-            '마음색 캔버스에서',
+            S.of(context).login_title,
             style: TextStyle(
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
@@ -219,7 +227,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
           Gap(8.h),
           Text(
-            '당신의 마음색을 그려보세요',
+            S.of(context).login_content,
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -244,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         children: [
           // 2. '다양한 플랫폼으로~' 텍스트는 그대로 두거나, 디자인에 맞춰 제거/수정 가능
           Text(
-            '다양한 플랫폼으로 간편하게 로그인하세요',
+            S.of(context).login_type,
             style: TextStyle(
               fontSize: 14.sp,
               color: AppColors.textSecondary,
@@ -254,11 +262,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
           Gap(24.h),
 
+          SignInWithAppleButton(
+            onPressed: isLoading ? null : _handleAppleLogin,
+            text: 'Sign in with Apple', // 텍스트 커스텀 가능
+            style: SignInWithAppleButtonStyle.black, // 애플 공식 블랙 스타일
+            height: 48, // 앱 디자인에 맞게 높이 조절
+          ),
+
+          Gap(12.h),
           // 3. 색상이 추가될 로그인 버튼들 (아래에서 스타일 수정)
           _LoginButton(
-            icon: Icons.g_mobiledata,
+            icon: FontAwesomeIcons.google,
             // 실제로는 Google 로고 아이콘 사용 권장
-            label: 'Google로 로그인',
+            label: 'Sign in with GOOGLE',
             onPressed: isLoading ? null : _handleGoogleLogin,
             isLoading: isLoading,
             // 여기에 새로운 색상 스타일을 적용할 예정
@@ -266,22 +282,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             // Google Blue
             foregroundColor: Colors.white,
           ),
-          Gap(12.h),
-          _LoginButton(
-            icon: Icons.apple,
-            label: 'Apple로 로그인',
-            onPressed: isLoading ? null : _handleAppleLogin,
-            isLoading: isLoading,
-            backgroundColor: Colors.black,
-            // Apple Black
-            foregroundColor: Colors.white,
-          ),
+
+
 
           // 구분선 (단순 텍스트로 변경)
           Padding(
             padding: EdgeInsets.symmetric(vertical: 35.h),
             child: Text(
-              '또는',
+              'or',
               style: TextStyle(
                 fontSize: 13.sp,
                 color: AppColors.textTertiary,
@@ -336,7 +344,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
       child: Text(
-        '계속을 클릭하면 당사의 서비스 이용 약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.', // 텍스트 변경
+        S.of(context).login_disclamer, // 텍스트 변경
         style: TextStyle(
           fontSize: 11.sp,
           color: AppColors.textTertiary,
@@ -351,15 +359,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   /// 🌐 언어 변경 핸들러
   void _handleLanguageChange() {
-    setState(() {
-      _currentLanguage = _currentLanguage == 'KO' ? 'EN' : 'KO';
-    });
+    // 1. Riverpod 프로바이더에서 현재 언어 가져오기
+    final currentLang = ref.read(appLanguageProvider);
+    final newLang = currentLang == 'ko' ? 'en' : 'ko';
 
-    // 햅틱 피드백
+    // 1. Riverpod 상태 업데이트 (DB 저장 등)
+    ref.read(appLanguageProvider.notifier).setLanguage(newLang);
+
+    // 2. ⭐ 핵심: easy_localization 언어 강제 변경
+    S.load(Locale(newLang));
+    // 3. 프로바이더를 통해 언어 변경 및 DB(Hive) 저장
+    ref.read(appLanguageProvider.notifier).setLanguage(newLang);
+
+    // 4. 피드백
     HapticFeedback.lightImpact();
-
-    // 성공 메시지
-    _showSuccessSnackBar('언어가 $_currentLanguage로 변경되었습니다');
+    // _showSuccessSnackBar('언어가 ${newLang.toUpperCase()}로 변경되었습니다');
   }
 
   /// 🌐 Google 로그인 핸들러 (AuthNotifier를 통해 실행)
@@ -371,243 +385,264 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     await ref.read(authNotifierProvider.notifier).googleLogin();
   }
 
-
-  /// 🍎 Apple 로그인 핸들러
   Future<void> _handleAppleLogin() async {
-    // debugPrint('[$_logTag] Apple 로그인 시도');
-    // HapticFeedback.selectionClick();
-    //
-    // try {
-    //   final result = await ref.read(authNotifierProvider.notifier).appleLogin(
-    //     identityToken: 'mock_identity_token',
-    //     authorizationCode: 'mock_auth_code',
-    //   );
-    //
-    //   if (result.isFailure) {
-    //     _showErrorSnackBar(result.errorMessage ?? 'Apple 로그인에 실패했습니다');
-    //   }
-    // } catch (e) {
-    //   debugPrint('[$_logTag] Apple 로그인 오류: $e');
-    //   _showErrorSnackBar('네트워크 오류가 발생했습니다');
-    // }
+    debugPrint('[$_logTag] Apple 로그인 시도');
+    HapticFeedback.selectionClick();
+
+    try {
+      // 🌟 파라미터 불필요! Notifier 안에서 애플 네이티브 팝업 띄우고 토큰까지 다 처리함
+      final result = await ref.read(authNotifierProvider.notifier).appleLogin();
+
+      if (result.isFailure) {
+        _showErrorSnackBar(result.errorCode ?? S.of(context).login_fail,);
+      }
+      // 성공 시 라우팅 처리는 보통 ref.listen(authNotifierProvider, ...) 쪽에서 감지해서 넘어감
+    } catch (e) {
+      debugPrint('[$_logTag] Apple 로그인 오류: $e');
+      _showErrorSnackBar(S.of(context).login_network_error);
+    }
   }
 
-  /// 🔍 익명 로그인 핸들러
+  /// 👻 익명(게스트) 로그인 핸들러
   Future<void> _handleAnonymousLogin() async {
-    // debugPrint('[$_logTag] 익명 로그인 시도');
-    // HapticFeedback.selectionClick();
-    //
-    // try {
-    //   final result = await ref.read(authNotifierProvider.notifier).anonymousLogin();
-    //
-    //   if (result.isFailure) {
-    //     _showErrorSnackBar(result.errorMessage ?? '익명 로그인에 실패했습니다');
-    //   }
-    // } catch (e) {
-    //   debugPrint('[$_logTag] 익명 로그인 오류: $e');
-    //   _showErrorSnackBar('네트워크 오류가 발생했습니다');
-    // }
+    debugPrint('[$_logTag] 익명 로그인 시도');
+    HapticFeedback.selectionClick();
+
+    try {
+      // 🌟 Notifier 안에서 언어(Language) 값을 알아서 읽어서 처리함
+      final result = await ref.read(authNotifierProvider.notifier).guestLogin();
+
+      if (result.isFailure) {
+        _showErrorSnackBar(result.errorCode ??  S.of(context).login_fail);
+      }
+    } catch (e) {
+      debugPrint('[$_logTag] 익명 로그인 오류: $e');
+      _showErrorSnackBar(S.of(context).login_network_error);
+    }
   }
 
   // 📍 LoginScreen의 _showNicknameDialog 메서드 수정
-
-  /// 📝 닉네임 설정 다이얼로그 (UseCase 연동)
   Future<void> _showNicknameDialog(BuildContext context) async {
     final TextEditingController nicknameController = TextEditingController();
 
-    final String? nickname = await showDialog<String>(
+    bool isTermsAgreed = false;
+
+    // 다이얼로그 결과를 Map으로 받습니다 (닉네임 + 약관동의여부)
+    final Map<String, dynamic>? result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) =>
-          StatefulBuilder(
-            builder: (context, setState) {
-              // 유효성 검사 로직 (기존과 동일)
-              String? validationError;
-              Widget? feedbackIcon;
-              Color borderColor = AppColors.primaryBlueDark;
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          String? validationError;
+          Widget? feedbackIcon;
+          Color borderColor = AppColors.primaryBlueDark;
 
-              void validateNickname(String nickname) {
-                final bool wasValid = validationError == null;
-                final RegExp validPattern = RegExp(r'^[a-zA-Z0-9ㄱ-ㅎ가-힣]*$');
+          void validateNickname(String nickname) {
+            final bool wasValid = validationError == null;
+            final RegExp validPattern = RegExp(r'^[a-zA-Z0-9ㄱ-ㅎ가-힣]*$');
 
-                if (nickname.isNotEmpty && nickname.length < 3) {
-                  validationError = '3글자 이상 입력해주세요.';
-                } else if (nickname.length > 12) {
-                  validationError = '12자 이하로 입력해주세요.';
-                } else
-                if (nickname.isNotEmpty && !validPattern.hasMatch(nickname)) {
-                  validationError = '특수문자는 사용할 수 없습니다.';
-                } else {
-                  validationError = null;
+            if (nickname.isNotEmpty && nickname.length < 3) {
+              validationError = S.of(context).login_validation;
+            } else if (nickname.length > 12) {
+              validationError = S.of(context).login_validation2;
+            } else if (nickname.isNotEmpty && !validPattern.hasMatch(nickname)) {
+              validationError = S.of(context).login_validation3;
+            } else {
+              validationError = null;
+            }
+
+            if (nickname.isEmpty) {
+              feedbackIcon = null;
+            } else if (validationError == null) {
+              feedbackIcon = Icon(Icons.check_circle_outline, color: AppColors.statusSuccess);
+            } else {
+              feedbackIcon = Icon(Icons.error_outline, color: AppColors.statusError);
+            }
+
+            if (wasValid && validationError != null) {
+              setState(() => borderColor = AppColors.statusError);
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (context.mounted) {
+                  setState(() => borderColor = AppColors.primaryBlueDark);
                 }
+              });
+            }
+          }
 
-                if (nickname.isEmpty) {
-                  feedbackIcon = null;
-                } else if (validationError == null) {
-                  feedbackIcon = Icon(Icons.check_circle_outline,
-                      color: AppColors.statusSuccess);
-                } else {
-                  feedbackIcon =
-                      Icon(Icons.error_outline, color: AppColors.statusError);
-                }
+          validateNickname(nicknameController.text);
 
-                if (wasValid && validationError != null) {
-                  setState(() => borderColor = AppColors.statusError);
-                  Future.delayed(const Duration(milliseconds: 500), () {
-                    if (context.mounted) {
-                      setState(() => borderColor = AppColors.primaryBlueDark);
-                    }
-                  });
-                }
-              }
+          // ✨ '확인' 버튼 활성화 조건 (닉네임 유효 && 약관 동의 체크)
+          final bool isButtonEnabled = validationError == null &&
+              nicknameController.text.isNotEmpty &&
+              isTermsAgreed;
 
-              validateNickname(nicknameController.text);
+          return AlertDialog(
+            backgroundColor: AppColors.backgroundCard,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            title: Center(
+              child: Text(
+                  S.of(context).login_welcome,
+                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary)
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children:[
+                  Text(S.of(context).login_nickname_setting, textAlign: TextAlign.center, style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary)),
+                  SizedBox(height: 4.h),
+                  Text(S.of(context).login_nickname_conditions, textAlign: TextAlign.center, style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                  SizedBox(height: 16.h),
 
-              return AlertDialog(
-                backgroundColor: AppColors.backgroundCard,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.r)),
-                title: Center(
-                  child: Text('닉네임 설정', style: TextStyle(fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary)),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text('사용할 닉네임을 설정해주세요', textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 14.sp, color: AppColors.textPrimary)),
-                    SizedBox(height: 4.h),
-                    Text('3~12자, 특수문자 제외', style: TextStyle(
-                        fontSize: 12.sp, color: AppColors.textSecondary)),
-                    SizedBox(height: 16.h),
-                    TextField(
-                      controller: nicknameController,
-                      onChanged: (nickname) =>
-                          setState(() => validateNickname(nickname)),
-                      decoration: InputDecoration(
-                        hintText: '닉네임을 입력해주세요',
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(
-                              color: borderColor, width: 1.0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: validationError == null
-                              ? AppColors.primary
-                              : AppColors.statusError, width: 2.0),
-                        ),
-                        suffixIcon: feedbackIcon,
-                        counterText: '',
+                  // 닉네임 입력 필드
+                  TextField(
+                    controller: nicknameController,
+                    onChanged: (nickname) => setState(() => validateNickname(nickname)),
+                    decoration: InputDecoration(
+                      hintText: S.of(context).login_nickname_enter,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: borderColor, width: 1.0),
                       ),
-                      maxLength: 12,
-                      autofocus: true,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z0-9ㄱ-ㅎ가-힣]')),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: validationError == null ? AppColors.primary : AppColors.statusError, width: 2.0),
+                      ),
+                      suffixIcon: feedbackIcon,
+                      counterText: '',
+                    ),
+                    maxLength: 12,
+                    autofocus: true,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9ㄱ-ㅎ가-힣]')),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // ✨ 약관 동의 체크박스 섹션
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundPrimary,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children:[
+                        SizedBox(
+                          width: 32.w,
+                          height: 32.h,
+                          child: Checkbox(
+                            value: isTermsAgreed,
+                            activeColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
+                            onChanged: (value) {
+                              setState(() => isTermsAgreed = value ?? false);
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary, height: 1.4),
+                              children:[
+                                const TextSpan(text: '(필수) '),
+                                TextSpan(
+                                  text: S.of(context).tnc,
+                                  style: const TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+                                  recognizer: TapGestureRecognizer()..onTap = () async {
+                                    final url = Uri.parse('https://www.notion.so/317b4bde4afa80969249c8caed899e7f?source=copy_link');
+                                    if (await canLaunchUrl(url)) await launchUrl(url);
+                                  },
+                                ),
+                                TextSpan(text: S.of(context).login_and),
+                                TextSpan(
+                                  text: S.of(context).login_privacy,
+                                  style: const TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+                                  recognizer: TapGestureRecognizer()..onTap = () async {
+                                    final url = Uri.parse('https://your-privacy-url.com');
+                                    if (await canLaunchUrl(url)) await launchUrl(url);
+                                  },
+                                ),
+                                TextSpan(text: S.of(context).login_agree ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-                actionsAlignment: MainAxisAlignment.center,
-                actions: [
-                  ElevatedButton(
-                    onPressed: (validationError == null &&
-                        nicknameController.text.isNotEmpty)
-                        ? () =>
-                        Navigator.of(dialogContext).pop(
-                            nicknameController.text.trim()) // ✅ 닉네임 반환
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r)),
-                      minimumSize: Size(double.infinity, 50.h),
-                    ),
-                    child: Text('확인', style: TextStyle(
-                        fontSize: 16.sp, fontWeight: FontWeight.w600)),
                   ),
                 ],
-              );
-            },
-          ),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions:[
+              ElevatedButton(
+                onPressed: isButtonEnabled
+                    ? () => Navigator.of(dialogContext).pop({
+                  'nickname': nicknameController.text.trim(),
+                  'isTermsAgreed': isTermsAgreed,
+                })
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  disabledBackgroundColor: AppColors.backgroundCard, // 비활성화 시 색상
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  minimumSize: Size(double.infinity, 50.h),
+                ),
+                child: Text(S.of(context).login_registr_complte, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          );
+        },
+      ),
     );
 
-    // 🎯 여기서 닉네임 처리!
-    if (nickname != null && nickname.isNotEmpty) {
-      await _handleNicknameUpdate(nickname);
+    // 🎯 다이얼로그 종료 후 결과 처리
+    if (result != null) {
+      final String nickname = result['nickname'];
+      final bool isTermsAgreed = result['isTermsAgreed'];
+
+      // 약관동의 변수도 함께 넘겨주도록 _handleNicknameUpdate 메서드 호출
+      await _handleNicknameUpdate(nickname, isTermsAgreed);
     }
   }
 
-  /// 🎯 닉네임 업데이트 핸들러 (개선된 버전)
-  Future<void> _handleNicknameUpdate(String nickname) async {
-    // 🔒 중복 요청 방지
-    if (_isProcessing) {
-      print('⚠️ 이미 처리 중입니다. 중복 요청을 무시합니다.');
-      return;
-    }
-
+  /// 🎯 닉네임 및 약관 동의 업데이트 핸들러
+  Future<void> _handleNicknameUpdate(String nickname, bool isTermsAgreed) async {
+    if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
     try {
-      // 🔄 로딩 상태 표시
-      _showLoadingSnackBar('닉네임을 설정하는 중...');
+      _showLoadingSnackBar(S.of(context).login_account_setting);
 
-      // 🎯 AuthNotifier를 통한 통합 처리 (권장 방식)
+      // 💡 여기서 setupProfile을 호출할 때 isTermsAgreed를 함께 넘길 수 있도록
+      // AuthNotifier의 setupProfile 파라미터를 수정하셔야 합니다.
       final result = await ref.read(authNotifierProvider.notifier).setupProfile(
         nickname: nickname,
+        isTermsAgreed: isTermsAgreed,
       );
 
-      // 📊 결과 처리
       result.fold(
         onSuccess: (_) {
-          // ✅ 성공 처리
-          _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
-          _showSuccessSnackBar('닉네임이 "$nickname"로 설정되었습니다');
-
-          print('✅ 닉네임 설정 성공: $nickname');
+          _hideLoadingSnackBar();
+          _showSuccessSnackBar(S.of(context).login_registr_complte);
         },
         onFailure: (error, errorCode) {
-          // ❌ 실패 처리
-          _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
-
-          // HTTP 405 오류 특별 처리
-          if (error.contains('405') || error.contains('Method Not Allowed')) {
-            _showErrorSnackBar('서버 설정 오류가 발생했습니다. 관리자에게 문의해주세요.');
-            print('❌ HTTP 405 오류 - 서버에서 허용하지 않는 메서드: $error');
-          } else {
-            _showErrorSnackBar(error);
-          }
-
-          print('❌ 닉네임 설정 실패: $error (코드: $errorCode)');
+          _hideLoadingSnackBar();
+          _showErrorSnackBar(error);
         },
       );
     } catch (e) {
-      // 🚨 예상치 못한 예외 처리
-      _hideLoadingSnackBar(); // 로딩 스낵바 먼저 숨김
-
-      print('❌ 닉네임 설정 중 예외 발생: $e');
-
-      // DioException 특별 처리
-      if (e.toString().contains('405')) {
-        _showErrorSnackBar('서버 연결 방식에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
-      } else {
-        _showErrorSnackBar('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
-      }
-
-      // 예외 발생 시 다시 시도 가능하도록
+      _hideLoadingSnackBar();
+      _showErrorSnackBar(S.of(context).login_network_error);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) _showNicknameDialog(context);
       });
     } finally {
-      // 🧹 항상 상태 정리
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -710,7 +745,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: '닫기',
+          label: S.of(context).login_close,
           textColor: Colors.white,
           onPressed: _hideCurrentSnackBar,
         ),
@@ -722,7 +757,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   void _handleLoginSuccess(AuthUser user) {
     debugPrint('[$_logTag] 로그인 성공');
 
-    _showSuccessSnackBar('${user.nickname ?? '사용자'}님, 환영합니다!');
+    _showSuccessSnackBar(S.of(context).login_nickname((user.nickname ?? 'User')));
 
     // 즉시 메인 화면으로 이동
     if (mounted) {
@@ -922,6 +957,7 @@ class _LoginButton extends StatelessWidget {
           backgroundColor: backgroundColor, // <-- 전달받은 배경색 사용
           foregroundColor: foregroundColor, // <-- 전달받은 전경색 사용
           elevation: 0, // 플랫 디자인이므로 그림자 제거
+          visualDensity: VisualDensity.standard,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
@@ -958,7 +994,7 @@ class _MinimalAnonymousLoginButton extends StatelessWidget {
       )
           : Icon(Icons.edit_outlined, size: 20.sp), // 아이콘 변경
       label: Text(
-        '익명으로 로그인', // 텍스트 변경
+        S.of(context).login_guest, // 텍스트 변경
         style: TextStyle(
           fontSize: 15.sp,
           fontWeight: FontWeight.w600,

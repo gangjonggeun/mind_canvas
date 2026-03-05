@@ -34,7 +34,9 @@ mixin _$AuthResponse {
   String? get nickname =>
       throw _privateConstructorUsedError; // 💰 [신규 추가] 서버에서 내려오는 코인 잔액
   @JsonKey(name: 'coins')
-  int get coins =>
+  int get coins => throw _privateConstructorUsedError;
+  @JsonKey(name: 'userId')
+  int get userId =>
       throw _privateConstructorUsedError; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @JsonKey(includeFromJson: false, includeToJson: false)
   DateTime? get issuedAt => throw _privateConstructorUsedError;
@@ -63,6 +65,7 @@ abstract class $AuthResponseCopyWith<$Res> {
       @JsonKey(name: 'token_type') String tokenType,
       @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(name: 'coins') int coins,
+      @JsonKey(name: 'userId') int userId,
       @JsonKey(includeFromJson: false, includeToJson: false)
       DateTime? issuedAt});
 }
@@ -89,6 +92,7 @@ class _$AuthResponseCopyWithImpl<$Res, $Val extends AuthResponse>
     Object? tokenType = null,
     Object? nickname = freezed,
     Object? coins = null,
+    Object? userId = null,
     Object? issuedAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -120,6 +124,10 @@ class _$AuthResponseCopyWithImpl<$Res, $Val extends AuthResponse>
           ? _value.coins
           : coins // ignore: cast_nullable_to_non_nullable
               as int,
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as int,
       issuedAt: freezed == issuedAt
           ? _value.issuedAt
           : issuedAt // ignore: cast_nullable_to_non_nullable
@@ -144,6 +152,7 @@ abstract class _$$AuthResponseImplCopyWith<$Res>
       @JsonKey(name: 'token_type') String tokenType,
       @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(name: 'coins') int coins,
+      @JsonKey(name: 'userId') int userId,
       @JsonKey(includeFromJson: false, includeToJson: false)
       DateTime? issuedAt});
 }
@@ -168,6 +177,7 @@ class __$$AuthResponseImplCopyWithImpl<$Res>
     Object? tokenType = null,
     Object? nickname = freezed,
     Object? coins = null,
+    Object? userId = null,
     Object? issuedAt = freezed,
   }) {
     return _then(_$AuthResponseImpl(
@@ -199,6 +209,10 @@ class __$$AuthResponseImplCopyWithImpl<$Res>
           ? _value.coins
           : coins // ignore: cast_nullable_to_non_nullable
               as int,
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as int,
       issuedAt: freezed == issuedAt
           ? _value.issuedAt
           : issuedAt // ignore: cast_nullable_to_non_nullable
@@ -218,6 +232,7 @@ class _$AuthResponseImpl implements _AuthResponse {
       @JsonKey(name: 'token_type') this.tokenType = 'Bearer',
       @JsonKey(name: 'nickname') this.nickname,
       @JsonKey(name: 'coins') this.coins = 0,
+      @JsonKey(name: 'userId') required this.userId,
       @JsonKey(includeFromJson: false, includeToJson: false) this.issuedAt});
 
   factory _$AuthResponseImpl.fromJson(Map<String, dynamic> json) =>
@@ -245,6 +260,9 @@ class _$AuthResponseImpl implements _AuthResponse {
   @override
   @JsonKey(name: 'coins')
   final int coins;
+  @override
+  @JsonKey(name: 'userId')
+  final int userId;
 // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -252,7 +270,7 @@ class _$AuthResponseImpl implements _AuthResponse {
 
   @override
   String toString() {
-    return 'AuthResponse(accessToken: $accessToken, refreshToken: $refreshToken, accessExpiresIn: $accessExpiresIn, refreshExpiresIn: $refreshExpiresIn, tokenType: $tokenType, nickname: $nickname, coins: $coins, issuedAt: $issuedAt)';
+    return 'AuthResponse(accessToken: $accessToken, refreshToken: $refreshToken, accessExpiresIn: $accessExpiresIn, refreshExpiresIn: $refreshExpiresIn, tokenType: $tokenType, nickname: $nickname, coins: $coins, userId: $userId, issuedAt: $issuedAt)';
   }
 
   @override
@@ -273,14 +291,24 @@ class _$AuthResponseImpl implements _AuthResponse {
             (identical(other.nickname, nickname) ||
                 other.nickname == nickname) &&
             (identical(other.coins, coins) || other.coins == coins) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.issuedAt, issuedAt) ||
                 other.issuedAt == issuedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, accessToken, refreshToken,
-      accessExpiresIn, refreshExpiresIn, tokenType, nickname, coins, issuedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      accessToken,
+      refreshToken,
+      accessExpiresIn,
+      refreshExpiresIn,
+      tokenType,
+      nickname,
+      coins,
+      userId,
+      issuedAt);
 
   /// Create a copy of AuthResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -307,6 +335,7 @@ abstract class _AuthResponse implements AuthResponse {
       @JsonKey(name: 'token_type') final String tokenType,
       @JsonKey(name: 'nickname') final String? nickname,
       @JsonKey(name: 'coins') final int coins,
+      @JsonKey(name: 'userId') required final int userId,
       @JsonKey(includeFromJson: false, includeToJson: false)
       final DateTime? issuedAt}) = _$AuthResponseImpl;
 
@@ -333,7 +362,10 @@ abstract class _AuthResponse implements AuthResponse {
   String? get nickname; // 💰 [신규 추가] 서버에서 내려오는 코인 잔액
   @override
   @JsonKey(name: 'coins')
-  int get coins; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
+  int get coins;
+  @override
+  @JsonKey(name: 'userId')
+  int get userId; // 클라이언트에서 추가하는 필드들 (서버에서 안옴)
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   DateTime? get issuedAt;

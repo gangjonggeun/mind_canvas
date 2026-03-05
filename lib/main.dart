@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,15 +13,20 @@ import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dar
 import 'package:flutter/services.dart';
 // ✅ 추가: GoRouter 관련 import
 import 'app/main_screen.dart';
+import 'core/providers/app_language_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/utils/cover_image_helper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'generated/l10n.dart';
+
+
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CoverImageHelper.init();
   await Firebase.initializeApp(); // 파이어베이스 초기화
-  await EasyLocalization.ensureInitialized(); // 추가
+  // await EasyLocalization.ensureInitialized(); // 추가
   await MobileAds.instance.initialize();
 
   // 🔔 권한 요청 (iOS/Android 13+)
@@ -66,28 +72,23 @@ void main() async {
   ]);
 
   runApp(
-      EasyLocalization(
-        supportedLocales: [Locale('ko'), Locale('en'), Locale('ja')],
-        path: 'assets/translations', // 경로 확인
-        fallbackLocale: Locale('ko'),
-        child:  ProviderScope(child: MindCanvasApp())),
+    const ProviderScope(
+      child: MindCanvasApp(),
+    ),
   );
 
 
   // runApp(const ProviderScope(child: TestMindCanvasApp()));
 
 }
-
-/// Mind Canvas 메인 애플리케이션
 class MindCanvasApp extends ConsumerWidget {
-  // ✅ 변경: StatelessWidget → ConsumerWidget
   const MindCanvasApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ✅ 변경: WidgetRef 추가
-    // ✅ 추가: GoRouter 인스턴스 가져오기
     final router = ref.watch(appRouterProvider);
+    // 🌐 1. Riverpod에서 현재 언어 상태 감시
+    final languageCode = ref.watch(appLanguageProvider);
 
     return ScreenUtilInit(
       designSize: const Size(375, 812),
@@ -95,15 +96,22 @@ class MindCanvasApp extends ConsumerWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
-          localizationsDelegates: context.localizationDelegates,
-          supportedLocales: context.supportedLocales,
-          locale: context.locale,
+          scaffoldMessengerKey: scaffoldMessengerKey,
+          // 🌐 2. Flutter Intl용 Delegate 설정
+          localizationsDelegates: const [
+            S.delegate, // 👈 생성된 S 클래스
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          // 🌐 3. S.delegate에서 지원하는 로케일 자동 연동
+          supportedLocales: S.delegate.supportedLocales,
 
-          // ✅ 변경: MaterialApp → MaterialApp.router
+          // 🌐 4. Riverpod 상태에 따라 앱 언어 결정
+          locale: Locale(languageCode),
+
           title: '마음색 캔버스',
           debugShowCheckedModeBanner: false,
-
-          // 🎨 테마 설정
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -112,16 +120,11 @@ class MindCanvasApp extends ConsumerWidget {
             ),
             fontFamily: 'Pretendard',
           ),
-
-          // 🧭 라우터 설정 (home 대신 routerConfig 사용)
           routerConfig: router,
-          // ✅ 변경: home → routerConfig
-
-          // 📱 ScreenUtil 적용
           builder: (context, child) {
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.noScaling, // 시스템 폰트 크기 무시
+                textScaler: TextScaler.noScaling,
               ),
               child: child ?? const SizedBox.shrink(),
             );

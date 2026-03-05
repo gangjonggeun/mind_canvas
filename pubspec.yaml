@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_localizations: # 👈 이거 추가
+    sdk: flutter
   #이미지 피커
   image_picker: ^1.0.7
   # 결과창에서 쓸 라이블러리
@@ -63,6 +64,10 @@ dependencies:
   portone_flutter: ^0.12.1
   google_mobile_ads: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  device_info_plus: ^12.3.0
+  sign_in_with_apple: ^7.0.1
+  font_awesome_flutter: ^10.9.1
+  intl_utils: ^2.8.8
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +97,7 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/images/icon/app_icon.png"
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/
@@ -116,3 +122,5 @@ flutter:
     - assets/images/cover/book/
     - .env
     - assets/translations/
+flutter_intl:
+  enabled: true

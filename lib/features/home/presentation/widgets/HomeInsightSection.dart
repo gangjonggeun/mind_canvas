@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../generated/l10n.dart';
 import '../../data/models/response/insight_response.dart';
 import '../notifiers/insight_notifier.dart';
 
@@ -19,8 +20,8 @@ class HomeInsightSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '💡 심리 인사이트',
+            Text(
+              S.of(context).home_insight_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -40,7 +41,7 @@ class HomeInsightSection extends ConsumerWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.refresh, color: AppColors.primaryBlue),
-              tooltip: '새로운 인사이트 보기',
+              tooltip: S.of(context).home_insight_see_new,
             ),
           ],
         ),
@@ -48,7 +49,7 @@ class HomeInsightSection extends ConsumerWidget {
 
         // ✅ 2. 상태별 본문 표시
         if (state.isLoading && state.insights.isEmpty)
-          _buildLoadingState() // 로딩 중 (데이터 없을 때만)
+          _buildLoadingState(context) // 로딩 중 (데이터 없을 때만)
         else if (state.errorMessage != null)
           _buildErrorState(state.errorMessage!) // 에러 발생
         else if (state.insights.isEmpty)
@@ -63,14 +64,14 @@ class HomeInsightSection extends ConsumerWidget {
   }
 
   // 🔄 로딩 UI (스켈레톤 느낌)
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
     return Container(
       height: 110,
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Center(child: Text("인사이트를 불러오는 중...")),
+      child: Center(child: Text(S.of(context).home_insight_loading)),
     );
   }
 
@@ -272,7 +273,7 @@ class HomeInsightSection extends ConsumerWidget {
                           IconButton(
                             onPressed: () => Navigator.pop(context),
                             icon: const Icon(Icons.close, color: Colors.white),
-                            tooltip: '닫기',
+                            tooltip: S.of(context).home_insight_close,
                           ),
                         ],
                       ),

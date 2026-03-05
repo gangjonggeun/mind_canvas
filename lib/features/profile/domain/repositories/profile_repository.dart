@@ -17,6 +17,7 @@ abstract class ProfileRepository {
   /// Returns [Result<SetupProfileResponse>] 성공 시 설정된 프로필 정보
   Future<Result<SetupProfileResponse>> setupProfile({
     required String nickname,
+    required bool isTermsAgreed,
     File? imageFile,
   });
   Future<Result<bool>> claimAdReward();

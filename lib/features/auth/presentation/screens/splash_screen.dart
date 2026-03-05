@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/auth/token_manager_provider.dart';
 import '../../domain/repositories/auth_repository_provider.dart';
 import '../providers/auth_provider.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -30,6 +31,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       final tokenManager = ref.read(tokenManagerProvider);
       await tokenManager.initFromStorage();
 
+      if (!tokenManager.isLoggedIn) {
+        print('⚡ 토큰 없음 -> 스플래시 스킵 후 [로그인 화면]으로 이동');
+        if (mounted) {
+
+          // 만약 클래스 직접 이동을 쓰신다면:
+           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        }
+        return;
+      }
       // 🚀 2. [UX 개선] 저장된 토큰이 아예 없다면? (첫 설치 or 로그아웃 상태)
       // 무의미한 1.5초 대기를 스킵하고 즉시 로그인 화면으로 보냅니다.
       if (tokenManager.currentAuth == null ||
@@ -59,32 +69,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     }
   }
-
   Future<bool> _performAutoLogin() async {
-    // 🚨 기존: repository를 직접 읽음 (노티파이어가 안 깨어남)
-    // final authRepository = ref.read(authRepositoryProvider);
-
     try {
-      // 1. 토큰 매니저 초기화 (이건 필요함)
       final tokenManager = ref.read(tokenManagerProvider);
       await tokenManager.initFromStorage();
 
       if (!tokenManager.isLoggedIn) return false;
 
-      // 2. ✅ [핵심] AuthNotifier를 read 합니다.
-      // 이 순간 AuthNotifier의 build()가 실행되면서 로그가 찍히고 FCM 동기화가 돌아갑니다.
+      // 🚨[핵심 변경] future를 await 할 때, 서버가 꺼져있어 DioException 등 네트워크 에러가 발생하면
+      // 강제로 catch 블록으로 빠지게 됩니다.
       final authUser = await ref.read(authNotifierProvider.future);
 
-      // 3. 결과 확인
       if (authUser != null) {
-        print('✅ 자동로그인 성공 (AuthNotifier 활성화)');
+        print('✅ 서버 검증 및 자동로그인 성공');
         return true;
       } else {
-        print('❌ 자동로그인 실패');
+        print('❌ 서버 검증 실패 (토큰 만료 혹은 서버 다운)');
         return false;
       }
     } catch (e) {
-      print('❌ 자동로그인 오류: $e');
+      // 💡 서버가 완전히 꺼져있어서 Timeout이나 SocketException이 발생한 경우 이곳으로 옵니다.
+      // 무조건 false를 반환하여 안전하게 로그인 화면으로 라우팅되도록 철벽 방어합니다.
+      print('❌ 자동로그인 통신 예외 발생 (서버 오프라인 등): $e');
       return false;
     }
   }

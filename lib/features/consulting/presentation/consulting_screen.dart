@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:mind_canvas/features/consulting/presentation/pages/anger_vent_page.dart';
 import '../../../core/widgets/common_sliver_app_bar.dart';
+import '../../../generated/l10n.dart';
 import 'pages/emotion_diary_page.dart';
 import 'pages/ai_chat_page.dart';
 // import 'pages/mindfulness_sound_page.dart'; // TODO: 구현 필요
@@ -31,9 +32,9 @@ class ConsultingScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         slivers: [
           // 1. 헤더 (SliverAppBar)
-          const CommonSliverAppBar(
-            title: '마음 상담',
-            subtitle: 'AI와 함께하는 종합 감정 케어',
+          CommonSliverAppBar(
+            title: S.of(context).consulting_header,
+            subtitle: S.of(context).consulting_subtitle,
             // 🌱 새싹 모양 아이콘 적용 (아래 설명 참고)
             icon: Icons.eco_rounded,
             iconColor: Color(0xFF69F0AE),
@@ -129,8 +130,8 @@ class ConsultingScreen extends StatelessWidget {
           isDark: isDark,
           icon: Icons.edit_note,
           iconColor: const Color(0xFF4ECDC4),
-          title: '💭 AI 감정일기',
-          subtitle: '오늘의 감정을 기록하고\nAI와 함께 분석해보세요',
+          title: S.of(context).consulting_journal,
+          subtitle: S.of(context).consulting_journal_subtitle,
           gradientColors: [
             const Color(0xFF4ECDC4).withOpacity(isDark ? 0.2 : 0.1),
             const Color(0xFF44A08D).withOpacity(isDark ? 0.2 : 0.1),
@@ -145,8 +146,8 @@ class ConsultingScreen extends StatelessWidget {
           isDark: isDark,
           icon: Icons.chat_bubble_outline,
           iconColor: const Color(0xFF667EEA),
-          title: '💬 AI 상담 채팅',
-          subtitle: '실시간으로 AI 상담사와\n대화하며 마음을 나눠보세요',
+          title: S.of(context).consulting_chat,
+          subtitle: S.of(context).consulting_chat_subtitle,
           gradientColors: [
             const Color(0xFF667EEA).withOpacity(isDark ? 0.2 : 0.1),
             const Color(0xFF764BA2).withOpacity(isDark ? 0.2 : 0.1),
@@ -161,15 +162,15 @@ class ConsultingScreen extends StatelessWidget {
           isDark: isDark,
           icon: Icons.local_fire_department, // 화풀이 아이콘
           iconColor: const Color(0xFFFF5F6D), // 붉은색 계열
-          title: '😠 AI 화풀기',
-          subtitle: '속 시원하게 털어놓고\nAI 샌드백과 함께 스트레스를 날려보세요',
+          title: S.of(context).consulting_punchingbag,
+          subtitle: S.of(context).consulting_punchingbag_subtitle,
           gradientColors: [
             // 붉은색 계열 그라데이션
             const Color(0xFFFF5F6D).withOpacity(isDark ? 0.2 : 0.1),
             const Color(0xFFFFC371).withOpacity(isDark ? 0.2 : 0.1),
           ],
           onTap: () => _navigateToAngerVent(context), // 새로운 네비게이션 함수
-          badge: '신규',
+          badge: S.of(context).consulting_new,
           badgeColor: const Color(0xFFFF5F6D),
         ),
         const SizedBox(height: 16),

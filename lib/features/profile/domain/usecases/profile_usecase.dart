@@ -29,6 +29,7 @@ class ProfileUseCase {
   // =============================================================
   Future<Result<SetupProfileResponse>> setupProfile({
     required String nickname,
+    required bool isTermsAgreed,
     File? imageFile, // 👈 String? profileImageUrl 대신 File?로 변경
   }) async {
     // 1. 닉네임 유효성 검증
@@ -49,6 +50,7 @@ class ProfileUseCase {
     // 3. Repository 호출 (File 전달)
     return await _profileRepository.setupProfile(
       nickname: nickname.trim(),
+      isTermsAgreed: isTermsAgreed,
       imageFile: imageFile, // 👈 변경된 파라미터 전달
     );
   }
@@ -92,7 +94,7 @@ class ProfileUseCase {
 
   Future<Result<bool>> updateNickname(String nickname) async {
     // setupProfile 재사용
-    final result = await setupProfile(nickname: nickname);
+    final result = await setupProfile(nickname: nickname,   isTermsAgreed: true );
 
     // SetupProfileResponse -> bool 변환 (성공 시 true)
     return result.fold(

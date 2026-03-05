@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../generated/l10n.dart';
 import '../../../info/info_screen.dart'; // 👈 상세 화면 이동을 위해 필요
 import '../../../recommendation/presentation/recommendation_screen.dart';
 import '../../data/models/response/test_recommendation_response.dart';
@@ -37,7 +38,7 @@ class HomeRecommendationSection extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, color: Colors.red),
-              Text("오류: ${state.errorMessage}"),
+              Text(S.of(context).home_recommend_error({state.errorMessage})), //${state.errorMessage}
               TextButton(
                 onPressed: () {
                   // 재시도 요청
@@ -45,7 +46,7 @@ class HomeRecommendationSection extends ConsumerWidget {
                       .read(testRecommendationNotifierProvider.notifier)
                       .fetchRecommendations();
                 },
-                child: const Text("다시 시도"),
+                child: Text(S.of(context).home_recommend_retry),
               ),
             ],
           ),
@@ -58,8 +59,8 @@ class HomeRecommendationSection extends ConsumerWidget {
       return Container(
         height: 100,
         alignment: Alignment.center,
-        child: const Text(
-          "현재 추천해 드릴 테스트가 없어요 😢",
+        child: Text(
+          S.of(context).home_recommend_no_data,
           style: TextStyle(color: Colors.grey),
         ),
       );
@@ -76,11 +77,11 @@ class HomeRecommendationSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ✅ [수정 1] 상단 타이틀 영역 ("전체보기" 버튼 삭제)
-        const Row(
+         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '✨ 당신을 위한 추천',
+              S.of(context).home_recommend_your_rec,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -127,8 +128,8 @@ class HomeRecommendationSection extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '당신을 위한 테스트',
+                        Text(
+                          S.of(context).home_recommend_your_test,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -136,8 +137,8 @@ class HomeRecommendationSection extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '당신의 성향에 맞는 심리검사를 추천해드려요',
+                        Text(
+                          S.of(context).home_recommend_test_content,
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
@@ -178,17 +179,17 @@ class HomeRecommendationSection extends ConsumerWidget {
     TestRecommendationResponse item,
   ) {
     // 배지 텍스트 및 색상 결정 로직
-    String badgeText = '추천';
+    String badgeText = S.of(context).home_recommend_rec_badge;
     List<Color> gradientColors = [
       AppColors.primaryBlue,
       AppColors.secondaryTeal,
     ];
 
     if (item.reason == 'HOT_TREND') {
-      badgeText = '인기';
+      badgeText = S.of(context).home_recommend_trend;
       gradientColors = [AppColors.secondaryTeal, AppColors.secondaryPurple];
     } else if (item.reason == 'NEW_ARRIVAL') {
-      badgeText = '신규';
+      badgeText = S.of(context).home_recommend_new;
       gradientColors = [AppColors.secondaryPurple, const Color(0xFFFF8A65)];
     }
 

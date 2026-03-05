@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../generated/l10n.dart';
 
 part 'app_language_provider.g.dart';
 
@@ -23,6 +26,7 @@ class AppLanguage extends _$AppLanguage {
 
   /// 🌐 언어 변경 (상태 업데이트 + Hive 저장)
   Future<void> setLanguage(String languageCode) async {
+    await S.load(Locale(languageCode));
     // 1. 상태 업데이트 (UI 즉시 반영)
     state = languageCode;
 

@@ -37,7 +37,7 @@ class UserNotifier extends _$UserNotifier {
 
     // 1. AuthResponse에 있는 기본 정보로 먼저 세팅 (빠른 UI 반응)
     state = UserModel(
-      id: 0, // AuthResponse에 id가 없다면 0이나 임시값. 곧 API로 채움
+      id: auth.userId, // AuthResponse에 id가 없다면 0이나 임시값. 곧 API로 채움
       email: '', // AuthResponse에 이메일이 없다면 비워둠
       nickname: auth.nickname,
       coins: auth.coins, // ✅ 로그인 시 받은 코인 적용

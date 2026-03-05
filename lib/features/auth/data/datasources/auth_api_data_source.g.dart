@@ -19,6 +19,37 @@ class _AuthApiDataSource implements AuthApiDataSource {
   String? baseUrl;
 
   @override
+  Future<ApiResponse<dynamic>> deleteAccount(String authorization) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': authorization};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<ApiResponse<dynamic>>(Options(
+      method: 'DELETE',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/users/account',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = ApiResponse<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
   Future<ApiResponse<dynamic>> updateFcmToken(
     String authorization,
     Map<String, String> body,
@@ -209,20 +240,21 @@ class _AuthApiDataSource implements AuthApiDataSource {
   }
 
   @override
-  Future<ApiResponse<String>> loginWithApple() async {
+  Future<ApiResponse<AuthResponse>> loginAsGuest(
+      GuestLoginRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = request;
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<ApiResponse<String>>(Options(
+        _setStreamType<ApiResponse<AuthResponse>>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
     )
             .compose(
               _dio.options,
-              '/auth/apple',
+              '/api/v1/auth/guest',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -231,28 +263,29 @@ class _AuthApiDataSource implements AuthApiDataSource {
               _dio.options.baseUrl,
               baseUrl,
             ))));
-    final value = ApiResponse<String>.fromJson(
+    final value = ApiResponse<AuthResponse>.fromJson(
       _result.data!,
-      (json) => json as String,
+      (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }
 
   @override
-  Future<ApiResponse<String>> loginAsGuest() async {
+  Future<ApiResponse<AuthResponse>> loginWithApple(
+      AppleLoginRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = request;
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<ApiResponse<String>>(Options(
+        _setStreamType<ApiResponse<AuthResponse>>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
     )
             .compose(
               _dio.options,
-              '/auth/guest',
+              '/api/v1/auth/apple',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -261,9 +294,9 @@ class _AuthApiDataSource implements AuthApiDataSource {
               _dio.options.baseUrl,
               baseUrl,
             ))));
-    final value = ApiResponse<String>.fromJson(
+    final value = ApiResponse<AuthResponse>.fromJson(
       _result.data!,
-      (json) => json as String,
+      (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }

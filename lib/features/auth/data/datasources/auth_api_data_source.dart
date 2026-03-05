@@ -10,7 +10,10 @@ part 'auth_api_data_source.g.dart'; // build_runner가 생성할 파일
 @RestApi()
 abstract class AuthApiDataSource {
   factory AuthApiDataSource(Dio dio, {String baseUrl}) = _AuthApiDataSource;
-
+  @DELETE('/users/account')
+  Future<ApiResponse<dynamic>> deleteAccount(
+      @Header('Authorization') String authorization,
+      );
 
   @PATCH('/users/fcm-token')
   // 🚨 수정 전: Future<ApiResponse<void>> updateFcmToken(...)
@@ -63,21 +66,15 @@ abstract class AuthApiDataSource {
       @Header('Authorization') String authorization,
       );
 
-  // =============================================================
-  // 🚧 미구현 API들 - 서버 구현 후 반환 타입 변경 예정
-  // =============================================================
 
-  /// Apple 로그인 (TODO - 서버 미구현)
-  ///
-  /// 🔄 현재: ApiResponse<String> (에러 메시지)
-  /// 🎯 목표: ApiResponse<AuthResponse> (서버 구현 후)
-  @POST('/auth/apple')
-  Future<ApiResponse<String>> loginWithApple();
 
-  /// 게스트 로그인 (TODO - 서버 미구현)
-  ///
-  /// 🔄 현재: ApiResponse<String> (에러 메시지)
-  /// 🎯 목표: ApiResponse<AuthResponse> (서버 구현 후)
-  @POST('/auth/guest')
-  Future<ApiResponse<String>> loginAsGuest();
+  @POST('/api/v1/auth/guest')
+  Future<ApiResponse<AuthResponse>> loginAsGuest(
+      @Body() GuestLoginRequest request,
+      );
+
+  @POST('/api/v1/auth/apple')
+  Future<ApiResponse<AuthResponse>> loginWithApple(
+      @Body() AppleLoginRequest request,
+      );
 }

@@ -26,7 +26,13 @@ class Result<T> {
   // =============================================================
   // 🏭 팩토리 메서드들
   // =============================================================
-
+  static Result<void> successEmpty([String? message]) {
+    return Result._(
+      success: true,
+      data: null, // 데이터가 없어도 성공!
+      message: message ?? '성공적으로 처리되었습니다',
+    );
+  }
   /// ✅ 성공 결과 생성
   static Result<T> success<T>(T data, [String? message]) {
     return Result._(

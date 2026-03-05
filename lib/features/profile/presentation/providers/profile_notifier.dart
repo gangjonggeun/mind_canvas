@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,6 +9,7 @@ import '../../data/models/response/profile_dto.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
 
 part 'profile_notifier.freezed.dart';
+
 part 'profile_notifier.g.dart';
 
 @freezed
@@ -55,9 +57,10 @@ class ProfileNotifier extends _$ProfileNotifier {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     final result = await ref.read(profileUseCaseProvider).setupProfile(
-      nickname: nickname,
-      imageFile: imageFile,
-    );
+          nickname: nickname,
+          isTermsAgreed: true,
+          imageFile: imageFile,
+        );
 
     return result.fold(
       onSuccess: (setupResponse) {
@@ -80,7 +83,8 @@ class ProfileNotifier extends _$ProfileNotifier {
   Future<void> changeLanguage(String languageCode) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    final result = await ref.read(profileUseCaseProvider).changeLanguage(languageCode);
+    final result =
+        await ref.read(profileUseCaseProvider).changeLanguage(languageCode);
 
     result.fold(
       onSuccess: (_) {
