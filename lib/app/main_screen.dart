@@ -6,6 +6,8 @@ import 'package:mind_canvas/features/consulting/presentation/consulting_screen.d
 
 import '../core/services/notification_service.dart';
 import '../features/analysis/presentation/analysis_screen.dart';
+import '../features/auth/presentation/providers/auth_provider.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/recommendation/presentation/recommendation_screen.dart';
@@ -68,6 +70,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     // 💰 UserNotifier 구독 (코인 잔액 실시간 감지)
     // final userState = ref.watch(userNotifierProvider);
     // final int coins = userState?.coins ?? 0;
+    // ref.listen(authNotifierProvider, (previous, next) {
+    //   final user = next.valueOrNull;
+    //   if (user == null && previous?.valueOrNull != null) {
+    //     // 유저가 null이 되면 (로그아웃/탈퇴 성공 시) 강제로 로그인 화면으로
+    //     Navigator.pushAndRemoveUntil(
+    //       context,
+    //       MaterialPageRoute(builder: (context) => const LoginScreen()),
+    //           (route) => false,
+    //     );
+    //   }
+    // });
 
     return Scaffold(
       // 🔥 Stack으로 감싸서 코인 배지를 최상단에 띄움

@@ -26,7 +26,7 @@ class AppLanguage extends _$AppLanguage {
 
   /// 🌐 언어 변경 (상태 업데이트 + Hive 저장)
   Future<void> setLanguage(String languageCode) async {
-    await S.load(Locale(languageCode));
+    // await S.load(Locale(languageCode));
     // 1. 상태 업데이트 (UI 즉시 반영)
     state = languageCode;
 

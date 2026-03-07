@@ -29,6 +29,33 @@ class TestRepositoryImpl implements TestRepository {
   }) : _testApiDataSource = testApiDataSource,
         _tokenManager = tokenManager;
 
+
+  @override
+  Future<Result<void>> deleteTestResult(int resultId) async {
+    try {
+      // 1. 토큰 확인
+      final validToken = await _tokenManager.getValidAccessToken();
+      if (validToken == null) return Result.failure('인증이 필요합니다', 'AUTH_REQUIRED');
+
+      // 2. DELETE API 호출
+      // 서버에서 ApiResponse<Void> 또는 ApiResponse<dynamic>을 반환할 텐데
+      // Retrofit은 ApiResponse<void>도 잘 처리합니다.
+      final apiResponse = await _testApiDataSource.deleteTestResult(resultId, validToken);
+
+      // 3. 응답 결과 처리
+      if (apiResponse.success) {
+        return Result.success(null); // 성공 시 데이터 없으므로 null
+      } else {
+        return Result.failure(apiResponse.message ?? '결과 삭제에 실패했습니다');
+      }
+    } on DioException catch (e) {
+      // 4. 네트워크 에러 처리 (로그 출력 추천)
+      return Result.failure('네트워크 오류가 발생했습니다');
+    } catch (e) {
+      return Result.failure('알 수 없는 오류 발생: $e');
+    }
+  }
+
   @override
   Future<Result<TestResultResponse>> submitSubjectiveTest(
       SubjectiveTestSubmitRequest request,

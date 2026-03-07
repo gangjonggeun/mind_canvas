@@ -101,8 +101,62 @@ class InkBalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // 퀵 액션 버튼 (상태 메시지 삭제됨)
-          _buildQuickActions(context, theme, colorScheme),
+          _buildAdActionButton(context, theme, colorScheme),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdActionButton(
+      BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+    final bool isMaxAds = dailyAdCount >= 5;
+
+    return Center(
+      child: FractionallySizedBox(
+        widthFactor: 0.7, // 70% 너비
+        child: GestureDetector(
+          onTap: isMaxAds ? null : () {
+            HapticFeedback.selectionClick();
+            onWatchAd?.call();
+          },
+          child: Opacity(
+            opacity: isMaxAds ? 0.6 : 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: isMaxAds
+                    ? colorScheme.surfaceVariant
+                    : colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isMaxAds
+                      ? colorScheme.outline.withOpacity(0.2)
+                      : colorScheme.primary.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isMaxAds ? Icons.check_circle_rounded : Icons.ads_click_rounded,
+                    color: isMaxAds ? colorScheme.onSurfaceVariant : colorScheme.primary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isMaxAds
+                        ? '오늘의 광고 완료'
+                        : '${'profile.watch_ad'.tr()} ($dailyAdCount/3)',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: isMaxAds ? colorScheme.onSurfaceVariant : colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

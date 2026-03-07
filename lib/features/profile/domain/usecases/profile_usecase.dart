@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:mind_canvas/core/utils/result.dart';
 import '../../../../core/network/page_response.dart';
 import '../../../recommendation/data/dto/post_response.dart';
+import '../../data/models/request/inquiry_request.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../repositories/profile_repository.dart';
 import '../../data/models/response/setup_profile_response.dart';
@@ -16,10 +17,24 @@ class ProfileUseCase {
 
   ProfileUseCase(this._profileRepository);
 
-
-  Future<Result<bool>> verifyPayment(String merchantUid, String portoneId) {
-    return _profileRepository.verifyPayment(merchantUid, portoneId);
+  Future<Result<void>> submitInquiry(InquiryRequest request) async {
+    try {
+      final response = await _profileRepository.submitInquiry(request);
+      if (response.isSuccess) {
+        return  Result.success(null);
+      } else {
+        return Result.failure(response.errorCode ?? '문의 전송에 실패했습니다.');
+      }
+    } catch (e) {
+      return Result.failure('서버와의 통신에 실패했습니다.', 'NETWORK_ERROR');
+    }
   }
+  Future<Result<void>> syncRevenueCat() async {
+    return await _profileRepository.syncRevenueCat();
+  }
+  // Future<Result<bool>> verifyPayment(String merchantUid, String portoneId) {
+  //   return _profileRepository.verifyPayment(merchantUid, portoneId);
+  // }
 
   Future<Result<bool>> claimAdReward() {
     return _profileRepository.claimAdReward();

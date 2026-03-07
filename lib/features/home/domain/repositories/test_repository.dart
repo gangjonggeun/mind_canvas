@@ -12,6 +12,7 @@ import '../models/test_ranking_item.dart';
 
 /// 🧠 테스트 Repository 인터페이스 (확장 버전)
 abstract class TestRepository {
+  Future<Result<void>> deleteTestResult(int resultId);
 
   Future<Result<TestResultResponse>> submitSubjectiveTest(
       SubjectiveTestSubmitRequest request,

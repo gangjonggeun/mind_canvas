@@ -11,23 +11,34 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+
 // ✅ 추가: GoRouter 관련 import
 import 'app/main_screen.dart';
+import 'core/auth/token_manager.dart';
+import 'core/auth/token_manager_provider.dart';
 import 'core/providers/app_language_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/utils/cover_image_helper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'features/auth/presentation/providers/auth_provider.dart';
 import 'generated/l10n.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CoverImageHelper.init();
   await Firebase.initializeApp(); // 파이어베이스 초기화
   // await EasyLocalization.ensureInitialized(); // 추가
   await MobileAds.instance.initialize();
+
+  // 로그인 정보가 없으므로 API 키만 넣고 초기화
+  await Purchases.setLogLevel(LogLevel.debug); // 개발 중에만 디버그 로그 켜기
+  await Purchases.configure(
+      PurchasesConfiguration("YOUR_REVENUECAT_PUBLIC_KEY"));
 
   // 🔔 권한 요청 (iOS/Android 13+)
   await FirebaseMessaging.instance.requestPermission(
@@ -71,16 +82,21 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  final tokenManager = TokenManager();
+  await tokenManager.initFromStorage();
+
   runApp(
-    const ProviderScope(
+    ProviderScope(
+      overrides: [
+        tokenManagerProvider.overrideWithValue(tokenManager),
+      ],
       child: MindCanvasApp(),
     ),
   );
 
-
   // runApp(const ProviderScope(child: TestMindCanvasApp()));
-
 }
+
 class MindCanvasApp extends ConsumerWidget {
   const MindCanvasApp({super.key});
 
@@ -89,6 +105,7 @@ class MindCanvasApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     // 🌐 1. Riverpod에서 현재 언어 상태 감시
     final languageCode = ref.watch(appLanguageProvider);
+    final authState = ref.watch(authNotifierProvider);
 
     return ScreenUtilInit(
       designSize: const Size(375, 812),

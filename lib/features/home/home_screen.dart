@@ -113,12 +113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  /// 네비게이션: 성격 기반 추천 화면으로 이동
-  void _navigateToPersonalityRecommendations() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const RecommendationScreen()),
-    );
-  }
+
 
 
   /// 🏆 인기 테스트 랭킹 섹션 (반응형) - Consumer 버전
@@ -139,11 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const PopularTestRankingScreen(),
-                  ),
-                );
+                context.pushNamed('popular_test');
               },
               child: Text(
                 S.of(context).home_more,
@@ -386,11 +377,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const RecommendationScreen(),
-                  ),
-                );
+                context.pushNamed('recommendation');
               },
               child: Text(
                 S.of(context).home_all,
@@ -821,11 +808,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // ),
                 TextButton(
                   onPressed: () {
-                    // 🎯 내 모든 기록을 볼 수 있는 통합 페이지로 이동
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MyActivityPage()),
-                    );
+                    context.pushNamed('my_activity');
+
                   },
                   child: Text(
                     S.of(context).home_all_see,

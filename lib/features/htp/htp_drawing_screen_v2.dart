@@ -27,8 +27,8 @@ enum PenType {
   marker('마커', Icons.highlight, 2.5, 0.0), // 마커 (굵기 일정)
   pencil('연필', Icons.create, 0.6, 0.1), // 연필 (얇고 거의 일정함)
   spray('스프레이', Icons.scatter_plot, 3.0, 0.0),
+  crayon('크레파스', Icons.draw, 2.0, 0.2),
   eraser('지우개', Icons.cleaning_services_rounded, 4.0, 0.0);
-
 
   final String name;
   final IconData icon;
@@ -135,7 +135,6 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
   // 브러시 설정
   double _strokeWidth = 3.0;
 
-
   @override
   void initState() {
     super.initState();
@@ -184,8 +183,14 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: const Color(0xFF3E2723), width: 2),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
-            BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 1, offset: const Offset(0, -1)),
+            BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8)),
+            BoxShadow(
+                color: Colors.white.withOpacity(0.1),
+                blurRadius: 1,
+                offset: const Offset(0, -1)),
           ],
         ),
         child: Column(
@@ -197,18 +202,22 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
               children: [
                 _buildToolBtn(
                   icon: _currentPenType.icon,
-                  color: _isEraserMode ? Colors.white54 : _currentColor.withOpacity(1.0),
+                  color: _isEraserMode
+                      ? Colors.white54
+                      : _currentColor.withOpacity(1.0),
                   isActive: !_isEraserMode,
                   onTap: () => setState(() => _isEraserMode = false),
                 ),
-                Container(width: 2, height: 24, color: const Color(0xFF3E2723)), // 구분선
+                Container(width: 2, height: 24, color: const Color(0xFF3E2723)),
+                // 구분선
                 _buildToolBtn(
                   icon: Icons.cleaning_services_rounded,
                   color: _isEraserMode ? Colors.white : Colors.white54,
                   isActive: _isEraserMode,
                   onTap: () => setState(() => _isEraserMode = true),
                 ),
-                Container(width: 2, height: 24, color: const Color(0xFF3E2723)), // 구분선
+                Container(width: 2, height: 24, color: const Color(0xFF3E2723)),
+                // 구분선
                 _buildToolBtn(
                   icon: Icons.settings_rounded,
                   color: Colors.white,
@@ -221,7 +230,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
             // 💡 2층: 선 굵기 슬라이더
             Row(
               children: [
-                const Icon(Icons.line_weight_rounded, size: 18, color: Colors.white70),
+                const Icon(Icons.line_weight_rounded,
+                    size: 18, color: Colors.white70),
                 Expanded(
                   child: SliderTheme(
                     data: SliderThemeData(
@@ -229,13 +239,17 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                       thumbColor: Colors.white,
                       inactiveTrackColor: Colors.black.withOpacity(0.3),
                       trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 8),
+                      overlayShape:
+                          const RoundSliderOverlayShape(overlayRadius: 16),
                     ),
                     child: Slider(
                       value: _baseStrokeWidth,
-                      min: 1.0, max: 20.0,
-                      onChanged: (val) => setState(() => _baseStrokeWidth = val),
+                      min: 1.0,
+                      max: 20.0,
+                      onChanged: (val) =>
+                          setState(() => _baseStrokeWidth = val),
                     ),
                   ),
                 ),
@@ -243,7 +257,10 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                   width: 28,
                   child: Text(
                     '${_baseStrokeWidth.toInt()}',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13),
                     textAlign: TextAlign.right,
                   ),
                 ),
@@ -291,20 +308,27 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 5, margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(color: Colors.grey.shade400, borderRadius: BorderRadius.circular(10)),
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
 
                 // --- 브러시 종류 ---
-                const Text('브러시 도구', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text('브러시 도구',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -314,7 +338,10 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                       return GestureDetector(
                         onTap: () {
                           setModalState(() => _currentPenType = pen);
-                          setState(() { _currentPenType = pen; _isEraserMode = false; });
+                          setState(() {
+                            _currentPenType = pen;
+                            _isEraserMode = false;
+                          });
                         },
                         child: Container(
                           margin: const EdgeInsets.only(right: 16),
@@ -322,11 +349,23 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                             children: [
                               CircleAvatar(
                                 radius: 26,
-                                backgroundColor: isSelected ? const Color(0xFF38A169) : Colors.grey.withOpacity(0.2),
-                                child: Icon(pen.icon, color: isSelected ? Colors.white : Colors.grey.shade600, size: 24),
+                                backgroundColor: isSelected
+                                    ? const Color(0xFF38A169)
+                                    : Colors.grey.withOpacity(0.2),
+                                child: Icon(pen.icon,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.grey.shade600,
+                                    size: 24),
                               ),
                               const SizedBox(height: 6),
-                              Text(pen.name, style: TextStyle(fontSize: 12, color: isSelected ? const Color(0xFF38A169) : Colors.grey, fontWeight: FontWeight.bold)),
+                              Text(pen.name,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: isSelected
+                                          ? const Color(0xFF38A169)
+                                          : Colors.grey,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -335,22 +374,27 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                   ),
                 ),
 
-                const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider()),
+                const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Divider()),
 
                 // --- 🎚️ 투명도 조절 ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('투명도 (수채화 효과)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${_transparency.toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                    const Text('투명도 (수채화 효과)',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${_transparency.toInt()}%',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.blue)),
                   ],
                 ),
                 SliderTheme(
                   data: SliderThemeData(
                       activeTrackColor: Colors.blue,
                       thumbColor: Colors.blue,
-                      inactiveTrackColor: Colors.blue.withOpacity(0.2)
-                  ),
+                      inactiveTrackColor: Colors.blue.withOpacity(0.2)),
                   child: Slider(
                     value: _transparency,
                     min: 0,
@@ -362,15 +406,22 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                   ),
                 ),
 
-                const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider()),
+                const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Divider()),
 
                 // --- 🎨 색상 팔레트 (20칸) ---
-                const Text('색상 팔레트', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text('색상 팔레트',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 7, crossAxisSpacing: 10, mainAxisSpacing: 10,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
                     ),
                     itemCount: 20, // 19 프리셋 + 1 커스텀
                     itemBuilder: (context, index) {
@@ -384,7 +435,14 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: SweepGradient(colors: [Colors.red, Colors.yellow, Colors.green, Colors.blue, Colors.purple, Colors.red]),
+                              gradient: SweepGradient(colors: [
+                                Colors.red,
+                                Colors.yellow,
+                                Colors.green,
+                                Colors.blue,
+                                Colors.purple,
+                                Colors.red
+                              ]),
                             ),
                             child: const Icon(Icons.add, color: Colors.white),
                           ),
@@ -394,7 +452,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                       // 💡 1~19번째 칸: 프리셋 색상
                       final color = _presetColors[index];
                       // 현재 선택된 색상인지 확인 (R,G,B 비교, 투명도는 제외)
-                      final isSelected = _currentColor.value & 0xFFFFFF == color.value & 0xFFFFFF;
+                      final isSelected = _currentColor.value & 0xFFFFFF ==
+                          color.value & 0xFFFFFF;
 
                       return GestureDetector(
                         onTap: () {
@@ -407,11 +466,26 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: color, shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.shade300, width: 1),
-                            boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.6), blurRadius: 6, spreadRadius: 2)] : null,
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.grey.shade300, width: 1),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                        color: color.withOpacity(0.6),
+                                        blurRadius: 6,
+                                        spreadRadius: 2)
+                                  ]
+                                : null,
                           ),
-                          child: isSelected ? Icon(Icons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 18) : null,
+                          child: isSelected
+                              ? Icon(Icons.check,
+                                  color: color.computeLuminance() > 0.5
+                                      ? Colors.black
+                                      : Colors.white,
+                                  size: 18)
+                              : null,
                         ),
                       );
                     },
@@ -433,9 +507,11 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.palette_rounded, color: Theme.of(context).primaryColor, size: 24),
+            Icon(Icons.palette_rounded,
+                color: Theme.of(context).primaryColor, size: 24),
             const SizedBox(width: 8),
-            const Text('나만의 색상 만들기', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('나만의 색상 만들기',
+                style: TextStyle(fontWeight: FontWeight.w700)),
           ],
         ),
         content: SizedBox(
@@ -454,7 +530,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('완료', style: TextStyle(fontWeight: FontWeight.bold)),
+            child:
+                const Text('완료', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -472,14 +549,17 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
     actualOpacity = actualOpacity.clamp(0.05, 1.0);
 
     // ✅ 지우개일 때는 투명도 무시, 일반 펜일 때는 선택된 색상 적용
-    final activeColor = _isEraserMode ? Colors.white : _currentColor.withOpacity(actualOpacity);
+    final activeColor =
+        _isEraserMode ? Colors.white : _currentColor.withOpacity(actualOpacity);
 
-    _currentStroke.value = Stroke([PointVector(point.dx, point.dy)],
+    _currentStroke.value = Stroke(
+      [PointVector(point.dx, point.dy)],
       activeColor,
-      _isEraserMode ? _baseStrokeWidth * 4.0 : _baseStrokeWidth * _currentPenType.sizeMultiplier,
+      _isEraserMode
+          ? _baseStrokeWidth * 4.0
+          : _baseStrokeWidth * _currentPenType.sizeMultiplier,
       _isEraserMode ? PenType.eraser : _currentPenType, // ✅ 지우개 타입 주입
     );
-
 
     _lastPoint = details.globalPosition;
     _lastTime = DateTime.now().millisecondsSinceEpoch;
@@ -512,9 +592,11 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
     RenderBox box = _canvasKey.currentContext?.findRenderObject() as RenderBox;
     Offset point = box.globalToLocal(details.globalPosition);
 
-    final points = List<PointVector>.from(_currentStroke.value!.points)..add(PointVector(point.dx, point.dy));
+    final points = List<PointVector>.from(_currentStroke.value!.points)
+      ..add(PointVector(point.dx, point.dy));
     // 👈 penType 정보도 같이 업데이트
-    _currentStroke.value = Stroke(points, _currentStroke.value!.color, _currentStroke.value!.baseSize, _currentStroke.value!.penType);
+    _currentStroke.value = Stroke(points, _currentStroke.value!.color,
+        _currentStroke.value!.baseSize, _currentStroke.value!.penType);
   }
 
   void _onPanEnd(DragEndDetails details) {
@@ -526,7 +608,7 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
       }
 
       setState(() {
-        _strokes.value =[..._strokes.value, _currentStroke.value!];
+        _strokes.value = [..._strokes.value, _currentStroke.value!];
         _undoHistory.clear();
       });
 
@@ -541,7 +623,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
       final strokes = List<Stroke>.from(_strokes.value);
       final last = strokes.removeLast();
 
-      setState(() { // ✅ setState 추가
+      setState(() {
+        // ✅ setState 추가
         _undoHistory.add(last);
         _strokes.value = strokes;
       });
@@ -552,7 +635,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
   void _redo() {
     if (_undoHistory.isNotEmpty) {
-      setState(() { // ✅ setState 추가
+      setState(() {
+        // ✅ setState 추가
         final lastRedo = _undoHistory.removeLast();
         _strokes.value = [..._strokes.value, lastRedo];
       });
@@ -562,13 +646,13 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
   }
 
   void _clearCanvas() {
-    setState(() { // ✅ setState 추가
-      _strokes.value =[];
+    setState(() {
+      // ✅ setState 추가
+      _strokes.value = [];
       _undoHistory.clear();
     });
     _dataCollector.addModification();
   }
-
 
   void _toggleEraser() {
     setState(() => _isEraserMode = !_isEraserMode);
@@ -587,23 +671,22 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/htp_v2_${DateTime.now().millisecondsSinceEpoch}.png');
+      final tempFile = File(
+          '${tempDir.path}/htp_v2_${DateTime.now().millisecondsSinceEpoch}.png');
       await tempFile.writeAsBytes(buffer);
 
       // 3. Entity 생성 (기존 코드와 동일)
       final drawing = _dataCollector
           .createDrawing(
-        type: _getHtpType(widget.drawingType),
-        startTime: _drawingStartTime,
-        endTime: DateTime.now().millisecondsSinceEpoch,
-        orderIndex: 0,
-      )
+            type: _getHtpType(widget.drawingType),
+            startTime: _drawingStartTime,
+            endTime: DateTime.now().millisecondsSinceEpoch,
+            orderIndex: 0,
+          )
           .copyWith(sketchJson: sketchJson);
 
       // 3️⃣ 👈 [수정] 콜백이 전달되었다면 프리미엄/싱글테스트 등에 저장, 없다면 기존 베이직에 저장!
-      if (widget.onSave != null)
-        await widget.onSave!(drawing, tempFile);
-
+      if (widget.onSave != null) await widget.onSave!(drawing, tempFile);
 
       Navigator.pop(context);
     } catch (e) {
@@ -613,17 +696,25 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
   HtpType _getHtpType(String typeString) {
     switch (typeString) {
-    // Basic & Premium
-      case 'house': return HtpType.house;
-      case 'tree': return HtpType.tree;
-      case 'person': return HtpType.person;
-      case 'man': return HtpType.man;
-      case 'woman': return HtpType.woman;
-      case 'starrySea': return HtpType.starrySea;
-      case 'pitr': return HtpType.pitr;
-      case 'fishbowl': return HtpType.fishbowl;
+      // Basic & Premium
+      case 'house':
+        return HtpType.house;
+      case 'tree':
+        return HtpType.tree;
+      case 'person':
+        return HtpType.person;
+      case 'man':
+        return HtpType.man;
+      case 'woman':
+        return HtpType.woman;
+      case 'starrySea':
+        return HtpType.starrySea;
+      case 'pitr':
+        return HtpType.pitr;
+      case 'fishbowl':
+        return HtpType.fishbowl;
 
-    // 예외 처리
+      // 예외 처리
       default:
         print("⚠️ 알 수 없는 타입: $typeString -> 기본값 house로 처리됨");
         return HtpType.house;
@@ -673,58 +764,60 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
           // 🎨 그리기 영역 (핵심 최적화 부분)
           Positioned(
-            top: 100,
-            bottom: 160, // 슬라이더와 툴바가 가리지 않도록 여백 확보
+            top: 20, // 위쪽 여백은 적당히
             left: 20, right: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: RepaintBoundary( // 캡처를 위한 바운더리
-                  key: _canvasKey,
-                  // 👇 [여기가 핵심] 터치 이벤트를 감지하는 곳입니다
-                  child: GestureDetector(
-                    onPanStart: _onPanStart,
-                    onPanUpdate: _onPanUpdate,
-                    onPanEnd: _onPanEnd,
-                    child: Stack(
-                      children: [
-                        // 투명한 배경을 깔아둬야 터치가 빈 공간에서도 먹힙니다.
-                        Container(color: Colors.white),
+            child: AspectRatio(
+              aspectRatio: 3 / 4,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: RepaintBoundary(
+                    // 캡처를 위한 바운더리
+                    key: _canvasKey,
+                    // 👇 [여기가 핵심] 터치 이벤트를 감지하는 곳입니다
+                    child: GestureDetector(
+                      onPanStart: _onPanStart,
+                      onPanUpdate: _onPanUpdate,
+                      onPanEnd: _onPanEnd,
+                      child: Stack(
+                        children: [
+                          Container(color: Colors.white),
 
-                        // 1. 이미 그려진 완료된 획들
-                        ValueListenableBuilder<List<Stroke>>(
-                          valueListenable: _strokes,
-                          builder: (context, strokes, _) {
-                            return CustomPaint(
-                              size: Size.infinite,
-                              painter: FreehandPainter(strokes: strokes),
-                            );
-                          },
-                        ),
-                        // 2. 현재 긋고 있는 획
-                        ValueListenableBuilder<Stroke?>(
-                          valueListenable: _currentStroke,
-                          builder: (context, stroke, _) {
-                            if (stroke == null) return const SizedBox.shrink();
-                            return CustomPaint(
-                              size: Size.infinite,
-                              painter: FreehandPainter(strokes: [stroke]),
-                            );
-                          },
-                        ),
-                      ],
+                          // 1. 이미 그려진 완료된 획들
+                          ValueListenableBuilder<List<Stroke>>(
+                            valueListenable: _strokes,
+                            builder: (context, strokes, _) {
+                              return CustomPaint(
+                                size: Size.infinite,
+                                painter: FreehandPainter(strokes: strokes),
+                              );
+                            },
+                          ),
+                          // 2. 현재 긋고 있는 획
+                          ValueListenableBuilder<Stroke?>(
+                            valueListenable: _currentStroke,
+                            builder: (context, stroke, _) {
+                              if (stroke == null)
+                                return const SizedBox.shrink();
+                              return CustomPaint(
+                                size: Size.infinite,
+                                painter: FreehandPainter(strokes: [stroke]),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-
 
           _buildWoodenToolbar(),
           //
@@ -772,7 +865,6 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
           //     ),
           //   ),
           // ),
-
         ],
       ),
     );
@@ -789,7 +881,6 @@ class FreehandPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-
     // canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
 
     for (final stroke in strokes) {
@@ -812,18 +903,44 @@ class FreehandPainter extends CustomPainter {
           // 좌표값을 시드로 사용하여 화면 갱신 시 입자가 떨리지 않게 고정!
           final random = Random((p.x * 1000).toInt() ^ (p.y * 1000).toInt());
 
-          for (int i = 0; i < 8; i++) { // 1좌표당 8개의 입자
+          for (int i = 0; i < 8; i++) {
+            // 1좌표당 8개의 입자
             final offsetX = (random.nextDouble() * 2 - 1) * radius;
             final offsetY = (random.nextDouble() * 2 - 1) * radius;
             // 입자가 원형 범위를 벗어나지 않게 커팅 (옵션)
             if (offsetX * offsetX + offsetY * offsetY <= radius * radius) {
-              canvas.drawCircle(Offset(p.x + offsetX, p.y + offsetY), 1.0, paint);
+              canvas.drawCircle(
+                  Offset(p.x + offsetX, p.y + offsetY), 1.0, paint);
             }
           }
         }
         continue; // 스프레이는 밑의 perfect_freehand 선 그리기를 건너뜀
       }
+      if (stroke.penType == PenType.crayon) {
+        final double radius = stroke.baseSize * 0.8; // 스프레이보다 작게
+        final paint = Paint()
+          ..color = stroke.color.withOpacity(0.6) // 약간 투명도를 주어야 겹쳤을 때 크레파스 느낌
+          ..blendMode = BlendMode.multiply
+          ..strokeCap = StrokeCap.round;
 
+        for (var p in stroke.points) {
+          // 좌표값을 시드로 사용하여 입자 위치 고정
+          final random = Random((p.x * 1000).toInt() ^ (p.y * 1000).toInt());
+
+          // 스프레이보다 더 밀도 있게 (한 점당 15개 정도)
+          for (int i = 0; i < 15; i++) {
+            final offsetX = (random.nextDouble() * 2 - 1) * radius;
+            final offsetY = (random.nextDouble() * 2 - 1) * radius;
+
+            // 크레파스 느낌을 위해 점 크기를 랜덤하게 (1.0 ~ 2.5)
+            final size = 1.0 + random.nextDouble() * 1.5;
+
+            canvas.drawCircle(
+                Offset(p.x + offsetX, p.y + offsetY), size, paint);
+          }
+        }
+        continue; // 크레파스도 패스 그리기를 건너뜀
+      }
       // 🖋️ 기존 일반 펜/붓 렌더링 로직 (수정 없음)
       final options = StrokeOptions(
         size: stroke.baseSize,
@@ -839,12 +956,12 @@ class FreehandPainter extends CustomPainter {
       for (int i = 1; i < outlinePoints.length - 1; i++) {
         final p0 = outlinePoints[i];
         final p1 = outlinePoints[i + 1];
-        path.quadraticBezierTo(p0.dx, p0.dy, (p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+        path.quadraticBezierTo(
+            p0.dx, p0.dy, (p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
       }
       path.close();
       canvas.drawPath(path, paint);
     }
-
   }
 
   @override
@@ -900,7 +1017,12 @@ class _CustomColorPickerState extends State<_CustomColorPicker> {
             color: _currentColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade300, width: 1),
-            boxShadow: [ BoxShadow(color: _currentColor.withOpacity(0.3), blurRadius: 8, spreadRadius: 1) ],
+            boxShadow: [
+              BoxShadow(
+                  color: _currentColor.withOpacity(0.3),
+                  blurRadius: 8,
+                  spreadRadius: 1)
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -920,14 +1042,17 @@ class _CustomColorPickerState extends State<_CustomColorPicker> {
     );
   }
 
-  Widget _buildColorSlider(String label, double value, Color sliderColor, ValueChanged<double> onChanged) {
+  Widget _buildColorSlider(String label, double value, Color sliderColor,
+      ValueChanged<double> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           SizedBox(
             width: 40,
-            child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            child: Text(label,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           ),
           Expanded(
             child: SliderTheme(
@@ -939,7 +1064,12 @@ class _CustomColorPickerState extends State<_CustomColorPicker> {
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
               ),
-              child: Slider(value: value, min: 0, max: 255, divisions: 255, onChanged: onChanged),
+              child: Slider(
+                  value: value,
+                  min: 0,
+                  max: 255,
+                  divisions: 255,
+                  onChanged: onChanged),
             ),
           ),
           SizedBox(

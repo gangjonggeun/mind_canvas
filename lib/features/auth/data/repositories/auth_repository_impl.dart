@@ -139,6 +139,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<AuthResponse>> loginWithApple(
       String identityToken, {
+        String? deviceId, // ✨ 추가
         String? fcmToken,
       }) async {
     return _safeApiCall(() async {
@@ -232,22 +233,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> logout({bool logoutFromAllDevices = false}) async {
     return _safeApiCall(() async {
       try {
-        // 서버에 로그아웃 요청
         final authHeader = _tokenManager.authorizationHeader;
         if (authHeader != null) {
-          final apiResponse = await _dataSource.logout(authHeader);
-
-          if (!apiResponse.isSuccess) {
-            print('⚠️ 서버 로그아웃 실패: ${apiResponse.errorMessage}');
-            // 서버 로그아웃 실패해도 로컬 토큰은 삭제
-          }
+          // 💡 validateStatus를 추가하여 500 에러가 나도 DioException을 던지지 않게 방어
+          await _dataSource.logout(authHeader);
         }
       } catch (e) {
-        print('⚠️ 서버 로그아웃 요청 실패: $e');
-        // 네트워크 오류 등으로 실패해도 로컬 토큰은 삭제
+        print('⚠️ 서버 로그아웃 실패했으나 로컬 데이터 삭제 진행');
       }
 
-      // 로컬 토큰 삭제 (항상 실행)
       await _tokenManager.clearTokens();
     });
   }
@@ -264,23 +258,46 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<AuthUser?>> getCurrentUser() async {
     return _safeApiCall(() async {
-      // 1. 로컬에 유효한 토큰이 있는지 확인
-      if (!_tokenManager.isLoggedIn) {
-        return null;
+      // 1. 헤더에 넣을 토큰 가져오기
+      final authHeader = _tokenManager.authorizationHeader;
+
+      // 토큰 자체가 없으면 서버 찌를 필요도 없이 비로그인 상태
+      if (authHeader == null) return null;
+
+      // 2. 서버에 '나 아직 정상 유저야? 내 최신 정보 줘!' 요청
+      final apiResponse = await _dataSource.getCurrentUser(authHeader);
+
+      // 3. 응답 처리
+      if (apiResponse.isSuccess && apiResponse.hasData) {
+        final userData = apiResponse.data!;
+
+        // ✨ 4. 혹시 다른 기기에서 닉네임 등을 바꿨을 수 있으니 로컬 캐시(TokenManager)도 업데이트
+        final currentAuth = _tokenManager.currentAuth;
+        if (currentAuth != null) {
+          final updatedAuth = currentAuth.copyWith(
+            nickname: userData.nickname,
+            // 서버 Enum 값으로 동기화
+          );
+          await _tokenManager.saveAuthResponse(updatedAuth);
+        }
+
+        // 5. AuthUser 반환 (이 값으로 앱 전체 UI가 그려짐)
+        return AuthUser(
+          userId: userData.userId,
+          nickname: userData.nickname,
+          loginType: userData.loginType,
+        );
+      } else {
+        // 토큰은 있는데 서버가 거절함 (탈퇴, 정지, 서버 강제 로그아웃 등)
+        throw DioException(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            statusCode: 401,
+            data: {'message': apiResponse.errorMessage ?? '유효하지 않은 사용자'},
+          ),
+        );
       }
-
-      // 2. 🚨 골칫거리였던 서버 통신(/auth/me) 삭제! 🚨
-      // final authHeader = await _tokenManager.getValidAccessToken();
-      // final apiResponse = await _dataSource.getCurrentUser(authHeader!);
-
-      // 3. 서버 통신 없이, TokenManager에 있는 닉네임만 꺼내서 바로 성공(Pass) 처리
-      final currentAuth = _tokenManager.currentAuth;
-
-      // (프로필 화면에서 진짜 데이터를 가져올 것이므로, 여기선 최소한의 데이터만 리턴)
-      return AuthUser(
-        nickname: currentAuth?.nickname ?? '사용자', loginType: LoginType.google,
-        // 로그인할 때 저장해둔 닉네임
-      );
     });
   }
 
@@ -346,7 +363,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<AuthResponse>> loginAsGuest(String languageCode, {String? fcmToken}) async {
+  Future<Result<AuthResponse>> loginAsGuest(   String languageCode, {
+    String? deviceId, // ✨ 추가
+    String? fcmToken,
+  }) async {
     return _safeApiCall(() async {
       // 1. 디바이스 ID 추출 (필수)
       final deviceId = await _getDeviceId();

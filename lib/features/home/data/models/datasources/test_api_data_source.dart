@@ -28,6 +28,12 @@ abstract class TestApiDataSource {
       @Header('Authorization') String token,
       );
 
+  @DELETE('/tests/results/{resultId}')
+  Future<ApiResponse<dynamic>> deleteTestResult(
+      @Path('resultId') int resultId,
+      @Header('Authorization') String token,
+      );
+
   @POST('/tests/subjective/submit')
   Future<ApiResponse<TestResultResponse>> submitSubjectiveTest(
       @Body() SubjectiveTestSubmitRequest request,

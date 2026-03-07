@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/providers/app_language_provider.dart';
+import '../../data/models/request/inquiry_request.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
 
@@ -29,6 +30,25 @@ class ProfileNotifier extends _$ProfileNotifier {
   ProfileState build() {
     // 생성 시점에는 초기 상태만 반환 (데이터 로드는 UI에서 init 시점이나 필요할 때 호출)
     return ProfileState.initial();
+  }
+
+  Future<bool> submitInquiry(InquiryRequest request) async {
+    // 로딩 상태로 변경 (기존 화면에 영향을 주지 않으려면 다이얼로그의 _isLoading으로만 처리해도 무방합니다)
+    // state = state.copyWith(isLoading: true, errorMessage: null);
+
+    final result = await ref.read(profileUseCaseProvider).submitInquiry(request);
+
+    return result.fold(
+      onSuccess: (_) {
+        // 성공 처리
+        return true;
+      },
+      onFailure: (msg, code) {
+        // 실패 처리 (필요시 에러메시지 상태 업데이트)
+        state = state.copyWith(errorMessage: msg);
+        return false;
+      },
+    );
   }
 
   /// 📊 프로필 정보 로드

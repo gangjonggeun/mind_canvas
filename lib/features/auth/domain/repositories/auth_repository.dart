@@ -10,13 +10,17 @@ import '../entities/auth_user_entity.dart';
 /// - 비즈니스 로직과 데이터 소스 분리
 /// - 테스트 가능한 추상화 제공
 abstract class AuthRepository {
-  Future<Result<AuthResponse>> loginAsGuest(String languageCode,
-      {String? fcmToken});
+  Future<Result<AuthResponse>> loginAsGuest(
+      String languageCode, {
+        String? deviceId, // ✨ 추가
+        String? fcmToken,
+      });
   Future<Result<void>> deleteAccount();
   Future<Result<AuthResponse>> loginWithApple(
-    String identityToken, {
-    String? fcmToken,
-  });
+      String identityToken, {
+        String? deviceId, // ✨ 추가
+        String? fcmToken,
+      });
 
   Future<void> syncFcmToken();
 
@@ -106,31 +110,3 @@ abstract class AuthRepository {
   /// 로그아웃 시 자동 호출됨
   Future<void> clearAuthTokens();
 }
-
-// =============================================================
-// 📝 Repository Pattern의 핵심 원칙
-// =============================================================
-
-/*
-✅ Result 패턴을 사용해야 하는 메서드들:
-- 네트워크 호출이 있는 메서드들 (예외 발생 가능)
-- loginWithGoogle, refreshToken, logout, getCurrentUser, validateToken
-
-✅ Result 패턴이 불필요한 메서드들:
-- 로컬 데이터만 확인하는 메서드들 (예외 발생 거의 없음)
-- isLoggedIn, isTokenExpired, saveAuthTokens, clearAuthTokens
-
-📋 Repository의 책임:
-1. DataSource의 ApiResponse<T>를 도메인의 Result<T>로 변환
-2. 모든 예외를 안전하게 처리
-3. 토큰 관리 로직 추상화
-4. 도메인 엔티티와 DTO 간 변환
-
-🎯 사용 예시:
-// UseCase에서
-final result = await authRepository.loginWithGoogle(idToken);
-result.fold(
-  onSuccess: (authResponse) => print('로그인 성공'),
-  onFailure: (error) => print('로그인 실패: $error'),
-);
-*/

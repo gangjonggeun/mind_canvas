@@ -620,8 +620,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
               child: OutlinedButton(
                 onPressed: () {
                   Share.share(
-                    //TODO: 웹으로 연결되게 구현하기
-                    '${widget.result.title}\n\n${widget.result.subtitle}\n\n#마인드캔버스 #심리테스트',
+                    '[${widget.result.title}]\n\n[${widget.result.subtitle}]\n\n 나의 결과가 궁금하다면?\n\n#마음색캔버스 #htp테스트 #타로 #주관식테스트',
                     subject: '심리테스트 결과 공유',
                   );
                 },

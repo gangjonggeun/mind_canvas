@@ -19,6 +19,71 @@ class _ProfileApiDataSource implements ProfileApiDataSource {
   String? baseUrl;
 
   @override
+  Future<ApiResponse<dynamic>> syncRevenueCat(String token) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<ApiResponse<dynamic>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/payments/sync',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = ApiResponse<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
+  Future<ApiResponse<dynamic>> submitInquiry(
+    String token,
+    InquiryRequest request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = request;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<ApiResponse<dynamic>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/support/inquiry',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = ApiResponse<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
   Future<ApiResponse<SetupProfileResponse>> setupProfile(
     String authorization,
     FormData body,
@@ -67,7 +132,7 @@ class _ProfileApiDataSource implements ProfileApiDataSource {
     )
             .compose(
               _dio.options,
-              '/api/v1/payments/ad-reward',
+              '/payments/ad-reward',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -102,7 +167,7 @@ class _ProfileApiDataSource implements ProfileApiDataSource {
     )
             .compose(
               _dio.options,
-              '/api/v1/payments/verify',
+              '/payments/verify',
               queryParameters: queryParameters,
               data: _data,
             )

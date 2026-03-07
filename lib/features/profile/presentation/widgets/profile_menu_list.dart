@@ -28,13 +28,7 @@ class ProfileMenuList extends StatelessWidget {
         _buildSectionTitle(context, 'profile.menu.section_activity'),
         const SizedBox(height: 12),
         _buildMenuSection([
-          // _MenuItem(
-          //   id: 'likes',
-          //   icon: Icons.favorite_rounded,
-          //   title: 'profile.menu.likes'.tr(),
-          //   subtitle: 'profile.menu.likes_sub'.tr(),
-          //   color: Colors.pinkAccent,
-          // ),
+
           _MenuItem(
             id: 'my_records',
             icon: Icons.history_edu_rounded,
@@ -83,7 +77,7 @@ class ProfileMenuList extends StatelessWidget {
           _MenuItem(
             id: 'help',
             icon: Icons.help_outline_rounded,
-            title: 'profile.menu.help'.tr(), // 앱스토어 필수: 고객 지원
+            title: '고객지원', // 앱스토어 필수: 고객 지원
             subtitle: 'profile.menu.help_sub'.tr(),
             color: Colors.blue,
           ),

@@ -36,6 +36,21 @@ class TestUseCase {
   ///
   /// @param testId 조회할 테스트 ID
   /// @return Result<TestDetailResponse> 성공 시 상세 정보, 실패 시 에러
+  Future<Result<void>>deleteTestResult(int testId) async {
+    try {
+      // Repository를 통한 데이터 조회
+      final result = await _repository.deleteTestResult(testId);
+
+      return result;
+    } catch (e) {
+      print('UseCase - 예상치 못한 오류: $e');
+      return Result.failure('테스트 결과 삭제 중 오류가 발생했습니다', 'UNKNOWN_ERROR');
+    }
+  }
+  /// 테스트 상세 정보 조회
+  ///
+  /// @param testId 조회할 테스트 ID
+  /// @return Result<TestDetailResponse> 성공 시 상세 정보, 실패 시 에러
   Future<Result<TestDetailResponse>> getTestDetail(int testId) async {
     try {
 

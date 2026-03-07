@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
 import 'package:mind_canvas/features/consulting/presentation/pages/anger_vent_page.dart';
 import '../../../core/widgets/common_sliver_app_bar.dart';
@@ -215,12 +216,7 @@ class ConsultingScreen extends StatelessWidget {
 
   void _navigateToAngerVent(BuildContext context) {
     _logger.info('Navigate to Anger Vent');
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const AngerVentPage(), // AngerVentPage로 이동
-        settings: const RouteSettings(name: '/anger-vent'),
-      ),
-    );
+    context.pushNamed('anger_vent');
   }
 
   /// 🎭 상담 카드 위젯 (재사용 가능) - 가로 긴 형태
@@ -522,21 +518,11 @@ class ConsultingScreen extends StatelessWidget {
 
   /// 🚀 네비게이션 메서드들 (메모리 최적화)
   void _navigateToEmotionDiary(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const EmotionDiaryPage(),
-        settings: const RouteSettings(name: '/emotion-diary'),
-      ),
-    );
+    context.pushNamed('emotion_diary');
   }
 
   void _navigateToAiChat(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const AiChatPage(),
-        settings: const RouteSettings(name: '/ai-chat'),
-      ),
-    );
+    context.pushNamed('ai_chat');
   }
 
   void _navigateToMindfulnessSound(BuildContext context) {

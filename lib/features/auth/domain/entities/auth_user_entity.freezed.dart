@@ -20,6 +20,8 @@ AuthUser _$AuthUserFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AuthUser {
+  @JsonKey(name: 'user_id')
+  int get userId => throw _privateConstructorUsedError; // ✨ 핵심: userId 추가!
   @JsonKey(name: 'nickname')
   String? get nickname => throw _privateConstructorUsedError;
   @JsonKey(name: 'login_type')
@@ -41,7 +43,8 @@ abstract class $AuthUserCopyWith<$Res> {
       _$AuthUserCopyWithImpl<$Res, AuthUser>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'nickname') String? nickname,
+      {@JsonKey(name: 'user_id') int userId,
+      @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(name: 'login_type') LoginType loginType});
 }
 
@@ -60,10 +63,15 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? userId = null,
     Object? nickname = freezed,
     Object? loginType = null,
   }) {
     return _then(_value.copyWith(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as int,
       nickname: freezed == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
@@ -85,7 +93,8 @@ abstract class _$$AuthUserImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'nickname') String? nickname,
+      {@JsonKey(name: 'user_id') int userId,
+      @JsonKey(name: 'nickname') String? nickname,
       @JsonKey(name: 'login_type') LoginType loginType});
 }
 
@@ -102,10 +111,15 @@ class __$$AuthUserImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? userId = null,
     Object? nickname = freezed,
     Object? loginType = null,
   }) {
     return _then(_$AuthUserImpl(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as int,
       nickname: freezed == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
@@ -122,12 +136,17 @@ class __$$AuthUserImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AuthUserImpl implements _AuthUser {
   const _$AuthUserImpl(
-      {@JsonKey(name: 'nickname') this.nickname,
+      {@JsonKey(name: 'user_id') required this.userId,
+      @JsonKey(name: 'nickname') this.nickname,
       @JsonKey(name: 'login_type') required this.loginType});
 
   factory _$AuthUserImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthUserImplFromJson(json);
 
+  @override
+  @JsonKey(name: 'user_id')
+  final int userId;
+// ✨ 핵심: userId 추가!
   @override
   @JsonKey(name: 'nickname')
   final String? nickname;
@@ -137,7 +156,7 @@ class _$AuthUserImpl implements _AuthUser {
 
   @override
   String toString() {
-    return 'AuthUser(nickname: $nickname, loginType: $loginType)';
+    return 'AuthUser(userId: $userId, nickname: $nickname, loginType: $loginType)';
   }
 
   @override
@@ -145,6 +164,7 @@ class _$AuthUserImpl implements _AuthUser {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AuthUserImpl &&
+            (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.nickname, nickname) ||
                 other.nickname == nickname) &&
             (identical(other.loginType, loginType) ||
@@ -153,7 +173,7 @@ class _$AuthUserImpl implements _AuthUser {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, nickname, loginType);
+  int get hashCode => Object.hash(runtimeType, userId, nickname, loginType);
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.
@@ -173,13 +193,17 @@ class _$AuthUserImpl implements _AuthUser {
 
 abstract class _AuthUser implements AuthUser {
   const factory _AuthUser(
-          {@JsonKey(name: 'nickname') final String? nickname,
+          {@JsonKey(name: 'user_id') required final int userId,
+          @JsonKey(name: 'nickname') final String? nickname,
           @JsonKey(name: 'login_type') required final LoginType loginType}) =
       _$AuthUserImpl;
 
   factory _AuthUser.fromJson(Map<String, dynamic> json) =
       _$AuthUserImpl.fromJson;
 
+  @override
+  @JsonKey(name: 'user_id')
+  int get userId; // ✨ 핵심: userId 추가!
   @override
   @JsonKey(name: 'nickname')
   String? get nickname;

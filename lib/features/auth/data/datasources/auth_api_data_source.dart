@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 import '../../../../core/network/api_response_dto.dart';
 import '../models/request/auth_request_dto.dart';
 import '../models/response/auth_response_dto.dart';
+import '../models/response/user_me_response.dart';
 
 part 'auth_api_data_source.g.dart'; // build_runner가 생성할 파일
 
@@ -62,18 +63,17 @@ abstract class AuthApiDataSource {
 
   /// 내 정보 조회 ✅
   @GET('/auth/me')
-  Future<ApiResponse<dynamic>> getCurrentUser(
+  Future<ApiResponse<UserMeResponse>> getCurrentUser(
       @Header('Authorization') String authorization,
       );
 
 
-
-  @POST('/api/v1/auth/guest')
+  @POST('/auth/guest')
   Future<ApiResponse<AuthResponse>> loginAsGuest(
       @Body() GuestLoginRequest request,
       );
 
-  @POST('/api/v1/auth/apple')
+  @POST('/auth/apple')
   Future<ApiResponse<AuthResponse>> loginWithApple(
       @Body() AppleLoginRequest request,
       );

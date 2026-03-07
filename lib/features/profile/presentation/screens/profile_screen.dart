@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:mind_canvas/features/profile/presentation/pages/liked_posts_page.dart';
 import 'package:mind_canvas/features/profile/presentation/pages/my_activity_page.dart';
-import 'package:mind_canvas/features/profile/presentation/screens/InkRechargeScreen.dart';
-import 'package:portone_flutter/iamport_payment.dart';
-import 'package:portone_flutter/model/payment_data.dart';
+
+import 'package:purchases_flutter/models/offerings_wrapper.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 // ✅ Provider 임포트 (경로는 실제 프로젝트에 맞게 확인해주세요)
 // import '../../../../core/providers/app_language_provider.dart';
@@ -24,6 +25,7 @@ import '../../data/models/user_profile.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
 import '../providers/ink_history_provider.dart';
 import '../providers/profile_notifier.dart';
+import '../widgets/help_menu_bottom_sheet.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/ink_balance_card.dart';
 import '../widgets/profile_menu_list.dart';
@@ -75,11 +77,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     HapticFeedback.selectionClick();
     switch (menuId) {
       case 'delete_account':
-        _showDeleteAccountDialog(context, ref);
+        _showDeleteAccountDialog();
         break;
       case 'my_records':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const MyActivityPage()));
+        context.pushNamed('my_activity');
         break;
       case 'ink_history':
         _showInkHistoryBottomSheet();
@@ -91,7 +92,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         _showNotificationDialog();
         break;
       case 'help':
-      // launchUrl(Uri.parse('https://your-notion-support-page.com'));
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => const HelpMenuBottomSheet(), // 아까 만든 그 위젯
+        );
         break;
       case 'logout':
         _showLogoutDialog();
@@ -99,9 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
   }
 
-
   void _showInkHistoryBottomSheet() {
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -165,9 +168,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   ? Colors.blue.withOpacity(0.1)
                                   : Colors.red.withOpacity(0.1),
                               child: Icon(
-                                isCharge
-                                    ? Icons.add
-                                    : Icons.remove,
+                                isCharge ? Icons.add : Icons.remove,
                                 color: isCharge ? Colors.blue : Colors.red,
                               ),
                             ),
@@ -215,117 +216,107 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ==============================================================
   // 🚪 업그레이드된 로그아웃 로직 (게스트 체크)
   // ==============================================================
-  void _showLogoutDialog() {
-    // 현재 유저 정보 가져오기 (예: UserNotifierProvider 등에서)
+  void _showLogoutDialog() async {
+    print("🛑[LOGOUT FLOW] 1. 다이얼로그 띄우기 시작");
 
     final currentUser = ref.read(userNotifierProvider);
     final isGuest = currentUser == null || (currentUser.email.isEmpty);
 
-    showDialog(
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isGuest ? '게스트 로그아웃' : '로그아웃'),
+      useRootNavigator: true, // 🛡️ [핵심 방어 1] 다이얼로그를 최상단에 띄움
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('로그아웃'),
         content: Text(
-          isGuest
-              ? '게스트 상태에서 로그아웃하시면\n지금까지의 분석 기록과 잉크가 모두 초기화됩니다.\n\n정말 로그아웃하시겠습니까?'
-              : '정말 로그아웃하시겠습니까?',
+          '정말 로그아웃하시겠습니까?',
           style: TextStyle(
-            color: isGuest ? Colors.red.shade700 : null, // 게스트면 빨간색 경고
+            color: isGuest ? Colors.red.shade700 : null,
             fontWeight: isGuest ? FontWeight.w500 : FontWeight.normal,
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('취소')),
+              onPressed: () {
+                print("🛑 [LOGOUT FLOW] 2-1. 취소 버튼 클릭");
+                // 🛡️[핵심 방어 2] 오직 다이얼로그만 확실히 닫음
+                Navigator.of(dialogContext, rootNavigator: true).pop(false);
+              },
+              child: const Text('취소')),
           FilledButton(
             style: isGuest
                 ? FilledButton.styleFrom(backgroundColor: Colors.red)
                 : null,
-            onPressed: () async {
-              // 1. 다이얼로그 닫기
-              Navigator.pop(context);
-
-              // 2. [핵심] 성공 여부와 상관없이 무조건 로컬 토큰 삭제부터 진행
-              // 이래야 서버 에러로 무한로딩 걸릴 일이 없음
-              await AuthStorage.clearAll();
-
-              // 3. 로딩 인디케이터 표시
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => const Center(child: CircularProgressIndicator()),
-              );
-
-              // 4. 서버 로그아웃 API 호출 (성공/실패 따지지 않음)
-              try {
-                await ref.read(authNotifierProvider.notifier).logout();
-              } catch (e) {
-                print("서버 로그아웃 API 호출 에러 (무시함): $e");
-              }
-
-              // 5. 로딩창 닫기
-              if (context.mounted) Navigator.pop(context);
-
-              // 6. 무조건 로그인 화면으로 이동
-              if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              }
+            onPressed: () {
+              print("🛑 [LOGOUT FLOW] 2-2. 로그아웃 버튼 클릭");
+              Navigator.of(dialogContext, rootNavigator: true).pop(true);
             },
             child: Text(isGuest ? '기록 지우고 나가기' : '로그아웃'),
           ),
         ],
       ),
     );
+
+    if (confirm != true) {
+      print("🛑 [LOGOUT FLOW] 3. 로그아웃 취소됨 (종료)");
+      return;
+    }
+
+    print("🛑 [LOGOUT FLOW] 4. 다이얼로그 닫히는 애니메이션 대기 (300ms)");
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    print("🛑 [LOGOUT FLOW] 5. AuthNotifier.logout() 호출 직전");
+    if (context.mounted) {
+      await ref.read(authNotifierProvider.notifier).logout();
+    }
+    print("🛑 [LOGOUT FLOW] 6. UI 쪽 함수 완전 종료! (이제 라우터가 알아서 함)");
   }
 
-  Future<void> _showDeleteAccountDialog(BuildContext context, WidgetRef ref) async {
+  //  계정 삭제
+  void _showDeleteAccountDialog() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('계정 탈퇴', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        content: const Text('정말 탈퇴하시겠습니까?\n\n탈퇴 시 모든 정보가 삭제되며, 게시글은 "알 수 없는 사용자"로 남게 됩니다. 이 작업은 되돌릴 수 없습니다.'),
-        actions:[
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('계정 탈퇴', style: TextStyle(color: Colors.red)),
+        content: const Text('정말 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('취소')),
           ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('탈퇴하기', style: TextStyle(color: Colors.white))
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('탈퇴하기', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
 
+    // 취소했으면 종료
     if (confirm != true) return;
 
-    // 로딩 인디케이터 표시
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+    // 1. (선택사항) 다이얼로그가 완전히 닫힐 애니메이션 시간 0.2초 여유 주기
+    await Future.delayed(const Duration(milliseconds: 200));
 
-    // 🎯 [수정됨] UseCase 대신 AuthNotifier의 deleteAccount 호출
-    final result = await ref.read(authNotifierProvider.notifier).deleteAccount();
+    // 2. 탈퇴 로직 실행
+    // 🚨 주의: AuthNotifier의 deleteAccount() 내부에는 state = AsyncLoading(); 이 절대 없어야 합니다!
+    final result =
+        await ref.read(authNotifierProvider.notifier).deleteAccount();
 
-    // 로딩 다이얼로그 닫기
-    if (context.mounted) Navigator.pop(context);
-
-    result.fold(
-      onSuccess: (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('계정이 성공적으로 삭제되었습니다.')));
-          // 성공 시 모든 스택 지우고 로그인 창으로!
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-        }
-      },
-      onFailure: (msg, _) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('탈퇴 실패: $msg')));
-        }
-      },
-    );
+    // 3. 🎯 Result 클래스의 fold 메서드 사용!
+    result.fold(onSuccess: (_) {
+      // 성공 시: 이미 AuthNotifier에서 state=null 이 되어 GoRouter가 /login으로 보냈음.
+      // 따라서 화면 이동 코드를 적을 필요가 전혀 없음!
+      print("✅ 탈퇴 성공");
+    }, onFailure: (msg, code) {
+      // 실패 시: 화면 이동이 없으므로 스낵바를 띄워줌
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('탈퇴 실패: $msg')));
+      }
+    });
   }
+
   // ==============================================================
   // 🌐 언어 설정 로직 (UI + Riverpod )
   // ==============================================================
@@ -378,10 +369,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       onTap: () async {
         Navigator.pop(context); // 바텀시트 닫기
 
-        // 1. EasyLocalization 로컬 언어 즉시 변경 (UI 텍스트 변경)
+        // ✅ 1. 가장 먼저 Provider 상태를 업데이트 (UI 상태와 Hive 저장소 업데이트)
+        // 이 코드가 없어서 현재 UI가 갱신되지 않았던 것입니다.
+        await ref.read(appLanguageProvider.notifier).setLanguage(code);
+
+        // 2. EasyLocalization 로컬 언어 즉시 변경 (UI 텍스트 변경)
         await context.setLocale(Locale(code));
 
-        // 2. 서버 통신 및 Hive 저장 (ProfileNotifier에서 알아서 다 해줌!)
+        // 3. 서버 통신 (필요 시)
+        // 만약 ProfileNotifier 내부에서 다시 appLanguageProvider를 참조하고 있다면
+        // 굳이 순서가 꼬이지 않도록 주의해야 합니다.
         await ref.read(profileNotifierProvider.notifier).changeLanguage(code);
       },
     );
@@ -482,7 +479,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               //잉크 잔액
               InkBalanceCard(
                 inkBalance: profileState.summary?.inkBalance ?? 0,
-                dailyAdCount: profileState.summary?.dailyAdCount ?? 0, // ✅ 데이터 전달
+                dailyAdCount: profileState.summary?.dailyAdCount ?? 0,
+                // ✅ 데이터 전달
                 onRecharge: () => _showInkRechargeDialog(context, ref),
                 onWatchAd: _onWatchAdTap, // ✅ 광고 버튼 핸들러 연결
               ),
@@ -524,10 +522,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-
-
-
-
 // 프로필 화면에서 호출할 때: _showInkRechargeDialog(context, ref);
   void _showInkRechargeDialog(BuildContext context, WidgetRef ref) {
     showDialog(
@@ -538,7 +532,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children:[
+            children: [
               // 🎨 팔레트 이미지 적용
               Image.asset(
                 'assets/images/icon/coin_palette_256.webp',
@@ -565,35 +559,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 title: '무료 잉크 받기',
                 subtitle: '동영상 광고 시청',
                 priceText: '무료',
-                icon: Icons.play_circle_fill,
                 iconColor: Colors.purple,
                 onTap: () {
                   Navigator.pop(context); // 다이얼로그 닫기
                   _watchAdForReward(context, ref); // 광고 로직 호출
-                },
+                }, assetPath: 'assets/images/icon/coin_palette_128.webp',
               ),
               const Divider(height: 24),
 
               // 💳 2. 유료 충전 옵션들
               _buildRechargeOption(
-                context: context, ref: ref,
-                title: '잉크 한 줌 (100개)', subtitle: '가볍게 시작하기', priceText: '₩ 1,000',
-                icon: Icons.water_drop, iconColor: Colors.blue,
-                onTap: () => _startPayment(context, ref, 1000, '잉크 100개'),
+                context: context,
+                ref: ref,
+                title: '잉크 한 줌 (100개)',
+                subtitle: '가볍게 시작하기',
+                priceText: '₩ 1,000',
+                iconColor: Colors.blue,
+                onTap: () => _startPayment(context, ref, "ink_100"),
+                assetPath: 'assets/images/icon/coin_palette_128.webp',
               ),
               const SizedBox(height: 8),
               _buildRechargeOption(
-                context: context, ref: ref,
-                title: '잉크 보따리 (500개)', subtitle: '가장 많이 선택해요', priceText: '₩ 4,500',
-                icon: Icons.water_drop, iconColor: Colors.blue, isBest: true,
-                onTap: () => _startPayment(context, ref, 4500, '잉크 500개'),
+                context: context,
+                ref: ref,
+                title: '잉크 보따리 (500개)',
+                subtitle: '가장 많이 선택해요',
+                priceText: '₩ 4,500',
+                iconColor: Colors.blue,
+                isBest: true,
+                onTap: () => _startPayment(context, ref, "ink_500"),
+                assetPath: 'assets/images/icon/coin_palette_128.webp',
               ),
               const SizedBox(height: 8),
               _buildRechargeOption(
-                context: context, ref: ref,
-                title: '잉크 드럼통 (1000개)', subtitle: '마음껏 분석하기', priceText: '₩ 8,000',
-                icon: Icons.water_drop, iconColor: Colors.blue,
-                onTap: () => _startPayment(context, ref, 8000, '잉크 1000개'),
+                context: context,
+                ref: ref,
+                title: '잉크 드럼통 (1000개)',
+                subtitle: '마음껏 분석하기',
+                priceText: '₩ 8,000',
+                iconColor: Colors.blue,
+                onTap: () => _startPayment(context, ref, "ink_1000"),
+                assetPath: 'assets/images/icon/coin_palette_128.webp',
               ),
             ],
           ),
@@ -603,9 +609,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Widget _buildRechargeOption({
-    required BuildContext context, required WidgetRef ref, required String title,
-    required String subtitle, required String priceText, required IconData icon,
-    required Color iconColor, required VoidCallback onTap, bool isBest = false,
+    required BuildContext context,
+    required WidgetRef ref,
+    required String title,
+    required String subtitle,
+    required String priceText,
+    required String assetPath,
+    required Color iconColor,
+    required VoidCallback onTap,
+    bool isBest = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -613,20 +625,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: isBest ? Colors.blue : Colors.grey.shade300, width: isBest ? 2 : 1),
+          border: Border.all(
+              color: isBest ? Colors.blue : Colors.grey.shade300,
+              width: isBest ? 2 : 1),
           borderRadius: BorderRadius.circular(16),
           color: isBest ? Colors.blue.withOpacity(0.05) : Colors.transparent,
         ),
         child: Row(
-          children:[
-            Icon(icon, color: iconColor, size: 28),
+          children: [
+            Image.asset(assetPath, width: 32, height: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children:[
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text(subtitle,
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
             ),
@@ -636,7 +654,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 color: isBest ? Colors.blue : Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(priceText, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              child: Text(priceText,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
             ),
           ],
         ),
@@ -644,69 +666,88 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-// 💳 결제 로직 (다이얼로그 닫힌 후 실행됨)
-  void _startPayment(BuildContext context, WidgetRef ref, int price, String itemName) {
-    Navigator.pop(context); // 충전 다이얼로그 닫기
-
-    final userCode = dotenv.env['PORTONE_USER_CODE'] ?? 'imp00000000';
-    final merchantUid = 'mid_${DateTime.now().millisecondsSinceEpoch}';
-    final user = ref.read(userNotifierProvider);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => IamportPayment(
-          appBar: AppBar(title: const Text('결제하기')),
-          userCode: userCode,
-          data: PaymentData(
-            pg: 'html5_inicis', payMethod: 'card', name: itemName, merchantUid: merchantUid, amount: price,
-            buyerName: user?.nickname ?? 'Guest', buyerEmail: user?.email ?? '', appScheme: 'mindcanvas', buyerTel: '',
-          ),
-          callback: (Map<String, String> result) {
-            Navigator.pop(context); // 결제창 닫기
-            if (result['success'] == 'true') {
-              _verifyOnServer(context, ref, merchantUid, result['imp_uid'] ?? '');
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('결제 취소: ${result['error_msg']}')));
-            }
-          },
-        ),
-      ),
+// 💳 결제 로직 (UI에서 아이템 클릭 시 실행)
+  Future<void> _startPayment(
+      BuildContext context, WidgetRef ref, String packageIdentifier) async {
+    // 1. 사용자에게 결제 대기 중임을 알리는 로딩 인디케이터 띄우기
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-  }
 
+    // 2. RevenueCat 서버에서 현재 활성화된 상품(Offerings) 목록 가져오기
+    Offerings offerings = await Purchases.getOfferings();
 
-  // 서버 검증 (기존 로직 유지)
-  Future<void> _verifyOnServer(
-      BuildContext context, WidgetRef ref, String merchantUid, String portoneId) async {
-
-    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-
-    final result = await ref.read(profileUseCaseProvider).verifyPayment(merchantUid, portoneId);
-
-    if (context.mounted) Navigator.pop(context);
-
-    result.fold(
-      onSuccess: (_) async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('충전 완료!'), backgroundColor: Colors.blue),
+    if (offerings.current != null) {
+      // 3. 내가 구매하려는 식별자(예: "100_coins")와 일치하는 상품 찾기
+      Package? packageToBuy;
+      try {
+        packageToBuy = offerings.current!.availablePackages.firstWhere(
+          (pkg) => pkg.identifier == packageIdentifier,
         );
-        await ref.read(userNotifierProvider.notifier).refreshProfile();
-        if (context.mounted) Navigator.pop(context);
-      },
-      onFailure: (msg, _) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $msg'), backgroundColor: Colors.red),
-        );
-      },
-    );
+      } catch (e) {
+        packageToBuy = null; // 매칭되는 상품이 없을 경우
+      }
+
+      // ✨ 4. 상품이 null이 아닐 때만 안전하게 네이티브 결제창 호출
+      if (packageToBuy != null) {
+        try {
+          // 1. 네이티브 결제창 호출! (FaceID / 지문 인식)
+          // (사용하시는 패키지 버전에 맞춰 result.customerInfo 형태로 꺼내시면 됩니다)
+          PurchaseResult result = await Purchases.purchasePackage(packageToBuy);
+          CustomerInfo customerInfo = result.customerInfo;
+
+          if (!context.mounted) return;
+          Navigator.pop(context); // 로딩창 닫기
+
+          // 💡 2. CustomerInfo 검증 (핵심)
+          // 잉크(소모품)의 경우 nonSubscriptionTransactions(구독이 아닌 일반 결제 내역) 배열에
+          // 방금 결제한 상품의 identifier가 추가되었는지 확인합니다.
+
+          final hasPurchased = customerInfo.nonSubscriptionTransactions.any(
+              (transaction) =>
+                  transaction.productIdentifier ==
+                  packageToBuy?.storeProduct.identifier);
+
+          if (hasPurchased) {
+            // 3. 결제 내역이 확인되었을 때만 서버에 핑 날리기!
+            await ref
+                .read(inkHistoryNotifierProvider.notifier)
+                .syncPurchaseWithServer();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('결제 성공! 잉크가 충전되었습니다.')),
+            );
+          } else {
+            // 결제는 진행됐으나 아직 RevenueCat 서버에 반영 안 된 상태 (결제 지연 등)
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('결제가 처리 중입니다. 잠시 후 확인해주세요.')),
+            );
+          }
+        } on PlatformException catch (e) {
+          if (!context.mounted) return;
+          Navigator.pop(context); // 로딩창 닫기
+
+          // 유저가 결제를 스스로 취소한 경우 (에러 아님)
+          if (PurchasesErrorHelper.getErrorCode(e) ==
+              PurchasesErrorCode.purchaseCancelledError) {
+            print('사용자가 결제를 취소했습니다.');
+          } else {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('결제 실패: ${e.message}')));
+          }
+        }
+      }
+    }
   }
-
-
 
   void _watchAdForReward(BuildContext context, WidgetRef ref) {
     // 1. 로딩 표시
-    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()));
 
     // 2. 보상형 광고 로드 (실제 출시는 애드몹에서 발급받은 ID 사용, 아래는 구글 테스트 ID)
     final adUnitId = 'ca-app-pub-3940256099942544/5224354917';
@@ -719,26 +760,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           Navigator.pop(context); // 로딩 닫기
 
           // 3. 광고 재생
-          ad.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) async {
+          ad.show(
+              onUserEarnedReward: (AdWithoutView ad, RewardItem reward) async {
             // 💡 유저가 광고를 끝까지 봤을 때 실행되는 곳! (여기서 서버로 보상 요청을 보냅니다)
 
-            showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()));
 
             // TODO: 서버의 '광고 보상 API' 호출
-            final result = await ref.read(profileUseCaseProvider).claimAdReward();
+            final result =
+                await ref.read(profileUseCaseProvider).claimAdReward();
 
             Navigator.pop(context); // 로딩 닫기
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('광고 시청 완료! 잉크 20개가 지급되었습니다.')));
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('광고 시청 완료! 잉크 20개가 지급되었습니다.')));
             ref.read(userNotifierProvider.notifier).refreshProfile(); // 잔액 갱신
           });
         },
         onAdFailedToLoad: (LoadAdError error) {
           Navigator.pop(context); // 로딩 닫기
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('광고를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('광고를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')));
         },
       ),
     );
   }
+
   void _onWatchAdTap() {
     final summary = ref.read(profileNotifierProvider).summary;
     final int currentAds = summary?.dailyAdCount ?? 0;
@@ -755,7 +805,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         title: const Text('무료 잉크 충전'),
         content: Text('광고를 시청하고 20 잉크를 받으시겠습니까?\n(오늘 시청 횟수: $currentAds/5)'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('취소')),
           TextButton(
             onPressed: () {
               Navigator.pop(context); // 다이얼로그 닫고
@@ -767,6 +818,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
     );
   }
+
   void _showMaxAdDialog() {
     showDialog(
       context: context,
@@ -775,7 +827,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         title: Column(
           children: [
             // ✅ 체크 아이콘으로 "완료됨"을 시각적으로 표시
-            Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade400, size: 48),
+            Icon(Icons.check_circle_outline_rounded,
+                color: Colors.green.shade400, size: 48),
             const SizedBox(height: 16),
             const Text(
               '오늘의 충전 완료',
@@ -795,7 +848,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             child: FilledButton(
               onPressed: () => Navigator.pop(context),
               style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: const Text('확인'),
@@ -805,5 +859,4 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
     );
   }
-
 }

@@ -102,39 +102,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     _currentLanguage = ref.watch(appLanguageProvider);
-    // 🎯 인증 상태 리스너
+
+    // 🎯 인증 상태 리스너 (팝업/다이얼로그 처리 전용)
     ref.listen<AsyncValue<AuthUser?>>(authNotifierProvider, (previous, next) {
-
-
-      print("🔍 listen 호출됨!");
-      print("🔍 previous: $previous");
-      print("🔍 next: $next");
-      print("🔍 next.value?.nickname: ${next.value?.nickname}");
+      // 로딩 상태 무시
+      if (next.isLoading) return;
 
       next.whenData((user) {
-        print("🔍 whenData 진입 - user: $user");
         if (user != null) {
-          print("🔍 user.nickname: ${user.nickname}");
+          // GoRouter가 '/main'으로 보내기 직전에, 닉네임이 없으면 다이얼로그를 띄웁니다.
           if (user.nickname == null) {
-            print("🔍 닉네임 다이얼로그 표시 예정");
+            print("🔍 닉네임 미설정 유저 -> 다이얼로그 표시");
             _showNicknameDialog(context);
-          } else {
-            print("🔍 메인 화면으로 이동 예정");
-            _handleLoginSuccess(user);
           }
+          // 닉네임이 있다면? -> 아무것도 안 해도 됩니다! GoRouter가 이미 '/main'으로 보냈습니다.
         }
       });
 
       next.whenOrNull(
         error: (error, stackTrace) {
-          print("❌ listen에서 에러: $error");
           _showErrorSnackBar(error.toString());
         },
       );
     });
 
     return Scaffold(
-      // backgroundColor: AppColors.backgroundPrimary,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: _buildMinimalContent(),
@@ -216,7 +208,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       child: Column(
         children: [
           Text(
-            S.of(context).login_title,
+            S
+                .of(context)
+                .login_title,
             style: TextStyle(
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
@@ -227,7 +221,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
           Gap(8.h),
           Text(
-            S.of(context).login_content,
+            S
+                .of(context)
+                .login_content,
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -252,7 +248,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         children: [
           // 2. '다양한 플랫폼으로~' 텍스트는 그대로 두거나, 디자인에 맞춰 제거/수정 가능
           Text(
-            S.of(context).login_type,
+            S
+                .of(context)
+                .login_type,
             style: TextStyle(
               fontSize: 14.sp,
               color: AppColors.textSecondary,
@@ -282,7 +280,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             // Google Blue
             foregroundColor: Colors.white,
           ),
-
 
 
           // 구분선 (단순 텍스트로 변경)
@@ -344,7 +341,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
       child: Text(
-        S.of(context).login_disclamer, // 텍스트 변경
+        S
+            .of(context)
+            .login_disclamer, // 텍스트 변경
         style: TextStyle(
           fontSize: 11.sp,
           color: AppColors.textTertiary,
@@ -394,12 +393,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       final result = await ref.read(authNotifierProvider.notifier).appleLogin();
 
       if (result.isFailure) {
-        _showErrorSnackBar(result.errorCode ?? S.of(context).login_fail,);
+        _showErrorSnackBar(result.errorCode ?? S
+            .of(context)
+            .login_fail,);
       }
       // 성공 시 라우팅 처리는 보통 ref.listen(authNotifierProvider, ...) 쪽에서 감지해서 넘어감
     } catch (e) {
       debugPrint('[$_logTag] Apple 로그인 오류: $e');
-      _showErrorSnackBar(S.of(context).login_network_error);
+      _showErrorSnackBar(S
+          .of(context)
+          .login_network_error);
     }
   }
 
@@ -413,11 +416,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       final result = await ref.read(authNotifierProvider.notifier).guestLogin();
 
       if (result.isFailure) {
-        _showErrorSnackBar(result.errorCode ??  S.of(context).login_fail);
+        _showErrorSnackBar(result.errorCode ?? S
+            .of(context)
+            .login_fail);
       }
     } catch (e) {
       debugPrint('[$_logTag] 익명 로그인 오류: $e');
-      _showErrorSnackBar(S.of(context).login_network_error);
+      _showErrorSnackBar(S
+          .of(context)
+          .login_network_error);
     }
   }
 
@@ -431,173 +438,234 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final Map<String, dynamic>? result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          String? validationError;
-          Widget? feedbackIcon;
-          Color borderColor = AppColors.primaryBlueDark;
+      builder: (dialogContext) =>
+          StatefulBuilder(
+            builder: (context, setState) {
+              String? validationError;
+              Widget? feedbackIcon;
+              Color borderColor = AppColors.primaryBlueDark;
 
-          void validateNickname(String nickname) {
-            final bool wasValid = validationError == null;
-            final RegExp validPattern = RegExp(r'^[a-zA-Z0-9ㄱ-ㅎ가-힣]*$');
+              void validateNickname(String nickname) {
+                final bool wasValid = validationError == null;
+                final RegExp validPattern = RegExp(r'^[a-zA-Z0-9ㄱ-ㅎ가-힣]*$');
 
-            if (nickname.isNotEmpty && nickname.length < 3) {
-              validationError = S.of(context).login_validation;
-            } else if (nickname.length > 12) {
-              validationError = S.of(context).login_validation2;
-            } else if (nickname.isNotEmpty && !validPattern.hasMatch(nickname)) {
-              validationError = S.of(context).login_validation3;
-            } else {
-              validationError = null;
-            }
-
-            if (nickname.isEmpty) {
-              feedbackIcon = null;
-            } else if (validationError == null) {
-              feedbackIcon = Icon(Icons.check_circle_outline, color: AppColors.statusSuccess);
-            } else {
-              feedbackIcon = Icon(Icons.error_outline, color: AppColors.statusError);
-            }
-
-            if (wasValid && validationError != null) {
-              setState(() => borderColor = AppColors.statusError);
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (context.mounted) {
-                  setState(() => borderColor = AppColors.primaryBlueDark);
+                if (nickname.isNotEmpty && nickname.length < 3) {
+                  validationError = S
+                      .of(context)
+                      .login_validation;
+                } else if (nickname.length > 12) {
+                  validationError = S
+                      .of(context)
+                      .login_validation2;
+                } else
+                if (nickname.isNotEmpty && !validPattern.hasMatch(nickname)) {
+                  validationError = S
+                      .of(context)
+                      .login_validation3;
+                } else {
+                  validationError = null;
                 }
-              });
-            }
-          }
 
-          validateNickname(nicknameController.text);
+                if (nickname.isEmpty) {
+                  feedbackIcon = null;
+                } else if (validationError == null) {
+                  feedbackIcon = Icon(Icons.check_circle_outline,
+                      color: AppColors.statusSuccess);
+                } else {
+                  feedbackIcon =
+                      Icon(Icons.error_outline, color: AppColors.statusError);
+                }
 
-          // ✨ '확인' 버튼 활성화 조건 (닉네임 유효 && 약관 동의 체크)
-          final bool isButtonEnabled = validationError == null &&
-              nicknameController.text.isNotEmpty &&
-              isTermsAgreed;
+                if (wasValid && validationError != null) {
+                  setState(() => borderColor = AppColors.statusError);
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (context.mounted) {
+                      setState(() => borderColor = AppColors.primaryBlueDark);
+                    }
+                  });
+                }
+              }
 
-          return AlertDialog(
-            backgroundColor: AppColors.backgroundCard,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-            title: Center(
-              child: Text(
-                  S.of(context).login_welcome,
-                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary)
-              ),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children:[
-                  Text(S.of(context).login_nickname_setting, textAlign: TextAlign.center, style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary)),
-                  SizedBox(height: 4.h),
-                  Text(S.of(context).login_nickname_conditions, textAlign: TextAlign.center, style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
-                  SizedBox(height: 16.h),
+              validateNickname(nicknameController.text);
 
-                  // 닉네임 입력 필드
-                  TextField(
-                    controller: nicknameController,
-                    onChanged: (nickname) => setState(() => validateNickname(nickname)),
-                    decoration: InputDecoration(
-                      hintText: S.of(context).login_nickname_enter,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: borderColor, width: 1.0),
+              // ✨ '확인' 버튼 활성화 조건 (닉네임 유효 && 약관 동의 체크)
+              final bool isButtonEnabled = validationError == null &&
+                  nicknameController.text.isNotEmpty &&
+                  isTermsAgreed;
+
+              return AlertDialog(
+                backgroundColor: AppColors.backgroundCard,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
+                title: Center(
+                  child: Text(
+                      S
+                          .of(context)
+                          .login_welcome,
+                      style: TextStyle(fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary)
+                  ),
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(S
+                          .of(context)
+                          .login_nickname_setting, textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 14.sp, color: AppColors.textPrimary)),
+                      SizedBox(height: 4.h),
+                      Text(S
+                          .of(context)
+                          .login_nickname_conditions,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 12.sp, color: AppColors.textSecondary)),
+                      SizedBox(height: 16.h),
+
+                      // 닉네임 입력 필드
+                      TextField(
+                        controller: nicknameController,
+                        onChanged: (nickname) =>
+                            setState(() => validateNickname(nickname)),
+                        decoration: InputDecoration(
+                          hintText: S
+                              .of(context)
+                              .login_nickname_enter,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                                color: borderColor, width: 1.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                                color: validationError == null ? AppColors
+                                    .primary : AppColors.statusError,
+                                width: 2.0),
+                          ),
+                          suffixIcon: feedbackIcon,
+                          counterText: '',
+                        ),
+                        maxLength: 12,
+                        autofocus: true,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(
+                              r'[a-zA-Z0-9ㄱ-ㅎ가-힣]')),
+                        ],
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: validationError == null ? AppColors.primary : AppColors.statusError, width: 2.0),
+                      SizedBox(height: 20.h),
+
+                      // ✨ 약관 동의 체크박스 섹션
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundPrimary,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 32.w,
+                              height: 32.h,
+                              child: Checkbox(
+                                value: isTermsAgreed,
+                                activeColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4.r)),
+                                onChanged: (value) {
+                                  setState(() =>
+                                  isTermsAgreed = value ?? false);
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: Text.rich(
+                                TextSpan(
+                                  style: TextStyle(fontSize: 11.sp,
+                                      color: AppColors.textSecondary,
+                                      height: 1.4),
+                                  children: [
+                                    const TextSpan(text: '(필수) '),
+                                    TextSpan(
+                                      text: S
+                                          .of(context)
+                                          .tnc,
+                                      style: const TextStyle(
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.bold),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () async {
+                                          final url = Uri.parse(
+                                              'https://www.notion.so/317b4bde4afa80969249c8caed899e7f?source=copy_link');
+                                          if (await canLaunchUrl(
+                                              url)) await launchUrl(url);
+                                        },
+                                    ),
+                                    TextSpan(text: S
+                                        .of(context)
+                                        .login_and),
+                                    TextSpan(
+                                      text: S
+                                          .of(context)
+                                          .login_privacy,
+                                      style: const TextStyle(
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.bold),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () async {
+                                          final url = Uri.parse(
+                                              'https://www.notion.so/317b4bde4afa80969249c8caed899e7f?source=copy_link');
+                                          if (await canLaunchUrl(
+                                              url)) await launchUrl(url);
+                                        },
+                                    ),
+                                    TextSpan(text: S
+                                        .of(context)
+                                        .login_agree),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      suffixIcon: feedbackIcon,
-                      counterText: '',
-                    ),
-                    maxLength: 12,
-                    autofocus: true,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9ㄱ-ㅎ가-힣]')),
                     ],
                   ),
-                  SizedBox(height: 20.h),
-
-                  // ✨ 약관 동의 체크박스 섹션
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundPrimary,
-                      borderRadius: BorderRadius.circular(12.r),
+                ),
+                actionsAlignment: MainAxisAlignment.center,
+                actions: [
+                  ElevatedButton(
+                    onPressed: isButtonEnabled
+                        ? () =>
+                        Navigator.of(dialogContext).pop({
+                          'nickname': nicknameController.text.trim(),
+                          'isTermsAgreed': isTermsAgreed,
+                        })
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      disabledBackgroundColor: AppColors.backgroundCard,
+                      // 비활성화 시 색상
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      minimumSize: Size(double.infinity, 50.h),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children:[
-                        SizedBox(
-                          width: 32.w,
-                          height: 32.h,
-                          child: Checkbox(
-                            value: isTermsAgreed,
-                            activeColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
-                            onChanged: (value) {
-                              setState(() => isTermsAgreed = value ?? false);
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary, height: 1.4),
-                              children:[
-                                const TextSpan(text: '(필수) '),
-                                TextSpan(
-                                  text: S.of(context).tnc,
-                                  style: const TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
-                                  recognizer: TapGestureRecognizer()..onTap = () async {
-                                    final url = Uri.parse('https://www.notion.so/317b4bde4afa80969249c8caed899e7f?source=copy_link');
-                                    if (await canLaunchUrl(url)) await launchUrl(url);
-                                  },
-                                ),
-                                TextSpan(text: S.of(context).login_and),
-                                TextSpan(
-                                  text: S.of(context).login_privacy,
-                                  style: const TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
-                                  recognizer: TapGestureRecognizer()..onTap = () async {
-                                    final url = Uri.parse('https://your-privacy-url.com');
-                                    if (await canLaunchUrl(url)) await launchUrl(url);
-                                  },
-                                ),
-                                TextSpan(text: S.of(context).login_agree ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Text(S
+                        .of(context)
+                        .login_registr_complte, style: TextStyle(
+                        fontSize: 16.sp, fontWeight: FontWeight.w600)),
                   ),
                 ],
-              ),
-            ),
-            actionsAlignment: MainAxisAlignment.center,
-            actions:[
-              ElevatedButton(
-                onPressed: isButtonEnabled
-                    ? () => Navigator.of(dialogContext).pop({
-                  'nickname': nicknameController.text.trim(),
-                  'isTermsAgreed': isTermsAgreed,
-                })
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  disabledBackgroundColor: AppColors.backgroundCard, // 비활성화 시 색상
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                  minimumSize: Size(double.infinity, 50.h),
-                ),
-                child: Text(S.of(context).login_registr_complte, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
-              ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
 
     // 🎯 다이얼로그 종료 후 결과 처리
@@ -611,12 +679,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   /// 🎯 닉네임 및 약관 동의 업데이트 핸들러
-  Future<void> _handleNicknameUpdate(String nickname, bool isTermsAgreed) async {
+  Future<void> _handleNicknameUpdate(String nickname,
+      bool isTermsAgreed) async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
     try {
-      _showLoadingSnackBar(S.of(context).login_account_setting);
+      _showLoadingSnackBar(S
+          .of(context)
+          .login_account_setting);
 
       // 💡 여기서 setupProfile을 호출할 때 isTermsAgreed를 함께 넘길 수 있도록
       // AuthNotifier의 setupProfile 파라미터를 수정하셔야 합니다.
@@ -628,7 +699,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       result.fold(
         onSuccess: (_) {
           _hideLoadingSnackBar();
-          _showSuccessSnackBar(S.of(context).login_registr_complte);
+          _showSuccessSnackBar(S
+              .of(context)
+              .login_registr_complte);
         },
         onFailure: (error, errorCode) {
           _hideLoadingSnackBar();
@@ -637,7 +710,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       );
     } catch (e) {
       _hideLoadingSnackBar();
-      _showErrorSnackBar(S.of(context).login_network_error);
+      _showErrorSnackBar(S
+          .of(context)
+          .login_network_error);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) _showNicknameDialog(context);
       });
@@ -745,7 +820,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: S.of(context).login_close,
+          label: S
+              .of(context)
+              .login_close,
           textColor: Colors.white,
           onPressed: _hideCurrentSnackBar,
         ),
@@ -753,16 +830,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  /// ✅ 로그인 성공 처리 (개선된 버전)
+  // [삭제 전] Navigator.pushAndRemoveUntil( ... ) 로직 삭제!
+// [변경 후]
   void _handleLoginSuccess(AuthUser user) {
-    debugPrint('[$_logTag] 로그인 성공');
-
-    _showSuccessSnackBar(S.of(context).login_nickname((user.nickname ?? 'User')));
-
-    // 즉시 메인 화면으로 이동
-    if (mounted) {
-      context.go('/main');
-    }
+    debugPrint('[$_logTag] 로그인 성공! 라우터가 메인으로 이동시킵니다.');
+    // 아무것도 안 해도 됩니다! AuthNotifier 상태가 바뀌면 GoRouter가 알아서 /main으로 보냅니다.
   }
 }
 

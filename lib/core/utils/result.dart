@@ -92,11 +92,13 @@ class Result<T> {
 
   /// 🎯 간단한 fold (에러 코드 불필요한 경우)
   R foldSimple<R>({
-    required R Function(T data) onSuccess,
+    required R Function(T? data) onSuccess, // T -> T? 로 변경 (void 허용)
     required R Function(String message) onFailure,
   }) {
-    if (_success && _data != null) {
-      return onSuccess(_data as T);
+    // ❌ 기존: if (_success && _data != null)
+    // ✅ 변경: 성공 여부만 체크합니다!
+    if (_success) {
+      return onSuccess(_data);
     } else {
       return onFailure(_message ?? '알 수 없는 오류');
     }
@@ -144,7 +146,7 @@ class Result<T> {
 
   /// 🎉 성공 시 동작 수행
   Result<T> onSuccess(void Function(T data) action) {
-    if (_success && _data != null) {
+    if (_success ) {
       action(_data as T);
     }
     return this;

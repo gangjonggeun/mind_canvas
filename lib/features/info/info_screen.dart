@@ -617,9 +617,10 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 💰 유료면 코인 아이콘, 무료면 플레이 아이콘
-            Icon(
-              isFree ? Icons.play_arrow : Icons.monetization_on,
-              size: 24,
+            Image.asset(
+              'assets/images/icon/coin_palette_128.webp',
+              width: 24,
+              height: 24,
             ),
             const SizedBox(width: 8),
             Text(

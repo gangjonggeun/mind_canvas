@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ✅ 화풀기 Notifier Import
+import '../../../../generated/l10n.dart';
 import '../providers/anger_vent_notifier.dart';
 
 /// 🔥 AI 화풀기(샌드백) 채팅 페이지
@@ -108,8 +109,8 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'AI 샌드백', // 이름 변경
+               Text(
+                S.of(context).consulting_punchingbag_title, // 이름 변경
                 style: TextStyle(
                   color: Color(0xFF2D3748),
                   fontSize: 16,
@@ -117,7 +118,7 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
                 ),
               ),
               Text(
-                isTyping ? '맞장구 치는 중...' : '준비 완료',
+                isTyping ? S.of(context).consulting_punchingbag_loading : S.of(context).consulting_punchingbag_online,
                 style: TextStyle(
                   color: isTyping
                       ? const Color(0xFFFF5F6D)
@@ -146,7 +147,12 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
       // 🔥 웰컴 메시지: 반말 컨셉
       _buildMessageBubble(
         isFromAi: true,
-        content: '야! 오늘 무슨 일 있었어? 😡\n누가 널 힘들게 했냐? 다 말해봐 내가 같이 욕해줄게!',
+        content: S.of(context).consulting_punchingbag_menu_1,
+        type: MessageType.text,
+      ),
+      _buildMessageBubble(
+        isFromAi: true,
+        content: S.of(context).consulting_punchingbag_menu_2,
         type: MessageType.text,
       ),
       // 🔥 추천 질문: 화풀이용 멘트
@@ -154,7 +160,7 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
         isFromAi: true,
         content: '',
         type: MessageType.suggestions,
-        suggestions: ['🤬 상사 욕 좀 하고 싶어', '😤 다 때려치우고 싶다', '🤯 진짜 너무 짜증나'],
+        suggestions: [S.of(context).consulting_punchingbag_option_1, S.of(context).consulting_punchingbag_option_2, S.of(context).consulting_punchingbag_option_3],
       ),
     ];
 
@@ -294,8 +300,8 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '🔥 버튼을 눌러서 바로 시작해!',
+              Text(
+                S.of(context).consulting_punchingbag_message,
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFFE53E3E), // 붉은 텍스트
@@ -451,8 +457,8 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
                 child: TextField(
                   controller: _messageController,
                   enabled: !isTyping,
-                  decoration: const InputDecoration(
-                    hintText: '하고 싶은 욕 다 써버려...',
+                  decoration:  InputDecoration(
+                    hintText: S.of(context).consulting_punchingbag_enter_message,
                     hintStyle: TextStyle(
                       color: Color(0xFFA0AEC0),
                       fontSize: 15,
@@ -526,14 +532,14 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '옵션',
+           Text(
+              S.of(context).consulting_punchingbag_option,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.refresh, color: Color(0xFFFF6B6B)),
-              title: const Text('대화 초기화 (기억 지우기)'),
+              title:  Text(S.of(context).consulting_punchingbag_reset),
               onTap: () {
                 Navigator.pop(context);
                 // TODO: Notifier에 clear 메서드 만들어서 호출

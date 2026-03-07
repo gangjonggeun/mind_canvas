@@ -52,12 +52,16 @@ class AuthUseCase {
   }
 
   /// 🍎 Apple 로그인 (미구현)
-  Future<Result<AuthResponse>> loginWithApple(String identityToken, {String? fcmToken}) async {
+  Future<Result<AuthResponse>> loginWithApple({
+    required String identityToken,
+    String? deviceId,
+    String? fcmToken
+  })  async {
     try {
       _logLoginAttempt(LoginType.apple);
 
       // Repository에 토큰 전달
-      final result = await _authRepository.loginWithApple(identityToken, fcmToken: fcmToken);
+      final result = await _authRepository.loginWithApple(identityToken, deviceId: deviceId, fcmToken: fcmToken);
 
       return result.fold(
         onSuccess: (authResponse) {
@@ -80,11 +84,15 @@ class AuthUseCase {
   }
 
   /// 👥 게스트 로그인 (미구현)
-  Future<Result<AuthResponse>> loginAsGuest(String languageCode, {String? fcmToken}) async {
+  Future<Result<AuthResponse>> loginAsGuest({
+    required String languageCode,
+    String? deviceId,
+    String? fcmToken
+  })async {
     try {
       _logLoginAttempt(LoginType.guest);
 
-      final result = await _authRepository.loginAsGuest(languageCode, fcmToken: fcmToken);
+      final result = await _authRepository.loginAsGuest(languageCode, deviceId: deviceId, fcmToken: fcmToken);
 
       return result.fold(
         onSuccess: (authResponse) {

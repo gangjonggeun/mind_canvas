@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../../../core/network/page_response.dart';
 import '../../../../core/utils/result.dart';
 import '../../../recommendation/data/dto/post_response.dart';
+import '../../data/models/request/inquiry_request.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../../data/models/response/setup_profile_response.dart';
 
@@ -20,8 +21,11 @@ abstract class ProfileRepository {
     required bool isTermsAgreed,
     File? imageFile,
   });
+  Future<Result<void>> syncRevenueCat();
+  Future<Result<void>> submitInquiry(InquiryRequest request);
+
   Future<Result<bool>> claimAdReward();
-  Future<Result<bool>> verifyPayment(String merchantUid, String portoneId);
+  // Future<Result<bool>> verifyPayment(String merchantUid, String portoneId);
 
   /// 📊 프로필 요약 정보 조회
   Future<Result<ProfileSummaryResponse>> getProfileSummary();

@@ -209,14 +209,15 @@ class _AuthApiDataSource implements AuthApiDataSource {
   }
 
   @override
-  Future<ApiResponse<dynamic>> getCurrentUser(String authorization) async {
+  Future<ApiResponse<UserMeResponse>> getCurrentUser(
+      String authorization) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{r'Authorization': authorization};
     _headers.removeWhere((k, v) => v == null);
     const Map<String, dynamic>? _data = null;
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<ApiResponse<dynamic>>(Options(
+        _setStreamType<ApiResponse<UserMeResponse>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -232,9 +233,9 @@ class _AuthApiDataSource implements AuthApiDataSource {
               _dio.options.baseUrl,
               baseUrl,
             ))));
-    final value = ApiResponse<dynamic>.fromJson(
+    final value = ApiResponse<UserMeResponse>.fromJson(
       _result.data!,
-      (json) => json as dynamic,
+      (json) => UserMeResponse.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }
@@ -254,7 +255,7 @@ class _AuthApiDataSource implements AuthApiDataSource {
     )
             .compose(
               _dio.options,
-              '/api/v1/auth/guest',
+              '/auth/guest',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -285,7 +286,7 @@ class _AuthApiDataSource implements AuthApiDataSource {
     )
             .compose(
               _dio.options,
-              '/api/v1/auth/apple',
+              '/auth/apple',
               queryParameters: queryParameters,
               data: _data,
             )

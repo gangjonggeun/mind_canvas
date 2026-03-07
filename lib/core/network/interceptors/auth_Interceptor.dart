@@ -82,10 +82,6 @@ class AuthInterceptor extends Interceptor {
   Future<void> _forceLogout() async {
     await AuthStorage.clearAll();
 
-    // AuthNotifier를 통해 UI 강제 로그아웃 처리
-    // ref.read(authNotifierProvider.notifier).logout();
 
-    // Todo: 로그인 화면으로 강제 이동시키는 라우팅 로직 (GoRouter 등을 사용 중이라면)
-    // ref.read(routerProvider).go('/login');
   }
 }

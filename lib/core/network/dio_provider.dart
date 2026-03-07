@@ -45,16 +45,16 @@ Dio dio(DioRef ref) {
   dio.interceptors.add(CoinSyncInterceptor(ref));
   dio.interceptors.add(AuthInterceptor(ref: ref, dio: dio));
 
-  // 1. 로깅 인터셉터 (디버그 모드만)
-  dio.interceptors.add(PrettyDioLogger(
-    requestHeader: true,
-    requestBody: true,
-    responseBody: true,
-    responseHeader: false,
-    error: true,
-    compact: true,
-    maxWidth: 90,
-  ));
+  // // 1. 로깅 인터셉터 (디버그 모드만)
+  // dio.interceptors.add(PrettyDioLogger(
+  //   requestHeader: true,
+  //   requestBody: true,
+  //   responseBody: true,
+  //   responseHeader: false,
+  //   error: true,
+  //   compact: true,
+  //   maxWidth: 90,
+  // ));
 
   // 2. ✅ 동적 타임아웃 및 헤더 관리 인터셉터
   dio.interceptors.add(

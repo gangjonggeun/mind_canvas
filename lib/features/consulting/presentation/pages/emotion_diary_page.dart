@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../generated/l10n.dart';
 import '../../data/dto/journal_response.dart';
 import '../providers/journal_notifier.dart';
 
@@ -36,35 +37,35 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
   // bool _showResult = false;
 
   // 🎯 감정일기 질문들 (확장 가능)
-  final List<EmotionQuestion> _questions = [
+  List<EmotionQuestion> get _questions => [
     EmotionQuestion(
       id: 0,
-      question: '오늘 하루, 당신의 마음을 가장 크게 움직인 감정은 무엇인가요?',
-      hint: '기쁨, 짜증, 우울, 편안함 등 지금 느껴지는 감정에 이름을 붙여보세요.',
+      question: S.of(context).diary_q1,
+      hint: S.of(context).diary_hint1,
       emoji: '🌅',
     ),
     EmotionQuestion(
       id: 1,
-      question: '어떤 일이나 상황이 그 감정을 불러일으켰나요?',
-      hint: '기쁨, 슬픔, 분노, 불안 등 구체적으로 표현해주세요',
+      question: S.of(context).diary_q2,
+      hint: S.of(context).diary_hint2,
       emoji: '💭',
     ),
     EmotionQuestion(
       id: 2,
-      question: '그 감정이 생긴 특별한 이유가 있나요?',
-      hint: '어떤 상황이나 사건이 그 감정을 불러일으켰는지 생각해보세요',
+      question: S.of(context).diary_q3,
+      hint: S.of(context).diary_hint3,
       emoji: '🔍',
     ),
     EmotionQuestion(
       id: 3,
-      question: '지금 이 순간 가장 필요한 것은 무엇일까요?',
-      hint: '휴식, 대화, 활동 등 마음이 원하는 것을 적어주세요',
+      question: S.of(context).diary_q4,
+      hint: S.of(context).diary_hint4,
       emoji: '💖',
     ),
     EmotionQuestion(
       id: 4,
-      question: '내일은 어떤 하루가 되었으면 좋겠나요?',
-      hint: '희망이나 기대, 계획 등을 자유롭게 표현해주세요',
+      question: S.of(context).diary_q5,
+      hint: S.of(context).diary_hint5,
       emoji: '🌟',
     ),
   ];
@@ -156,8 +157,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
         children: [
           const CircularProgressIndicator(color: Color(0xFF6B73FF)),
           const SizedBox(height: 24),
-          const Text(
-            "AI가 당신의 하루를 읽고 있어요...",
+           Text(
+            S.of(context).diary_loading,
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF64748B),
@@ -166,7 +167,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
           ),
           const SizedBox(height: 8),
           Text(
-            "잠시만 기다려주세요 ✨",
+            S.of(context).diary_wait,
             style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
           ),
         ],
@@ -184,7 +185,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
         icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
       ),
       title: Text(
-        _showResult ? '📊 감정 분석 결과' : '💭 감정일기 작성',
+        _showResult ? S.of(context).diary_result : S.of(context).diary_report,
         style: const TextStyle(
           color: Color(0xFF2D3748),
           fontSize: 18,
@@ -405,7 +406,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '질문 ${_currentQuestionIndex + 1}',
+              S.of(context).diary_q_inedex(_currentQuestionIndex + 1), 
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -413,7 +414,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
               ),
             ),
             Text(
-              '${(progress * 100).toInt()}% 완료',
+              S.of(context).diary_complete((progress * 100).toInt()), //
               style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
           ],
@@ -523,8 +524,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
         color: Color(0xFF334155),
         height: 1.8,
       ),
-      decoration: const InputDecoration(
-        hintText: '마음속 이야기를 자유롭게 풀어내보세요...',
+      decoration: InputDecoration(
+        hintText: S.of(context).diary_input_text,
         hintStyle: TextStyle(
           color: Color(0xFFCBD5E1),
           fontSize: 17,
@@ -555,8 +556,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                '이전',
+              child:Text(
+                S.of(context).diary_prev,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -583,7 +584,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
               elevation: 0,
             ),
             child: Text(
-              _isLastQuestion() ? '완료' : '다음',
+              _isLastQuestion() ? S.of(context).diary_complete_btn : S.of(context).diary_next_btn,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -999,8 +1000,8 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      "닫기",
+                    child:  Text(
+                      S.of(context).diary_close,
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -1025,37 +1026,37 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
     switch (analysis.primaryEmotion) {
       case EmotionType.JOY:
         emotionEmoji = '😊';
-        emotionText = '기쁨';
+        emotionText = S.of(context).diary_emotion_delight;
         emotionColor = Colors.green;
         break;
       case EmotionType.SADNESS:
         emotionEmoji = '😢';
-        emotionText = '슬픔';
+        emotionText = S.of(context).diary_emotion_sad;
         emotionColor = Colors.blue;
         break;
       case EmotionType.ANGER:
         emotionEmoji = '😡';
-        emotionText = '분노';
+        emotionText = S.of(context).diary_emotion_angry;
         emotionColor = Colors.red;
         break;
       case EmotionType.ANXIETY:
         emotionEmoji = '😟';
-        emotionText = '불안';
+        emotionText = S.of(context).diary_emotion_anxious;
         emotionColor = Colors.orange;
         break;
       case EmotionType.TIREDNESS:
         emotionEmoji = '😴';
-        emotionText = '무기력';
+        emotionText = S.of(context).diary_emotion_let;
         emotionColor = Colors.deepPurple;
         break;
       case EmotionType.NEUTRAL:
         emotionEmoji = '😐';
-        emotionText = '평온';
+        emotionText = S.of(context).diary_emotion_netral;
         emotionColor = Colors.grey;
         break;
       default:
         emotionEmoji = '🤔';
-        emotionText = '미확인';
+        emotionText = S.of(context).diary_emotion_unkonown;
         emotionColor = Colors.black54;
         break;
     }
@@ -1082,7 +1083,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
               Text(emotionEmoji, style: const TextStyle(fontSize: 24)), // 이모티콘
               const SizedBox(width: 8),
               Text(
-                "오늘의 감정: $emotionText", // ✅ 이모티콘과 텍스트 사용
+                S.of(context).diary_emotion_text(emotionText), // ✅ 이모티콘과 텍스트 사용 emotionText
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1095,7 +1096,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
           const Divider(),
           const SizedBox(height: 12),
           Text(
-            "AI 피드백", // ✅ 제목 변경
+            S.of(context).diary_result_title, // ✅ 제목 변경
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],

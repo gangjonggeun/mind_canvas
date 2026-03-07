@@ -22,6 +22,11 @@ _$AuthResponseImpl _$$AuthResponseImplFromJson(Map json) => $checkedCreate(
           nickname: $checkedConvert('nickname', (v) => v as String?),
           coins: $checkedConvert('coins', (v) => (v as num?)?.toInt() ?? 0),
           userId: $checkedConvert('userId', (v) => (v as num).toInt()),
+          loginType: $checkedConvert(
+              'loginType',
+              (v) =>
+                  $enumDecodeNullable(_$LoginTypeEnumMap, v) ??
+                  LoginType.google),
         );
         return val;
       },
@@ -44,4 +49,11 @@ Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
       'nickname': instance.nickname,
       'coins': instance.coins,
       'userId': instance.userId,
+      'loginType': _$LoginTypeEnumMap[instance.loginType]!,
     };
+
+const _$LoginTypeEnumMap = {
+  LoginType.google: 'GOOGLE',
+  LoginType.apple: 'APPLE',
+  LoginType.guest: 'GUEST',
+};

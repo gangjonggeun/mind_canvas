@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/dto/comprehensive_analysis_response.dart';
 import '../notifier/comprehensive_analysis_notifier.dart';
@@ -104,10 +105,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ComprehensiveAnalysisScreen()),
-        );
+        context.pushNamed('comprehensive_analysis');
       },
       child: Container(
         width: double.infinity,

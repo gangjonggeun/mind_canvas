@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 import '../../../../core/network/api_response_dto.dart';
 import '../../../../core/network/page_response.dart';
 import '../../../recommendation/data/dto/post_response.dart';
+import '../models/request/inquiry_request.dart';
 import '../models/request/setup_profile_request.dart';
 import '../models/response/profile_dto.dart';
 import '../models/response/setup_profile_response.dart';
@@ -15,6 +16,17 @@ abstract class ProfileApiDataSource {
   factory ProfileApiDataSource(Dio dio, {String baseUrl}) =
       _ProfileApiDataSource;
 
+  @POST('/payments/sync') // 서버의 결제 동기화 엔드포인트와 맞추세요
+  Future<ApiResponse<dynamic>> syncRevenueCat(
+      @Header('Authorization') String token,
+      );
+
+  @POST('/support/inquiry')
+  Future<ApiResponse<dynamic>> submitInquiry(
+      @Header('Authorization') String token,
+      @Body() InquiryRequest request,
+      );
+
   /// 🔄 프로필 업데이트 (닉네임 등)
   @PATCH('/profile')
   // @MultiPart() // FormData를 쓰면 @MultiPart 생략 가능 (Dio가 알아서 처리)
@@ -23,13 +35,13 @@ abstract class ProfileApiDataSource {
       @Body() FormData body, // 👈 여기가 핵심 변경점
       );
 
-  @POST('/api/v1/payments/ad-reward')
+  @POST('/payments/ad-reward')
   Future<ApiResponse<dynamic>> claimAdReward(
       @Header('Authorization') String token,
       );
 
 
-  @POST('/api/v1/payments/verify')
+  @POST('/payments/verify')
   Future<ApiResponse<dynamic>> verifyPayment(
       @Header('Authorization') String token,
       @Body() Map<String, dynamic> body,

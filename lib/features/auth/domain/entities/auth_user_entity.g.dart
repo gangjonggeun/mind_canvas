@@ -11,17 +11,19 @@ _$AuthUserImpl _$$AuthUserImplFromJson(Map json) => $checkedCreate(
       json,
       ($checkedConvert) {
         final val = _$AuthUserImpl(
+          userId: $checkedConvert('user_id', (v) => (v as num).toInt()),
           nickname: $checkedConvert('nickname', (v) => v as String?),
           loginType: $checkedConvert(
               'login_type', (v) => $enumDecode(_$LoginTypeEnumMap, v)),
         );
         return val;
       },
-      fieldKeyMap: const {'loginType': 'login_type'},
+      fieldKeyMap: const {'userId': 'user_id', 'loginType': 'login_type'},
     );
 
 Map<String, dynamic> _$$AuthUserImplToJson(_$AuthUserImpl instance) =>
     <String, dynamic>{
+      'user_id': instance.userId,
       'nickname': instance.nickname,
       'login_type': _$LoginTypeEnumMap[instance.loginType]!,
     };
