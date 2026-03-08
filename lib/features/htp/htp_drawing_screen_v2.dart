@@ -27,7 +27,7 @@ enum PenType {
   marker('마커', Icons.highlight, 2.5, 0.0), // 마커 (굵기 일정)
   pencil('연필', Icons.create, 0.6, 0.1), // 연필 (얇고 거의 일정함)
   spray('스프레이', Icons.scatter_plot, 3.0, 0.0),
-  crayon('크레파스', Icons.draw, 2.0, 0.2),
+  // crayon('크레파스', Icons.draw, 2.0, 0.2),
   eraser('지우개', Icons.cleaning_services_rounded, 4.0, 0.0);
 
   final String name;
@@ -168,7 +168,7 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
   Widget _buildWoodenToolbar() {
     return Positioned(
-      bottom: 40,
+      bottom: 20,
       left: 24,
       right: 24,
       child: Container(
@@ -696,7 +696,7 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
   HtpType _getHtpType(String typeString) {
     switch (typeString) {
-      // Basic & Premium
+    // Basic & Premium (기존 HTP)
       case 'house':
         return HtpType.house;
       case 'tree':
@@ -707,6 +707,8 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
         return HtpType.man;
       case 'woman':
         return HtpType.woman;
+
+    // 기존 진단
       case 'starrySea':
         return HtpType.starrySea;
       case 'pitr':
@@ -714,7 +716,27 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
       case 'fishbowl':
         return HtpType.fishbowl;
 
-      // 예외 처리
+    // 신규 진단(Test)
+      case 'road':
+        return HtpType.road;
+      case 'bridge':
+        return HtpType.bridge;
+      case 'magicShop':
+        return HtpType.magicShop;
+      case 'sinkingShip':
+        return HtpType.sinkingShip;
+
+    // 신규 치료(Therapy)
+      case 'scribble':
+        return HtpType.scribble;
+      case 'weather':
+        return HtpType.weather;
+      case 'mandala':
+        return HtpType.mandala;
+      case 'dewOnLeaf':
+        return HtpType.dewOnLeaf;
+
+    // 예외 처리
       default:
         print("⚠️ 알 수 없는 타입: $typeString -> 기본값 house로 처리됨");
         return HtpType.house;
@@ -730,16 +752,36 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
           isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('${widget.title}',
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                // 🤎 나무 이젤과 어울리는 딥 브라운 투명도 조절
+                const Color(0xFF451A03).withOpacity(0.35),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        title: Text(
+          '${widget.title}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white, // 배경이 실사라 흰색 글씨가 가장 잘 보입니다
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-              icon: const Icon(Icons.undo),
+              icon:  Icon(Icons.undo),
               onPressed: _strokes.value.isNotEmpty ? _undo : null),
           IconButton(
-              icon: const Icon(Icons.redo),
+              icon:  Icon(Icons.redo),
               onPressed: _undoHistory.isNotEmpty ? _redo : null),
           IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
@@ -764,10 +806,10 @@ class _HtpDrawingScreenV2State extends State<HtpDrawingScreenV2>
 
           // 🎨 그리기 영역 (핵심 최적화 부분)
           Positioned(
-            top: 20, // 위쪽 여백은 적당히
-            left: 20, right: 20,
+            top: 110, // 위쪽 여백은 적당히
+            left: 15, right: 15,
             child: AspectRatio(
-              aspectRatio: 3 / 4,
+              aspectRatio: 0.65,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -915,31 +957,6 @@ class FreehandPainter extends CustomPainter {
           }
         }
         continue; // 스프레이는 밑의 perfect_freehand 선 그리기를 건너뜀
-      }
-      if (stroke.penType == PenType.crayon) {
-        final double radius = stroke.baseSize * 0.8; // 스프레이보다 작게
-        final paint = Paint()
-          ..color = stroke.color.withOpacity(0.6) // 약간 투명도를 주어야 겹쳤을 때 크레파스 느낌
-          ..blendMode = BlendMode.multiply
-          ..strokeCap = StrokeCap.round;
-
-        for (var p in stroke.points) {
-          // 좌표값을 시드로 사용하여 입자 위치 고정
-          final random = Random((p.x * 1000).toInt() ^ (p.y * 1000).toInt());
-
-          // 스프레이보다 더 밀도 있게 (한 점당 15개 정도)
-          for (int i = 0; i < 15; i++) {
-            final offsetX = (random.nextDouble() * 2 - 1) * radius;
-            final offsetY = (random.nextDouble() * 2 - 1) * radius;
-
-            // 크레파스 느낌을 위해 점 크기를 랜덤하게 (1.0 ~ 2.5)
-            final size = 1.0 + random.nextDouble() * 1.5;
-
-            canvas.drawCircle(
-                Offset(p.x + offsetX, p.y + offsetY), size, paint);
-          }
-        }
-        continue; // 크레파스도 패스 그리기를 건너뜀
       }
       // 🖋️ 기존 일반 펜/붓 렌더링 로직 (수정 없음)
       final options = StrokeOptions(

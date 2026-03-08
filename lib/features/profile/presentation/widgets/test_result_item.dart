@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../home/data/repositories/test_repository_provider.dart';
+import '../../../home/domain/usecases/test_use_case.dart';
 import '../../../psy_result/data/mapper/test_result_mapper.dart';
 import '../../../psy_result/presentation/psy_result_screen.dart';
 import '../../../psy_result/presentation/screen/psy_result_screen2.dart';
@@ -9,8 +10,13 @@ import '../providers/my_test_results_notifier.dart'; // DTO 경로 확인
 
 class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
   final MyTestResultSummaryResponse result;
+  final Future<void> Function() onDelete;
 
-  const TestResultItem({super.key, required this.result});
+  const TestResultItem({
+    super.key,
+    required this.result,
+    required this.onDelete, // ✅ 필수 전달
+  });
 
   // 🎨 태그 기반 해시코드 컬러 로직
   Color _getCategoryColor(String tag) {
@@ -99,20 +105,29 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
               ),
             ),
             // 오른쪽 상태 배지
-            Column(
+            Row(
               children: [
+                // 1. 상태 배지
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('분석 완료', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF4A5568))),
+                  child: const Text(
+                      '분석 완료',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF4A5568))
+                  ),
                 ),
-                // ✅ 삭제 버튼 추가
+                const SizedBox(width: 4), // 배지와 아이콘 사이 간격
+
+                // 2. 삭제 버튼
                 IconButton(
-                  icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
+                  // 가로로 배치했으니 점 3개가 가로인 아이콘이 더 어울릴 수 있습니다 (Icons.more_horiz)
+                  icon: const Icon(Icons.more_horiz, size: 20, color: Colors.grey),
                   onPressed: () => _showDeleteDialog(context, ref),
+                  padding: EdgeInsets.zero, // 기본 패딩 제거
+                  constraints: const BoxConstraints(), // 기본 크기 제한 제거
                 ),
               ],
             ),
@@ -128,22 +143,28 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("결과 삭제"),
-        content: const Text("정말 이 심리테스트 결과를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다."),
+        content: const Text("정말 이 심리테스트 결과를 삭제하시겠습니까?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("취소")),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // 다이얼로그 닫기
+              Navigator.pop(context);
 
-              // ✅ Notifier의 deleteResult 호출 (위에서 만든 그 함수!)
-              await ref.read(myTestResultsNotifierProvider.notifier).deleteResult(result.id);
-
-              // 삭제 후 사용자 피드백 (선택)
+              await onDelete(); // ✅ 부모가 넘겨준 삭제 로직을 실행
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("삭제되었습니다.")),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("삭제되었습니다.")));
               }
+              // resultData.fold(
+              //   onSuccess: (_) {
+              //     // ✅ 2. 삭제 성공 시 콜백 실행! (이게 핵심)
+              //     onDeleteSuccess?.call();
+              //
+              //     if (context.mounted) {
+              //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("삭제되었습니다.")));
+              //     }
+              //   },
+              //   onFailure: (msg, _) => print("삭제 실패: $msg"),
+              // );
             },
             child: const Text("삭제", style: TextStyle(color: Colors.red)),
           ),

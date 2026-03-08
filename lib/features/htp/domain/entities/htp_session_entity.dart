@@ -254,12 +254,27 @@ class HtpDrawingEntity {
 
 /// HTP 그림 타입
 enum HtpType {
+  // 기본 HTP
   house,
   tree,
   person,
-  starrySea,
-  pitr, //빗속의 사람
-  fishbowl, // 어항
   man,
-  woman
+  woman,
+
+  // 기존 진단
+  starrySea, // 별이 빛나는 밤바다
+  pitr,      // 빗속의 사람
+  fishbowl,  // 어항
+
+  // 신규 진단(Test)
+  road,        // 길
+  bridge,      // 다리
+  magicShop,   // 마법 상점
+  sinkingShip, // 가라앉는 배
+
+  // 신규 치료(Therapy)
+  scribble,  // 난화
+  weather,   // 날씨와 기분 풍경
+  mandala,   // 만다라
+  dewOnLeaf  // 나뭇잎 위의 이슬
 }

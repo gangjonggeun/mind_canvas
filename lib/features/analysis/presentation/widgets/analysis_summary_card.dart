@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../data/dto/comprehensive_analysis_response.dart';
 import '../notifier/comprehensive_analysis_notifier.dart';
 import 'comprehensive_analysis_screen.dart';
@@ -23,7 +24,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text('analysis.loading'.tr(), style: const TextStyle(color: Colors.grey)),
+            Text(S.of(context).analysis_summary_loading, style: const TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -41,7 +42,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => ref.read(comprehensiveAnalysisNotifierProvider.notifier).loadAnalysisReport(),
-              child: Text('analysis.retry'.tr()),
+              child: Text(S.of(context).analysis_summary_retry),
             ),
           ],
         ),
@@ -56,13 +57,13 @@ class AnalysisSummaryCard extends ConsumerWidget {
           children: [
             const Icon(Icons.auto_awesome, size: 40, color: Color(0xFF667EEA)),
             const SizedBox(height: 12),
-            const Text(
-              "나의 입체적인 성격이 궁금하다면?",
+            Text(
+              S.of(context).analysis_summary_nodata_title,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
-            const Text(
-              "여러 테스트를 통한 성격 데이터를 AI가 통합 분석합니다.",
+            Text(
+              S.of(context).analysis_summary_nodata_content,
               style: TextStyle(fontSize: 12, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -78,7 +79,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: const Text("AI 종합 분석 받기"),
+              child:  Text(S.of(context).analysis_summary_start_btn),
             ),
           ],
         ),
@@ -136,25 +137,25 @@ class AnalysisSummaryCard extends ConsumerWidget {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome, color: Colors.white, size: 14),
                       SizedBox(width: 6),
                       Text(
-                        "나의 심리 분석",
+                        S.of(context).analysis_summary_my_psydata,
                         style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
                 // 오른쪽 자세히 보기
-                const Padding(
+                 Padding(
                   padding: EdgeInsets.only(top: 2), // 뱃지와 시각적 중앙 맞춤
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text("자세히 보기", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text(S.of(context).analysis_summary_show_detail, style: TextStyle(color: Colors.white70, fontSize: 12)),
                       Icon(Icons.chevron_right, color: Colors.white70, size: 16),
                     ],
                   ),
@@ -249,10 +250,10 @@ class AnalysisSummaryCard extends ConsumerWidget {
 
   // ✅ [수정/통합] 구매 확정 다이얼로그 (초기 분석 & 다시 받기 공용)
   void _showPurchaseDialog(BuildContext context, WidgetRef ref, {required bool isRefresh}) {
-    final title = isRefresh ? "분석 다시 받기" : "AI 종합 분석";
+    final title = isRefresh ? S.of(context).analysis_summary_retry_analysis : S.of(context).analysis_summary_analysis;
     final message = isRefresh
-        ? "기존 분석 결과는 삭제되고 새로운 데이터로 다시 분석합니다."
-        : "나의 데이터를 바탕으로 심층 분석 보고서를 생성합니다.";
+        ? S.of(context).analysis_summary_info_1
+        : S.of(context).analysis_summary_info2;
 
     showDialog(
       context: context,
@@ -265,24 +266,24 @@ class AnalysisSummaryCard extends ConsumerWidget {
           children: [
             Text(message),
             const SizedBox(height: 12),
-            const Row(
+            Row(
               children: [
                 Icon(Icons.monetization_on, color: Colors.orange, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  "20 코인이 소모됩니다.",
+                  S.of(context).analysis_summary_ink,
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            const Text("진행하시겠습니까?", style: TextStyle(color: Colors.grey)),
+            Text(S.of(context).analysis_summary_continue, style: TextStyle(color: Colors.grey)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("취소", style: TextStyle(color: Colors.grey)),
+            child:  Text(S.of(context).analysis_summary_cancel, style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -299,7 +300,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
               backgroundColor: const Color(0xFF667EEA),
               foregroundColor: Colors.white,
             ),
-            child: Text(isRefresh ? "다시 받기" : "분석 시작"),
+            child: Text(isRefresh ? S.of(context).analysis_summary_retry : S.of(context).analysis_summary_start_btn),
           ),
         ],
       ),
@@ -312,31 +313,31 @@ class AnalysisSummaryCard extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("분석 다시 받기"),
-        content: const Column(
+        title: Text(S.of(context).analysis_summary_retry_analysis),
+        content:  Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("기존 분석 결과는 삭제되고 새로운 데이터로 다시 분석합니다."),
+            Text(S.of(context).analysis_summary_info_1),//
             SizedBox(height: 12),
             Row(
               children: [
                 Icon(Icons.monetization_on, color: Colors.orange, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  "20 코인이 소모됩니다.",
+                  S.of(context).analysis_summary_ink,
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
                 ),
               ],
             ),
             SizedBox(height: 8),
-            Text("진행하시겠습니까?", style: TextStyle(color: Colors.grey)),
+            Text(S.of(context).analysis_summary_continue, style: TextStyle(color: Colors.grey)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("취소", style: TextStyle(color: Colors.grey)),
+            child:  Text(S.of(context).analysis_summary_cancel, style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -348,7 +349,7 @@ class AnalysisSummaryCard extends ConsumerWidget {
               backgroundColor: const Color(0xFF667EEA),
               foregroundColor: Colors.white,
             ),
-            child: const Text("다시 받기"),
+            child:  Text(S.of(context).analysis_summary_retry),
           ),
         ],
       ),

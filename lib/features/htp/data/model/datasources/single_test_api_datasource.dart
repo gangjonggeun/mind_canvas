@@ -63,4 +63,12 @@ class SingleTestApiDataSource {
 
   Future<ApiResponse<TestResultResponse>> analyzeFishbowl(File image, String json, String token) =>
       _analyze(path: '/analyze/fishbowl', imageFile: image, requestJson: json, accessToken: token);
+
+  Future<ApiResponse<TestResultResponse>> analyzeGeneral(
+      String path,
+      File image,
+      String json,
+      String token
+      ) => _analyze(path: path, imageFile: image, requestJson: json, accessToken: token);
+
 }

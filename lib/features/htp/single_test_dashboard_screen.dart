@@ -77,6 +77,130 @@ class _SingleTestDashboardScreenState
             PdiQuestion(id: 'q5', questionText: '물고기 가족들은 어항 벽 너머 어디를 보고 있나요?'),
           ]
         };
+
+
+      case SingleTestType.sinkingShip:
+        return {
+          'title': '가라앉는 배',
+          'desc': '바다 한가운데서 가라앉고 있는 배와 그 주변 상황을 그려보세요.',
+          'icon': Icons.directions_boat_rounded, // 배 모양 아이콘
+          'color': const Color(0xFF2C5282), // 깊고 어두운 바다의 네이비
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '이 배는 왜 가라앉고 있나요? (암초, 폭풍, 고장 등)'),
+            PdiQuestion(id: 'q2', questionText: '배 안에는 누가, 혹은 무엇이 타고 있나요?'),
+            PdiQuestion(id: 'q3', questionText: '구명보트나 구명조끼는 충분히 준비되어 있나요?'),
+            PdiQuestion(id: 'q4', questionText: '이 상황에서 구조대가 오고 있나요? 온다면 언제쯤 도착할까요?'),
+            PdiQuestion(id: 'q5', questionText: '가라앉는 배를 지켜보는 당신의 마음은 어떤가요?'),
+          ]
+        };
+
+
+      case SingleTestType.dewOnLeaf:
+        return {
+          'title': '나뭇잎 위의 이슬',
+          'desc': '나뭇잎 위에 맺힌 투명한 아침 이슬 한 방울을 그려주세요.',
+          'icon': Icons.water_drop_rounded, // 물방울 아이콘
+          'color': const Color(0xFF48BB78), // 싱그러운 나뭇잎의 그린
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '이 이슬은 방금 맺힌 건가요, 아니면 밤새 맺혀 있던 건가요?'),
+            PdiQuestion(id: 'q2', questionText: '이슬은 나뭇잎 위에 머물러 있는 지금, 평온해 보이나요 아니면 불안해 보이나요?'),
+            PdiQuestion(id: 'q3', questionText: '이슬 안에 세상의 어떤 풍경이 비치고 있나요?'),
+            PdiQuestion(id: 'q4', questionText: '햇빛이 강해지거나 바람이 불면 이 이슬은 어떻게 될까요?'),
+            PdiQuestion(id: 'q5', questionText: '이 이슬 방울에게 조심스럽게 해주고 싶은 말이 있다면 무엇인가요?'),
+          ]
+        };
+
+      case SingleTestType.road:
+        return {
+          'title': '길 (Road)',
+          'desc': '어디론가 이어지는 길을 자유롭게 그려주세요.',
+          'icon': Icons.edit_road_rounded, // 또는 alt_route
+          'color': const Color(0xFFD69E2E), // 흙길을 연상시키는 따뜻한 옐로우브라운
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '이 길은 어디에서 시작해서 어디로 향하고 있나요?'),
+            PdiQuestion(id: 'q2', questionText: '이 길을 걷고 있다면, 지금 앞으로 가고 있나요 아니면 뒤돌아보고 있나요?'),
+            PdiQuestion(id: 'q3', questionText: '길 끝에는 무엇이 기다리고 있을까요?'),
+            PdiQuestion(id: 'q4', questionText: '길을 걷다가 장애물을 만난다면 무엇일까요? 어떻게 지나갈 건가요?'),
+            PdiQuestion(id: 'q5', questionText: '이 길 위에서 함께 걷고 싶은 사람이 있다면 누구인가요?'),
+          ]
+        };
+
+      case SingleTestType.bridge:
+        return {
+          'title': '다리 (Bridge)',
+          'desc': '무언가를 연결하는 다리와 그 주변 풍경을 그려주세요.',
+          'icon': Icons.architecture_rounded, // 다리 모양과 어울리는 아이콘
+          'color': const Color(0xFF718096), // 견고한 느낌의 쿨그레이
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '이 다리는 무엇과 무엇을 연결해 주고 있나요?'),
+            PdiQuestion(id: 'q2', questionText: '다리 아래에는 무엇이 있나요? (예: 강, 절벽, 도로 등)'),
+            PdiQuestion(id: 'q3', questionText: '이 다리는 얼마나 튼튼한가요? 흔들리지는 않나요?'),
+            PdiQuestion(id: 'q4', questionText: '누군가 다리 건너편에서 당신을 기다리고 있다면 누구일까요?'),
+            PdiQuestion(id: 'q5', questionText: '다리를 다 건너고 나면 당신의 기분은 어떨 것 같나요?'),
+          ]
+        };
+
+      case SingleTestType.magicShop:
+        return {
+          'title': '마법 상점',
+          'desc': '무엇이든 팔고 살 수 있는 신비한 마법 상점을 그려보세요.',
+          'icon': Icons.storefront_rounded, // 또는 auto_awesome
+          'color': const Color(0xFF9F7AEA), // 신비로운 보라색
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '이 마법 상점에서는 주로 어떤 물건을 팔고 있나요?'),
+            PdiQuestion(id: 'q2', questionText: '당신은 이곳에서 무엇을 사고 싶나요?'),
+            PdiQuestion(id: 'q3', questionText: '원하는 것을 사기 위해, 당신이 가진 것 중 무엇을 지불해야 하나요?'),
+            PdiQuestion(id: 'q4', questionText: '상점의 주인은 어떤 모습이고, 당신에게 어떤 말을 건넸나요?'),
+            PdiQuestion(id: 'q5', questionText: '물건을 사고 상점을 나서는 당신의 발걸음은 어떤가요?'),
+          ]
+        };
+
+    // ==========================================
+    // 치료(Therapy) 탭 추가 항목
+    // ==========================================
+      case SingleTestType.scribble:
+        return {
+          'title': '난화 (Scribble)',
+          'desc': '눈을 감고 화면에 마음껏 선을 휘갈긴 후, 그 안에서 떠오르는 모양을 찾아 완성해 보세요.',
+          'icon': Icons.gesture_rounded,
+          'color': const Color(0xFFED8936), // 에너지가 느껴지는 오렌지
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '선을 막 휘갈길 때 기분이 어땠나요? (답답함, 시원함 등)'),
+            PdiQuestion(id: 'q2', questionText: '어지러운 선들 속에서 어떤 모양이나 이미지를 발견했나요?'),
+            PdiQuestion(id: 'q3', questionText: '이 그림에 제목을 붙여준다면 무엇이라고 짓고 싶나요?'),
+            PdiQuestion(id: 'q4', questionText: '그려진 대상이 당신에게 하고 싶은 말이 있다면 무엇일까요?'),
+          ]
+        };
+
+      case SingleTestType.weather:
+        return {
+          'title': '날씨와 기분 풍경',
+          'desc': '지금 당신의 마음속 날씨는 어떤가요? 풍경으로 표현해 보세요.',
+          'icon': Icons.cloud_circle_rounded,
+          'color': const Color(0xFF4FD1C5), // 맑고 상쾌한 틸(Teal) 색상
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '그림 속 날씨는 현재 어떤 상태인가요? (맑음, 비, 폭풍 등)'),
+            PdiQuestion(id: 'q2', questionText: '이 날씨는 언제부터 시작되었나요?'),
+            PdiQuestion(id: 'q3', questionText: '그림 속에 당신이 있다면 어디에 있고, 무엇을 하고 있나요?'),
+            PdiQuestion(id: 'q4', questionText: '조금 뒤, 이 풍경의 날씨는 어떻게 변할 것 같나요?'),
+            PdiQuestion(id: 'q5', questionText: '이 날씨에 가장 필요한 물건이나 사람이 있다면 무엇일까요?'),
+          ]
+        };
+
+      case SingleTestType.mandala:
+        return {
+          'title': '만다라 (Mandala)',
+          'desc': '안전하고 동그란 원 안에 당신의 마음을 자유롭게 채워보세요.',
+          'icon': Icons.filter_vintage_rounded, // 꽃 모양의 아이콘으로 만다라 상징
+          'color': const Color(0xFFF687B3), // 마음을 따뜻하게 안아주는 핑크
+          'questions':[
+            PdiQuestion(id: 'q1', questionText: '원의 중심(가운데)에는 무엇을 그렸나요? 혹은 어떤 색을 칠했나요?'),
+            PdiQuestion(id: 'q2', questionText: '그림을 그릴 때 원 안에서 밖으로 나갔나요, 아니면 밖에서 안으로 들어왔나요?'),
+            PdiQuestion(id: 'q3', questionText: '원 안을 채우면서 마음이 어떻게 변했나요?'),
+            PdiQuestion(id: 'q4', questionText: '원의 테두리는 당신에게 어떤 느낌을 주나요? (보호받는 느낌, 답답한 느낌 등)'),
+            PdiQuestion(id: 'q5', questionText: '완성된 이 만다라의 제목을 지어주세요.'),
+          ]
+        };
     }
   }
 

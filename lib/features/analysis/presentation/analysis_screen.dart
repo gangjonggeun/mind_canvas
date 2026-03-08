@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/features/analysis/presentation/widgets/analysis_summary_card.dart';
 import '../../../core/widgets/common_sliver_app_bar.dart';
+import '../../../generated/l10n.dart';
 import '../data/dto/psychological_profile_response.dart';
 import '../domain/entities/analysis_data.dart';
 import 'notifier/user_analysis_notifier.dart';
@@ -23,16 +24,16 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
   // final AnalysisData _analysisData = AnalysisSampleData.sampleAnalysisData;
 
   // 에니어그램 UI 메타데이터 (유형 1~9)
-  static final Map<int, Map<String, dynamic>> _enneagramMetadata = {
-    1: {'name': '개혁가', 'emoji': Icons.balance, 'color': Color(0xFFEF5350)}, // 완벽, 균형
-    2: {'name': '조력가', 'emoji': Icons.favorite, 'color': Color(0xFFAB47BC)}, // 사랑, 도움
-    3: {'name': '성취가', 'emoji': Icons.emoji_events, 'color': Color(0xFFFFA726)}, // 성취, 트로피
-    4: {'name': '예술가', 'emoji': Icons.palette, 'color': Color(0xFF7E57C2)}, // 독창성
-    5: {'name': '탐구자', 'emoji': Icons.psychology, 'color': Color(0xFF42A5F5)}, // 지식, 뇌
-    6: {'name': '충실가', 'emoji': Icons.security, 'color': Color(0xFF26C6DA)}, // 안전, 보호
-    7: {'name': '열정가', 'emoji': Icons.rocket_launch, 'color': Color(0xFFD4E157)}, // 모험, 재미
-    8: {'name': '도전가', 'emoji': Icons.local_fire_department, 'color': Color(0xFFFF7043)}, // 힘, 불
-    9: {'name': '평화주의자', 'emoji': Icons.spa, 'color': Color(0xFF66BB6A)}, // 평화, 잎
+   Map<int, Map<String, dynamic>> get _enneagramMetadata => {
+    1: {'name': S.of(context).analysis_eneagram_type1, 'emoji': Icons.balance, 'color': Color(0xFFEF5350)}, // 완벽, 균형
+    2: {'name': S.of(context).analysis_eneagram_type2, 'emoji': Icons.favorite, 'color': Color(0xFFAB47BC)}, // 사랑, 도움
+    3: {'name': S.of(context).analysis_eneagram_type3, 'emoji': Icons.emoji_events, 'color': Color(0xFFFFA726)}, // 성취, 트로피
+    4: {'name': S.of(context).analysis_eneagram_type4, 'emoji': Icons.palette, 'color': Color(0xFF7E57C2)}, // 독창성
+    5: {'name': S.of(context).analysis_eneagram_type5, 'emoji': Icons.psychology, 'color': Color(0xFF42A5F5)}, // 지식, 뇌
+    6: {'name': S.of(context).analysis_eneagram_type6, 'emoji': Icons.security, 'color': Color(0xFF26C6DA)}, // 안전, 보호
+    7: {'name': S.of(context).analysis_eneagram_type7, 'emoji': Icons.rocket_launch, 'color': Color(0xFFD4E157)}, // 모험, 재미
+    8: {'name': S.of(context).analysis_eneagram_type8, 'emoji': Icons.local_fire_department, 'color': Color(0xFFFF7043)}, // 힘, 불
+    9: {'name': S.of(context).analysis_eneagram_type9, 'emoji': Icons.spa, 'color': Color(0xFF66BB6A)}, // 평화, 잎
   };
 
   @override
@@ -104,7 +105,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
               onPressed: () => ref
                   .read(userAnalysisNotifierProvider.notifier)
                   .loadMyProfile(),
-              child: const Text('다시 시도'),
+              child: Text(S.of(context).analysis_retry),
             ),
           ],
         ),
@@ -129,8 +130,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            const CommonSliverAppBar(
-              title: '나의 성격 분석',
+            CommonSliverAppBar(
+              title: S.of(context).analysis_mydata,
               subtitle: '심리테스트를 할수록 정확해지는 분석',
               icon: Icons.pie_chart_rounded,
             ),
@@ -176,13 +177,13 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     // 데이터 없음 -> 검사 유도
     else {
       return _buildEmptyStateCard(
-        title: "16인지 분석",
-        description: "나의 에너지는 어디로 향할까요?\n4가지 지표를 통해 나의 성격 유형을 알아보세요.",
+        title: S.of(context).analysis_mbti_title,
+        description: S.of(context).analysis_description,
         icon: Icons.psychology_outlined,
-        buttonText: "성향 분석 하러가기",
+        buttonText: S.of(context).analysis_mbti_btn,
         colors: [const Color(0xFF667EEA), Color(0xFF764BA2)],
         onTap: () {
-          print("MBTI 성향 검사 이동");
+          print("16인지 분석 이동");
         },
       );
     }
@@ -198,10 +199,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     // 데이터가 없는 경우
     else {
       return _buildEmptyStateCard(
-        title: "Big 5 성격 분석",
-        description: "심리학계에서 가장 신뢰받는 5가지 성격 요인을 통해\n나의 본질적인 성향을 파악해보세요.",
+        title: S.of(context).analysis_big5_title,
+        description: S.of(context).analysis_big5_description,
         icon: Icons.pie_chart_outline,
-        buttonText: "Big 5 검사하기",
+        buttonText: S.of(context).analysis_big5_btn,
         colors: [const Color(0xFFFF7043), Color(0xFFE64A19)],
         onTap: () {
           // TODO: Big5 검사 페이지로 이동
@@ -218,10 +219,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
       return _buildTopEnneagramTypes(profile.enneagram!);
     } else {
       return _buildEmptyStateCard(
-        title: "9가지 성격 유형",
-        description: "9가지 성격 유형 중 나는 어디에 속할까요?\n나의 무의식적인 동기와 행동 패턴을 발견하세요.",
+        title: S.of(context).analysis_eneagram_title,
+        description: S.of(context).analysis_eneagram_description,
         icon: Icons.people_outline,
-        buttonText: "9가지 성격 유형 검사하기",
+        buttonText: S.of(context).analysis_eneagram_btn,
         colors: [const Color(0xFF4CAF50), Color(0xFF388E3C)],
         onTap: () {
           // TODO: 에니어그램 검사 페이지로 이동
@@ -566,8 +567,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                 ),
               ),
               const SizedBox(width: 24),
-              const Text(
-                '16 인지기능 지표',
+               Text(
+                S.of(context).analysis_mbti_data,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -653,11 +654,11 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
 
     // 타입 설명 맵핑 (기존 유지)
     String getTypeDesc(String type) {
-      const map = {
-        'E': '외향형', 'I': '내향형',
-        'S': '감각형', 'N': '직관형',
-        'T': '사고형', 'F': '감정형',
-        'J': '판단형', 'P': '인식형',
+       final map = {
+        'E': S.of(context).analysis_mbti_e, 'I': S.of(context).analysis_mbti_i,
+        'S': S.of(context).analysis_mbti_s, 'N': S.of(context).analysis_mbti_n,
+        'T': S.of(context).analysis_mbti_t, 'F': S.of(context).analysis_mbti_f,
+        'J': S.of(context).analysis_mbti_j, 'P': S.of(context).analysis_mbti_p,
       };
       return map[type] ?? '';
     }
@@ -824,36 +825,36 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     final bigFiveData = [
       {
         'name': '신경성 (Neuroticism)',
-        'leftLabel': '안정적인',
-        'rightLabel': '민감한',
+        'leftLabel': S.of(context).analysis_big5_n_low,
+        'rightLabel': S.of(context).analysis_big5_n_high,
         'score': big5.neuroticism.toDouble(),
         'color': const Color(0xFFEF5350),
       },
       {
         'name': '외향성 (Extraversion)',
-        'leftLabel': '내향적인',
-        'rightLabel': '외향적인',
+        'leftLabel': S.of(context).analysis_big5_e_low,
+        'rightLabel': S.of(context).analysis_big5_n_high,
         'score': big5.extraversion.toDouble(),
         'color': const Color(0xFF42A5F5),
       },
       {
         'name': '개방성 (Openness)',
-        'leftLabel': '보수적인',
-        'rightLabel': '개방적인',
+        'leftLabel': S.of(context).analysis_big5_o_low,
+        'rightLabel': S.of(context).analysis_big5_n_high,
         'score': big5.openness.toDouble(),
         'color': const Color(0xFFAB47BC),
       },
       {
         'name': '친화성 (Agreeableness)',
-        'leftLabel': '경쟁적인',
-        'rightLabel': '협력적인',
+        'leftLabel': S.of(context).analysis_big5_a_low,
+        'rightLabel': S.of(context).analysis_big5_a_high,
         'score': big5.agreeableness.toDouble(),
         'color': const Color(0xFF66BB6A),
       },
       {
         'name': '성실성 (Conscientiousness)',
-        'leftLabel': '즉흥적인',
-        'rightLabel': '계획적인',
+        'leftLabel': S.of(context).analysis_big5_c_low,
+        'rightLabel': S.of(context).analysis_big5_c_high,
         'score': big5.conscientiousness.toDouble(),
         'color': const Color(0xFFFF7043),
       },
@@ -887,8 +888,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Big 5 성격 지표',
+              Text(
+                S.of(context).analysis_big5_data,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -1067,8 +1068,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        '9가지 성격 유형',
+                      Text(
+                        S.of(context).analysis_eneagram_data,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -1079,7 +1080,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
                   ),
                   // 결과 타입 표시 (예: 7w6)
                   Text(
-                    "나의 유형: ${stats.resultType}",
+                    S.of(context).analysis_eneagram_mydata(stats.resultType!), //"나의 유형: ${stats.resultType}"
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF64748B),
@@ -1206,7 +1207,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
 
         // 3. 유형 번호
         Text(
-          '${typeNum}번',
+          '${typeNum} type',
           style: TextStyle(
             fontSize: isMain ? 14 : 12,
             fontWeight: FontWeight.w700,

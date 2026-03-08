@@ -206,6 +206,24 @@ class SingleTestSessionNotifier extends StateNotifier<HtpSessionEntity?> {
         return HtpType.pitr;
       case SingleTestType.fishbowl:
         return HtpType.fishbowl;
+    // --- 새로 추가된 진단(Test) 탭 ---
+      case SingleTestType.road:
+        return HtpType.road;
+      case SingleTestType.bridge:
+        return HtpType.bridge;
+      case SingleTestType.magicShop:
+        return HtpType.magicShop;
+      case SingleTestType.sinkingShip:
+        return HtpType.sinkingShip;
+    // --- 새로 추가된 치료(Therapy) 탭 ---
+      case SingleTestType.scribble:
+        return HtpType.scribble;
+      case SingleTestType.weather:
+        return HtpType.weather;
+      case SingleTestType.mandala:
+        return HtpType.mandala;
+      case SingleTestType.dewOnLeaf:
+        return HtpType.dewOnLeaf;
     }
   }
 

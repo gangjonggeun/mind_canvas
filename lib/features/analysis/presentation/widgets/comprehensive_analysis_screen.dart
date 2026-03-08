@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../data/dto/comprehensive_analysis_response.dart';
 import '../notifier/comprehensive_analysis_notifier.dart';
 
@@ -29,7 +30,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('analysis.page_title'.tr()),
+        title: Text(S.of(context).analysis_page_title),
         centerTitle: true,
       ),
       body: _buildBody(state),
@@ -44,7 +45,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text('analysis.loading'.tr(), style: const TextStyle(color: Colors.grey)),
+            Text(S.of(context).analysis_page_loading, style: const TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -61,7 +62,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.read(comprehensiveAnalysisNotifierProvider.notifier).loadAnalysisReport(),
-              child: Text('analysis.retry'.tr()),
+              child: Text(S.of(context).analysis_page_retry),
             ),
           ],
         ),
@@ -69,7 +70,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
     }
 
     if (state.report == null) {
-      return Center(child: Text('analysis.empty'.tr()));
+      return Center(child: Text(S.of(context).analysis_page_empty));
     }
 
     // 데이터가 있을 경우 리포트 UI 렌더링
@@ -94,7 +95,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           const SizedBox(height: 32),
 
           // 2. 종합 분석 본문
-          _buildSectionTitle('analysis.core_summary'.tr(), themeColor),
+          _buildSectionTitle(S.of(context).analysis_page_core_summary, themeColor),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -113,7 +114,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           const SizedBox(height: 32),
 
           // 3. ✨ 나의 강점 (세로 리스트 카드)
-          _buildSectionTitle('analysis.strengths'.tr(), Colors.green),
+          _buildSectionTitle(S.of(context).analysis_page_strengths, Colors.green),
           ...data.strengths.map((text) => _buildDetailCard(
             text: text,
             icon: Icons.check_circle_outline,
@@ -123,7 +124,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           const SizedBox(height: 32),
 
           // 4. ⚠️ 주의할 점 (세로 리스트 카드)
-          _buildSectionTitle('analysis.weaknesses'.tr(), Colors.orange),
+          _buildSectionTitle(S.of(context).analysis_page_weakness, Colors.orange),
           ...data.weaknesses.map((text) => _buildDetailCard(
             text: text,
             icon: Icons.warning_amber_rounded,
@@ -133,7 +134,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           const SizedBox(height: 32),
 
           // 5. 🌿 최적의 환경
-          _buildSectionTitle('analysis.environment'.tr(), themeColor),
+          _buildSectionTitle(S.of(context).analysis_page_environment, themeColor),
           _buildDetailCard(
             text: data.idealEnvironment,
             icon: Icons.spa_outlined,
@@ -144,7 +145,7 @@ class _ComprehensiveAnalysisScreenState extends ConsumerState<ComprehensiveAnaly
           const SizedBox(height: 32),
 
           // 6. 🎨 추천 취미 (텍스트 길이에 맞춰지는 카드)
-          _buildSectionTitle('analysis.hobbies'.tr(), themeColor),
+          _buildSectionTitle(S.of(context).analysis_page_hobbies, themeColor),
           Column(
             children: data.recommendedHobbies.map((hobby) => Container(
               width: double.infinity,

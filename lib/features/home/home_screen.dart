@@ -1,6 +1,9 @@
+// import 'widgets/home_viewpager.dart';
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
@@ -12,19 +15,15 @@ import '../../core/theme/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/info/info_screen.dart';
 import '../../generated/l10n.dart';
+import '../home/presentation/notifiers/test_list_notifier.dart';
 import '../profile/presentation/pages/my_activity_page.dart';
 import '../profile/presentation/providers/recent_test_results_provider.dart';
 import '../profile/presentation/widgets/test_result_item.dart';
 import '../recommendation/presentation/recommendation_screen.dart';
-
 import '../recommendation/presentation/widgets/personalized_content_section.dart'
     as recommendation;
-
-// import 'widgets/home_viewpager.dart';
-import 'dart:math' as math;
-import '../home/presentation/notifiers/test_list_notifier.dart';
-
 import 'domain/models/test_ranking_item.dart';
+import 'domain/usecases/test_use_case.dart';
 
 /// Mind Canvas 심리테스트 홈 화면
 ///
@@ -527,234 +526,237 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
+  //
+  // Widget _buildTestCategories() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           const Text(
+  //             '💭 인기 간단한 테스트',
+  //             style: TextStyle(
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.bold,
+  //               color: AppColors.textPrimary,
+  //             ),
+  //           ),
+  //           TextButton(
+  //             onPressed: () {},
+  //             child: const Text(
+  //               '더보기',
+  //               style: TextStyle(
+  //                 color: AppColors.primaryBlue,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 16),
+  //
+  //       // ===== 🌅 첫 번째 카드: 상상해보는 내 심리테스트 =====
+  //       _buildImageContentCard(
+  //         title: '상상해보는 내 심리테스트',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=200&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFFFF8A65), Color(0xFFFFAB40)],
+  //         ),
+  //       ),
+  //
+  //       const SizedBox(height: 12),
+  //
+  //       // ===== 🤝 두 번째 카드: 육감불만 테스트 =====
+  //       _buildImageContentCard(
+  //         title: '육감불만 테스트',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=600&h=200&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFF42A5F5), Color(0xFF26C6DA)],
+  //         ),
+  //       ),
+  //
+  //       const SizedBox(height: 12),
+  //
+  //       // ===== 🌌 세 번째 카드: 남성적 VS 여성적 테스트 =====
+  //       _buildImageContentCard(
+  //         title: '당신은 남성적? 여성적? 남성성 여성성 테스트',
+  //         imageUrl:
+  //             'https://images.unsplash.com/photo-1519578443396-9048f6db0b2f?w=600&h=200&fit=crop&auto=format',
+  //         gradient: const LinearGradient(
+  //           begin: Alignment.centerLeft,
+  //           end: Alignment.centerRight,
+  //           colors: [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+  //
+  // /// 이미지 기반 컨텐츠 카드 빌더
+  // Widget _buildImageContentCard({
+  //   required String title,
+  //   required String imageUrl,
+  //   required Gradient gradient,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       print('컨텐츠 카드 클릭: $title');
+  //     },
+  //     child: Container(
+  //       width: double.infinity,
+  //       height: 120,
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(16),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.black.withOpacity(0.1),
+  //             blurRadius: 10,
+  //             offset: const Offset(0, 3),
+  //           ),
+  //         ],
+  //       ),
+  //       child: ClipRRect(
+  //         borderRadius: BorderRadius.circular(16),
+  //         child: Stack(
+  //           children: [
+  //             // ===== 🖼️ 배경 이미지 (고선명도 최적화) =====
+  //             Positioned.fill(
+  //               child: CachedNetworkImage(
+  //                 imageUrl: imageUrl,
+  //                 fit: BoxFit.cover,
+  //                 filterQuality: FilterQuality.high,
+  //                 placeholder: (context, url) => Container(
+  //                   decoration: BoxDecoration(gradient: gradient),
+  //                   child: const Center(
+  //                     child: CircularProgressIndicator(
+  //                       strokeWidth: 2,
+  //                       color: Colors.white,
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 errorWidget: (context, url, error) => Container(
+  //                   decoration: BoxDecoration(gradient: gradient),
+  //                   child: Column(
+  //                     mainAxisAlignment: MainAxisAlignment.center,
+  //                     children: [
+  //                       Icon(
+  //                         Icons.broken_image_outlined,
+  //                         color: Colors.white.withOpacity(0.7),
+  //                         size: 24,
+  //                       ),
+  //                       const SizedBox(height: 4),
+  //                       Text(
+  //                         S.of(context).home_image_load_fail,
+  //                         style: TextStyle(
+  //                           color: Colors.white.withOpacity(0.7),
+  //                           fontSize: 10,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //
+  //             // ===== 🎨 그라데이션 오버레이 =====
+  //             Positioned.fill(
+  //               child: Container(
+  //                 decoration: BoxDecoration(
+  //                   gradient: LinearGradient(
+  //                     begin: Alignment.centerLeft,
+  //                     end: Alignment.centerRight,
+  //                     stops: const [0.0, 0.4, 1.0],
+  //                     colors: [
+  //                       Colors.black.withOpacity(0.7),
+  //                       Colors.black.withOpacity(0.3),
+  //                       Colors.transparent,
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //
+  //             // ===== 📝 텍스트 컨텐츠 =====
+  //             Positioned(
+  //               left: 20,
+  //               right: 60,
+  //               top: 0,
+  //               bottom: 0,
+  //               child: Row(
+  //                 children: [
+  //                   Expanded(
+  //                     child: Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       mainAxisAlignment: MainAxisAlignment.center,
+  //                       children: [
+  //                         Text(
+  //                           title,
+  //                           style: const TextStyle(
+  //                             color: Colors.white,
+  //                             fontSize: 16,
+  //                             fontWeight: FontWeight.bold,
+  //                             height: 1.3,
+  //                           ),
+  //                           maxLines: 2,
+  //                           overflow: TextOverflow.ellipsis,
+  //                         ),
+  //                         const SizedBox(height: 8),
+  //                         Container(
+  //                           padding: const EdgeInsets.symmetric(
+  //                             horizontal: 12,
+  //                             vertical: 6,
+  //                           ),
+  //                           decoration: BoxDecoration(
+  //                             color: Colors.white.withOpacity(0.2),
+  //                             borderRadius: BorderRadius.circular(20),
+  //                             border: Border.all(
+  //                               color: Colors.white.withOpacity(0.3),
+  //                               width: 1,
+  //                             ),
+  //                           ),
+  //                           child:  Text(
+  //                             S.of(context).home_test,
+  //                             style: TextStyle(
+  //                               color: Colors.white,
+  //                               fontSize: 12,
+  //                               fontWeight: FontWeight.w600,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //
+  //             // ===== 🔜 오른쪽 화살표 =====
+  //             const Positioned(
+  //               right: 20,
+  //               top: 0,
+  //               bottom: 0,
+  //               child: Icon(
+  //                 Icons.arrow_forward_ios,
+  //                 color: Colors.white,
+  //                 size: 18,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildTestCategories() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              '💭 인기 간단한 테스트',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text(
-                '더보기',
-                style: TextStyle(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
 
-        // ===== 🌅 첫 번째 카드: 상상해보는 내 심리테스트 =====
-        _buildImageContentCard(
-          title: '상상해보는 내 심리테스트',
-          imageUrl:
-              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=200&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFFFF8A65), Color(0xFFFFAB40)],
-          ),
-        ),
 
-        const SizedBox(height: 12),
-
-        // ===== 🤝 두 번째 카드: 육감불만 테스트 =====
-        _buildImageContentCard(
-          title: '육감불만 테스트',
-          imageUrl:
-              'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=600&h=200&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF42A5F5), Color(0xFF26C6DA)],
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // ===== 🌌 세 번째 카드: 남성적 VS 여성적 테스트 =====
-        _buildImageContentCard(
-          title: '당신은 남성적? 여성적? 남성성 여성성 테스트',
-          imageUrl:
-              'https://images.unsplash.com/photo-1519578443396-9048f6db0b2f?w=600&h=200&fit=crop&auto=format',
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 이미지 기반 컨텐츠 카드 빌더
-  Widget _buildImageContentCard({
-    required String title,
-    required String imageUrl,
-    required Gradient gradient,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        print('컨텐츠 카드 클릭: $title');
-      },
-      child: Container(
-        width: double.infinity,
-        height: 120,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              // ===== 🖼️ 배경 이미지 (고선명도 최적화) =====
-              Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
-                  placeholder: (context, url) => Container(
-                    decoration: BoxDecoration(gradient: gradient),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    decoration: BoxDecoration(gradient: gradient),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          S.of(context).home_image_load_fail,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // ===== 🎨 그라데이션 오버레이 =====
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      stops: const [0.0, 0.4, 1.0],
-                      colors: [
-                        Colors.black.withOpacity(0.7),
-                        Colors.black.withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // ===== 📝 텍스트 컨텐츠 =====
-              Positioned(
-                left: 20,
-                right: 60,
-                top: 0,
-                bottom: 0,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child:  Text(
-                              S.of(context).home_test,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ===== 🔜 오른쪽 화살표 =====
-              const Positioned(
-                right: 20,
-                top: 0,
-                bottom: 0,
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
   Widget _buildRecentTests() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -845,7 +847,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 16),
             ...results.map((item) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: TestResultItem(result: item), // 👈 아까 만든 공용 위젯 재사용!
+              child: TestResultItem(result: item, onDelete: () async {
+                // 1. 삭제 호출 (이미 만들어둔 useCase 사용)
+                await ref.read(testUseCaseProvider).deleteTestResult(item.id);
+                // 2. 홈 화면 데이터 새로고침
+                ref.invalidate(recentTestResultsProvider);
+              },), // 👈 아까 만든 공용 위젯 재사용!
             )).toList(),
           ],
         );

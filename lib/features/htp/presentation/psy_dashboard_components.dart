@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../generated/l10n.dart';
+
 /// ✅ 공통 상태 Enum
 enum PsyTaskStatus { notStarted, inProgress, completed }
 
@@ -134,7 +136,7 @@ class PsyProgressBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('진행 상황', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : Colors.black87)),
+              Text(S.of(context).psy_dashboard_progress, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : Colors.black87)),
               Text('$current / $total', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF38A169))),
             ],
           ),
@@ -166,8 +168,8 @@ class PsyTaskCard extends StatelessWidget {
 
   // ✅ 추가된 옵션들 (텍스트, 아이콘, 업로드 버튼 숨김 여부)
   final bool showUpload;
-  final String actionText;
-  final String completedActionText;
+  final String? actionText;
+  final String? completedActionText;
   final IconData actionIcon;
 
   const PsyTaskCard({
@@ -180,14 +182,18 @@ class PsyTaskCard extends StatelessWidget {
     required this.onUpload,
     required this.onPreview,
     this.showUpload = true,                  // 기본은 보이게
-    this.actionText = '그리기',                 // 기본 텍스트
-    this.completedActionText = '수정',         // 기본 완료 텍스트
+    this.actionText ,                 // 기본 텍스트
+    this.completedActionText ,         // 기본 완료 텍스트
     this.actionIcon = Icons.brush,           // 기본 아이콘
     super.key,
   });
 
+  //= S.of(context).psy_dashboard_action   = '수정
   @override
   Widget build(BuildContext context) {
+    final String actText = actionText ?? S.of(context).psy_dashboard_action;
+    final String compText = completedActionText ?? S.of(context).psy_dashboard_completed_action;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(20),
@@ -226,7 +232,7 @@ class PsyTaskCard extends StatelessWidget {
             children: [
               // 1. 메인 액션 버튼 (텍스트/아이콘 동적 적용)
               _buildBtn(
-                status == PsyTaskStatus.notStarted ? actionText : completedActionText,
+                status == PsyTaskStatus.notStarted ? actText : compText,
                 status == PsyTaskStatus.notStarted ? actionIcon : Icons.edit,
                 color,
                 onStart,
@@ -236,13 +242,13 @@ class PsyTaskCard extends StatelessWidget {
 
               // 2. 업로드 버튼 (showUpload가 true일 때만 렌더링)
               if (showUpload) ...[
-                _buildBtn("업로드", Icons.upload_file, Colors.grey, onUpload, false),
+                _buildBtn(S.of(context).psy_dashboard_upload, Icons.upload_file, Colors.grey, onUpload, false),
                 const SizedBox(height: 6),
               ],
 
               // 3. 미리보기 버튼 (완료 상태일 때만)
               if (status == PsyTaskStatus.completed) ...[
-                _buildBtn("확인", Icons.visibility, Colors.blueGrey, onPreview, false),
+                _buildBtn(S.of(context).psy_dashboard_confirm, Icons.visibility, Colors.blueGrey, onPreview, false),
               ],
             ],
           )
@@ -362,7 +368,7 @@ class PsyPreviewDialog extends StatelessWidget {
               children: [
                 Icon(icon, color: Theme.of(context).primaryColor, size: 24),
                 const SizedBox(width: 12),
-                Text('$title 미리보기', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(S.of(context).psy_dashboard_preview(title), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 const Spacer(),
                 IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
               ],
@@ -404,7 +410,7 @@ class PsyPreviewDialog extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onEdit,
                     icon: const Icon(Icons.edit_rounded),
-                    label: const Text('수정하기'),
+                    label:  Text(S.of(context).psy_dashboard_retouch),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
@@ -413,7 +419,7 @@ class PsyPreviewDialog extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onConfirm,
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('확인'),
+                    label: Text(S.of(context).psy_dashboard_confirm),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
@@ -428,7 +434,7 @@ class PsyPreviewDialog extends StatelessWidget {
     );
   }
 
-  IconData _getIconForLabel(String label) {
+  IconData _getIconForLabel(String label) { //TODO: 여기 다국어 처리 로직 다시 생각해봐야함
     if (label.contains('시간')) return Icons.timer_outlined;
     if (label.contains('수정')) return Icons.edit_rounded;
     return Icons.gesture_rounded;
@@ -571,9 +577,9 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
                           TextFormField(
                             controller: _controllers[q.id],
                             maxLines: q.isMultiline ? 3 : 1,
-                            validator: (v) => (v == null || v.trim().isEmpty) ? '내용을 입력해주세요' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? S.of(context).psy_dashboard_enter_content : null,
                             decoration: InputDecoration(
-                              hintText: q.hintText ?? '답변을 입력해주세요',
+                              hintText: q.hintText ??  S.of(context).psy_dashboard_enter_content,
                               filled: true,
                               fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -606,8 +612,8 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
-                child: const Text(
-                  '답변 저장하기',
+                child: Text(
+                  S.of(context).psy_dashboard_save_content,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),

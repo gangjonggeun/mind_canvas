@@ -55,6 +55,11 @@ class SingleTestRepository {
         case SingleTestType.fishbowl:
           response = await _apiDataSource.analyzeFishbowl(imageFile, requestJson, token);
           break;
+        default:
+        // testType.name을 이용하여 경로 동적 생성 (예: /analyze/road, /analyze/mandala)
+        // 백엔드 엔드포인트 규칙에 맞춰 경로를 지정하세요.
+          final path = '/analyze/${testType.name}';
+          response = await _apiDataSource.analyzeGeneral(path, imageFile, requestJson, token);
       }
 
       // 3. PENDING 처리 로직 (이전 HTP와 동일하게 처리)

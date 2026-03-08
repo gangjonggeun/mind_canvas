@@ -12,6 +12,13 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final path = options.path;
+    if (path.contains('/auth/google') ||
+        path.contains('/auth/apple') ||
+        path.contains('/auth/guest') ||
+        path.contains('/auth/refresh')) {
+      return handler.next(options);
+    }
     // 1. 헤더에 Access Token 주입
     final accessToken = await AuthStorage.loadAccessToken();
     if (accessToken != null) {
@@ -22,59 +29,63 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // 🚨 401 Unauthorized 에러 (Access Token 만료) 발생 시
     if (err.response?.statusCode == 401) {
-      print('⚠️ Access Token 만료 감지. Refresh 시도...');
+      final path = err.requestOptions.path;
+
+      // 1. 로그인/리프레시 API는 제외
+      if (path.contains('/auth/google') ||
+          path.contains('/auth/apple') ||
+          path.contains('/auth/guest') ||
+          path.contains('/auth/refresh')) {
+        return handler.next(err);
+      }
+
+      // ✨[무한루프 방지 핵심 코드] 이미 한 번 재시도했는데 또 401이 났다면? 즉시 차단!
+      if (err.requestOptions.extra['isRetry'] == true) {
+        print('🛑 무한 루프 감지: 재시도한 요청이 또 401입니다. 강제 로그아웃 처리합니다.');
+        await _forceLogout();
+        return handler.next(err);
+      }
+
+      print('⚠️ Access Token 만료 감지. Refresh 시도... (경로: $path)');
 
       final refreshToken = await AuthStorage.loadRefreshToken();
-
       if (refreshToken == null) {
-        // 리프레시 토큰조차 없으면 로그아웃 처리
         await _forceLogout();
         return handler.next(err);
       }
 
       try {
-        // 💡 주의: 여기서 기존 dio 객체를 쓰면 무한 루프에 빠질 수 있으므로
-        // 토큰 갱신 전용 새로운 Dio 인스턴스를 생성하거나 별도 패키지(http 등)를 사용합니다.
         final tokenDio = Dio(BaseOptions(baseUrl: dio.options.baseUrl));
-
-        // 1. 서버에 토큰 갱신 요청
         final refreshResponse = await tokenDio.post(
-          '/api/auth/refresh', // ⬅️ 서버의 토큰 갱신 엔드포인트에 맞게 수정하세요.
+          '/auth/refresh',
           data: {'refreshToken': refreshToken},
         );
 
-        // 2. 성공 시 새 토큰 파싱
-        final newAccessToken = refreshResponse.data['data']['accessToken'];
-        final newRefreshToken = refreshResponse.data['data']['refreshToken'];
+        final responseData = refreshResponse.data['data'] ?? refreshResponse.data;
+        final newAccessToken = responseData['accessToken'] ?? responseData['access_token'];
+        final newRefreshToken = responseData['refreshToken'] ?? responseData['refresh_token'];
 
-        // 3. Storage에 새 토큰 저장
         await AuthStorage.saveAccessToken(newAccessToken);
-        if (newRefreshToken != null) {
-          await AuthStorage.saveRefreshToken(newRefreshToken);
-        }
+        if (newRefreshToken != null) await AuthStorage.saveRefreshToken(newRefreshToken);
 
-        print('✅ 토큰 갱신 성공! 실패했던 요청 재시도...');
-
-        // 4. 원래 실패했던 요청의 헤더를 새 토큰으로 변경
+        // 2. 헤더 교체
         err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 
-        // 5. 원래 하려던 요청을 다시 실행 (사용자는 실패했는지 모름!)
-        final retryResponse = await dio.fetch(err.requestOptions);
+        // ✨ [무한루프 방지 마커 추가] 이 요청은 "재시도된 요청"임을 표시!
+        err.requestOptions.extra['isRetry'] = true;
 
-        // 6. 재시도 성공 결과를 반환
+        // 3. 재시도
+        final retryResponse = await dio.fetch(err.requestOptions);
         return handler.resolve(retryResponse);
 
-      } on DioException catch (e) {
-        // 🚨 Refresh Token 마저 만료된 경우 (401 에러 등)
-        print('❌ Refresh Token 만료. 재로그인 필요.');
+      } catch (e) {
+        print('❌ Refresh Token 갱신 실패. 재로그인 필요.');
         await _forceLogout();
-        return handler.next(e);
+        return handler.next(err);
       }
     }
 
-    // 401이 아닌 다른 에러는 그대로 패스
     return handler.next(err);
   }
 

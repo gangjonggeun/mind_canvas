@@ -19,6 +19,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../../../app/presentation/notifier/user_notifier.dart';
 import '../../../../core/auth/auth_storage.dart';
 import '../../../../core/providers/app_language_provider.dart';
+import '../../../../generated/l10n.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/screens/login_screen.dart';
 import '../../data/models/user_profile.dart';
@@ -58,7 +59,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('프로필이 업데이트되었습니다').tr(), // 다국어 적용
+          content: Text(S.of(context).profile_updated), // 다국어 적용
           backgroundColor: Theme.of(context).colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -127,7 +128,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
-            const Text('잉크 사용 내역',
+           Text(S.of(context).profile_ink_history,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
 
@@ -142,12 +143,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         const Center(child: CircularProgressIndicator()),
 
                     // 에러 발생 시 UI에 에러 메시지 표시
-                    error: (err, stack) => Center(child: Text('오류 발생: $err')),
+                    error: (err, stack) => Center(child: Text(S.of(context).profile_error)),
 
                     data: (historyList) {
                       if (historyList.isEmpty) {
-                        return const Center(
-                            child: Text('잉크 사용 내역이 없습니다.',
+                        return  Center(
+                            child: Text(S.of(context).profile_empty_ink,
                                 style: TextStyle(color: Colors.grey)));
                       }
 
@@ -194,7 +195,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                     color: isCharge ? Colors.blue : Colors.red,
                                   ),
                                 ),
-                                Text('잔액: ${item.balanceAfter}',
+                                Text(S.of(context).profile_balance(item.balanceAfter),
                                     style: const TextStyle(
                                         fontSize: 11, color: Colors.grey)),
                               ],
@@ -226,9 +227,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       context: context,
       useRootNavigator: true, // 🛡️ [핵심 방어 1] 다이얼로그를 최상단에 띄움
       builder: (dialogContext) => AlertDialog(
-        title: const Text('로그아웃'),
+        title:  Text(S.of(context).profile_logout),
         content: Text(
-          '정말 로그아웃하시겠습니까?',
+          S.of(context).profile_logout_content,
           style: TextStyle(
             color: isGuest ? Colors.red.shade700 : null,
             fontWeight: isGuest ? FontWeight.w500 : FontWeight.normal,
@@ -242,7 +243,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 // 🛡️[핵심 방어 2] 오직 다이얼로그만 확실히 닫음
                 Navigator.of(dialogContext, rootNavigator: true).pop(false);
               },
-              child: const Text('취소')),
+              child: Text(S.of(context).profile_cancel)),
           FilledButton(
             style: isGuest
                 ? FilledButton.styleFrom(backgroundColor: Colors.red)
@@ -251,7 +252,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               print("🛑 [LOGOUT FLOW] 2-2. 로그아웃 버튼 클릭");
               Navigator.of(dialogContext, rootNavigator: true).pop(true);
             },
-            child: Text(isGuest ? '기록 지우고 나가기' : '로그아웃'),
+            child: Text(isGuest ? S.of(context).profile_guest_logout : S.of(context).profile_nomal_logout),
           ),
         ],
       ),
@@ -277,16 +278,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('계정 탈퇴', style: TextStyle(color: Colors.red)),
-        content: const Text('정말 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'),
+        title: Text(S.of(context).profile_del_title, style: TextStyle(color: Colors.red)),
+        content: Text(S.of(context).profile_del_content),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('취소')),
+              child:  Text(S.of(context).profile_cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('탈퇴하기', style: TextStyle(color: Colors.white)),
+            child:  Text(S.of(context).profile_del_ok, style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -312,7 +313,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       // 실패 시: 화면 이동이 없으므로 스낵바를 띄워줌
       if (context.mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('탈퇴 실패: $msg')));
+            .showSnackBar(SnackBar(content: Text(S.of(context).profile_del_fail)));
       }
     });
   }
@@ -330,10 +331,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+             Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                '언어 설정',
+                S.of(context).profile_lan_setting,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -391,11 +392,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('profile.menu.notifications'.tr()),
+        title: Text(S.of(context).profile_notify_set),
         content: StatefulBuilder(
           builder: (context, setDialogState) {
             return SwitchListTile(
-              title: const Text('푸시 알림 수신'),
+              title:  Text(S.of(context).profile_notify_set_content),
               value: true,
               onChanged: (val) {
                 setDialogState(() {});
@@ -438,7 +439,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         automaticallyImplyLeading: false,
         // 🚨 뒤로가기(백버튼) 완벽히 제거
         title: Text(
-          '프로필', // 나중에 'profile.title'.tr() 로 변경 가능
+          S.of(context).profile_header, 
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: colorScheme.onSurface,
@@ -540,13 +541,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 height: 100,
               ),
               const SizedBox(height: 16),
-              const Text(
-                '잉크가 부족하신가요?',
+               Text(
+                S.of(context).profile_ink_charge,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                '마인드 캔버스의 모든 심리테스트를\n자유롭게 즐겨보세요!',
+                S.of(context).profile_ink_charge_content,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
@@ -556,9 +557,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               _buildRechargeOption(
                 context: context,
                 ref: ref,
-                title: '무료 잉크 받기',
-                subtitle: '동영상 광고 시청',
-                priceText: '무료',
+                title: S.of(context).profile_ink_charge_free_title,
+                subtitle: S.of(context).profile_ink_charge_free_subtitle,
+                priceText: S.of(context).profile_ink_charge_price,
                 iconColor: Colors.purple,
                 onTap: () {
                   Navigator.pop(context); // 다이얼로그 닫기
@@ -571,9 +572,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               _buildRechargeOption(
                 context: context,
                 ref: ref,
-                title: '잉크 한 줌 (100개)',
-                subtitle: '가볍게 시작하기',
-                priceText: '₩ 1,000',
+                title: S.of(context).profile_ink_charge_100_title,
+                subtitle: S.of(context).profile_ink_charge_100_subtitle,
+                priceText: S.of(context).profile_ink_charge_100_price,
                 iconColor: Colors.blue,
                 onTap: () => _startPayment(context, ref, "ink_100"),
                 assetPath: 'assets/images/icon/coin_palette_128.webp',
@@ -582,9 +583,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               _buildRechargeOption(
                 context: context,
                 ref: ref,
-                title: '잉크 보따리 (500개)',
-                subtitle: '가장 많이 선택해요',
-                priceText: '₩ 4,500',
+                title: S.of(context).profile_ink_charge_500_title,
+                subtitle: S.of(context).profile_ink_charge_500_subtitle,
+                priceText: S.of(context).profile_ink_charge_500_price,
                 iconColor: Colors.blue,
                 isBest: true,
                 onTap: () => _startPayment(context, ref, "ink_500"),
@@ -594,9 +595,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               _buildRechargeOption(
                 context: context,
                 ref: ref,
-                title: '잉크 드럼통 (1000개)',
-                subtitle: '마음껏 분석하기',
-                priceText: '₩ 8,000',
+                title: S.of(context).profile_ink_charge_1000_title,
+                subtitle: S.of(context).profile_ink_charge_1000_subtitle,
+                priceText: S.of(context).profile_ink_charge_1000_price,
                 iconColor: Colors.blue,
                 onTap: () => _startPayment(context, ref, "ink_1000"),
                 assetPath: 'assets/images/icon/coin_palette_128.webp',
@@ -717,12 +718,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 .syncPurchaseWithServer();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('결제 성공! 잉크가 충전되었습니다.')),
+              SnackBar(content: Text(S.of(context).profile_ink_charge_sucess)),
             );
           } else {
             // 결제는 진행됐으나 아직 RevenueCat 서버에 반영 안 된 상태 (결제 지연 등)
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('결제가 처리 중입니다. 잠시 후 확인해주세요.')),
+              SnackBar(content: Text(S.of(context).profile_ink_charge_fail)),
             );
           }
         } on PlatformException catch (e) {
@@ -735,7 +736,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             print('사용자가 결제를 취소했습니다.');
           } else {
             ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('결제 실패: ${e.message}')));
+                .showSnackBar(SnackBar(content: Text(S.of(context).profile_ink_charge_fail)));
           }
         }
       }
@@ -776,14 +777,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
             Navigator.pop(context); // 로딩 닫기
             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('광고 시청 완료! 잉크 20개가 지급되었습니다.')));
+                 SnackBar(content: Text(S.of(context).profile_ink_ads_sucess)));
             ref.read(userNotifierProvider.notifier).refreshProfile(); // 잔액 갱신
           });
         },
         onAdFailedToLoad: (LoadAdError error) {
           Navigator.pop(context); // 로딩 닫기
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('광고를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')));
+              SnackBar(content: Text(S.of(context).profile_ink_ads_fail)));
         },
       ),
     );
@@ -830,14 +831,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             Icon(Icons.check_circle_outline_rounded,
                 color: Colors.green.shade400, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              '오늘의 충전 완료',
+             Text(
+              S.of(context).profile_ink_ads_limit_title,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
-        content: const Text(
-          '오늘 제공되는 5번의 무료 잉크를\n모두 받으셨습니다!\n\n내일 자정에 다시 충전됩니다.',
+        content: Text(
+          S.of(context).profile_ink_ads_limit_content,
           textAlign: TextAlign.center,
           style: TextStyle(height: 1.5),
         ),
@@ -852,7 +853,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text('확인'),
+              child:  Text(S.of(context).profile_ink_ads_limit_ok),
             ),
           ),
         ],

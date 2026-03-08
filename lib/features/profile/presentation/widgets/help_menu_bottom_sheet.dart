@@ -40,7 +40,6 @@ class HelpMenuBottomSheet extends StatelessWidget {
             title: const Text('버그 제보 및 환불 문의'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: 문의 작성 다이얼로그 띄우기
               showDialog(
                 context: context,
                 builder: (context) => const InquiryDialog(),

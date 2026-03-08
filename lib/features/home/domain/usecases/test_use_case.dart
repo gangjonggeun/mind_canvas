@@ -36,7 +36,7 @@ class TestUseCase {
   ///
   /// @param testId 조회할 테스트 ID
   /// @return Result<TestDetailResponse> 성공 시 상세 정보, 실패 시 에러
-  Future<Result<void>>deleteTestResult(int testId) async {
+  Future<Result<void>> deleteTestResult(int testId) async {
     try {
       // Repository를 통한 데이터 조회
       final result = await _repository.deleteTestResult(testId);

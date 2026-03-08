@@ -61,7 +61,7 @@ class _TestResultsTab extends ConsumerWidget {
         itemCount: results.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) => TestResultItem(
-          result: results[index],
+          result: results[index], onDelete: () => ref.read(myTestResultsNotifierProvider.notifier).deleteResult(results[index].id),
         ),
       ),
       loading: () => const Center(child: CircularProgressIndicator()),
