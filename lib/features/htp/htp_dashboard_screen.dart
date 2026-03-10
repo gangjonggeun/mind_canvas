@@ -17,6 +17,7 @@ import 'package:mind_canvas/features/htp/presentation/providers/htp_session_prov
 import 'package:mind_canvas/features/htp/presentation/psy_dashboard_components.dart'; // ✅ 이미지 피커 추가
 
 import '../../core/utils/ai_analysis_helper.dart';
+import '../../generated/l10n.dart';
 import 'data/model/request/htp_basic_request.dart';
 import 'domain/entities/htp_session_entity.dart';
 import 'htp_drawing_screen.dart';
@@ -33,19 +34,19 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
   final ImagePicker _picker = ImagePicker();
 
   /// 🎨 HTP 화면 설정값 (여기에만 HTP 관련 UI 정보가 있음)
-  final Map<String, dynamic> _htpConfig = {
+   Map<String, dynamic> get _htpConfig => {
     'house': {
-      'title': '집 그리기',
+      'title': S.of(context).htp_premium_config1,
       'icon': Icons.home_rounded,
       'color': const Color(0xFF3182CE)
     },
     'tree': {
-      'title': '나무 그리기',
+      'title': S.of(context).htp_premium_config2,
       'icon': Icons.park_rounded,
       'color': const Color(0xFF38A169)
     },
     'person': {
-      'title': '사람 그리기',
+      'title': S.of(context).htp_config3,
       'icon': Icons.person_rounded,
       'color': const Color(0xFF805AD5)
     },
@@ -100,7 +101,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
       backgroundColor:
           isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-          title: const Text("HTP 심리검사"),
+          title:  Text(S.of(context).htp_title),
           backgroundColor: Colors.transparent,
           elevation: 0),
       body: SingleChildScrollView(
@@ -110,7 +111,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
             // 1. 헤더 (공용 컴포넌트)
             PsyHeader(
               title: 'House-Tree-Person',
-              description: '순서에 상관없이 3가지 그림을 그려주세요.',
+              description: S.of(context).htp_premium_header,
               isDarkMode: isDarkMode,
               icon: Icons.home,
             ),
@@ -167,7 +168,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
           child: PsySubmitButton(
             isEnabled:completedCount == 3,
             isSubmitting: false,
-            text: "검사 결과 제출하기 ($completedCount/3)",
+            text: S.of(context).htp_completed_count(completedCount),
             onPressed: _submitDrawings,
           ),
         ),
@@ -204,11 +205,11 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
     if (drawing == null || drawing.imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content:  Row(
             children: [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 8),
-              Text('저장된 이미지를 찾을 수 없습니다'),
+              Text(S.of(context).htp_premium_image_fail),
             ],
           ),
           backgroundColor: Colors.red,
@@ -222,11 +223,11 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
     if (!imageFile.existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 8),
-              Text('이미지 파일이 존재하지 않습니다'),
+              Text(S.of(context).htp_premium_image_empty),
             ],
           ),
           backgroundColor: Colors.red,
@@ -264,7 +265,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${_getDrawingTitle(type)} 미리보기',
+                    S.of(context).htp_premium_preview(_getDrawingTitle(type)),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -302,16 +303,16 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
                 children: [
                   // ✅ 컴포넌트 사용
                   PsyInfoRow(
-                    label: '소요 시간',
-                    value: '${drawing.durationSeconds}초',
+                    label: S.of(context).drawing_info_time,
+                    value: '${drawing.durationSeconds}s',
                     icon: Icons.timer_outlined,
                   ),
                   const SizedBox(height: 8),
 
                   // ✅ 컴포넌트 사용
                   PsyInfoRow(
-                    label: '행동 횟수',
-                    value: '${drawing.strokeCount}회',
+                    label: S.of(context).drawing_info_num,
+                    value: '${drawing.strokeCount}',
                     icon: Icons.gesture_rounded,
                   ),
 
@@ -319,8 +320,8 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
                     const SizedBox(height: 8),
                     // ✅ 컴포넌트 사용
                     PsyInfoRow(
-                      label: '수정 횟수',
-                      value: '${drawing.modificationCount}회',
+                      label: S.of(context).drawing_info_edit,
+                      value: '${drawing.modificationCount}',
                       icon: Icons.edit_rounded,
                     ),
                   ],
@@ -341,7 +342,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
                         _navigateToDrawing(type, _getDrawingTitle(type));
                       },
                       icon: const Icon(Icons.edit_rounded),
-                      label: const Text('수정하기'),
+                      label: Text(S.of(context).htp_premium_edit),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -355,7 +356,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.check_rounded),
-                      label: const Text('확인'),
+                      label: Text(S.of(context).htp_premium_confirm),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -392,11 +393,11 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
   String _getDrawingTitle(String type) {
     switch (type) {
       case 'house':
-        return '집';
+        return S.of(context).house;
       case 'tree':
-        return '나무';
+        return S.of(context).tree;
       case 'person':
-        return '사람';
+        return S.of(context).painting;
       default:
         return '그림';
     }
@@ -410,21 +411,21 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title:  Row(
           children: [
             Icon(Icons.collections_rounded, color: Color(0xFF38A169)),
             SizedBox(width: 10),
-            Text('그림 저장'),
+            Text(S.of(context).drawing_save),
           ],
         ),
-        content: const Text(
-          '그린 그림들을 갤러리에 저장하시겠습니까?\n분석 결과 페이지에서도 확인할 수 있습니다.',
+        content: Text(
+          S.of(context).drawing_save_content,
           style: TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), // 저장 안 함
-            child: const Text('아니요', style: TextStyle(color: Colors.grey)),
+            child:  Text(S.of(context).drawing_no, style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true), // 저장함
@@ -432,7 +433,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
               backgroundColor: const Color(0xFF38A169),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('네, 저장할게요', style: TextStyle(color: Colors.white)),
+            child: Text(S.of(context).drawing_save_yes, style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -454,12 +455,12 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('검사 제출'),
-        content: const Text('분석을 시작할까요?\n제출 후에는 그림을 수정할 수 없습니다.'),
+        title:  Text(S.of(context).drawing_submit),
+        content: Text(S.of(context).drawing_submit_content),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(S.of(context).drawing_cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -467,7 +468,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
               _performSubmit(); // 실제 서버 전송 로직 실행
             },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38A169)),
-            child: const Text('제출하기', style: TextStyle(color: Colors.white)),
+            child:  Text(S.of(context).drawing_submit_agree, style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -488,7 +489,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
         drawingProcess: drawingProcess,
       );
     } catch (e) {
-      AiAnalysisHelper.showErrorSnackBar(context, '전송 중 오류: $e');
+      AiAnalysisHelper.showErrorSnackBar(context, S.of(context).drawing_submit_error);
     }
   }
 
@@ -525,7 +526,7 @@ class _HtpDashboardScreenState extends ConsumerState<HtpDashboardScreen> {
 
       if (successCount > 0 && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('갤러리에 그림이 저장되었습니다 📸')),
+          SnackBar(content: Text(S.of(context).drawing_save_image)),
         );
       }
     } catch (e) {

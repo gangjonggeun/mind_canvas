@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../generated/l10n.dart';
 import '../../../home/data/repositories/test_repository_provider.dart';
 import '../../../home/domain/usecases/test_use_case.dart';
 import '../../../psy_result/data/mapper/test_result_mapper.dart';
@@ -58,7 +59,7 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
             print("❌ 테스트 결과 조회 실패: $msg");
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('결과를 불러오지 못했습니다: $msg'))
+                  SnackBar(content: Text(S.of(context).test_result_item_fail))
               );
             }
           },
@@ -114,8 +115,8 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                      '분석 완료',
+                  child:  Text(
+                      S.of(context).test_result_item_complete,
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF4A5568))
                   ),
                 ),
@@ -142,17 +143,17 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("결과 삭제"),
-        content: const Text("정말 이 심리테스트 결과를 삭제하시겠습니까?"),
+        title: Text(S.of(context).test_result_item_remove),
+        content:  Text(S.of(context).test_result_item_remove_content),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("취소")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(S.of(context).test_result_item_cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
 
               await onDelete(); // ✅ 부모가 넘겨준 삭제 로직을 실행
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("삭제되었습니다.")));
+                ScaffoldMessenger.of(context).showSnackBar( SnackBar(content: Text(S.of(context).test_result_item_removed)));
               }
               // resultData.fold(
               //   onSuccess: (_) {
@@ -166,7 +167,7 @@ class TestResultItem extends ConsumerWidget { // ConsumerWidget으로 변경
               //   onFailure: (msg, _) => print("삭제 실패: $msg"),
               // );
             },
-            child: const Text("삭제", style: TextStyle(color: Colors.red)),
+            child: Text(S.of(context).test_result_item_delete, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

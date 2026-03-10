@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../generated/l10n.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../providers/profile_notifier.dart';
 import 'profile_edit_dialog.dart';
@@ -42,9 +43,9 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
 
     // 데이터 로드 실패 혹은 없음
     if (summary == null) {
-      return const SizedBox(
+      return  SizedBox(
         height: 200,
-        child: Center(child: Text('프로필 정보를 불러올 수 없습니다.')),
+        child: Center(child: Text(S.of(context).profile_header_fail)),
       );
     }
 
@@ -85,12 +86,12 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'profile.welcome_msg'.tr(),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    // Text(
+                    //   'profile.welcome_msg'.tr(),
+                    //   style: theme.textTheme.labelMedium?.copyWith(
+                    //     color: colorScheme.onSurfaceVariant,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -153,7 +154,7 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
         _buildActivityItem(
           icon: Icons.description_rounded,
           // 적절한 아이콘 추천
-          label: 'profile.tests'.tr(),
+          label: S.of(context).profile_header_tested,
           // json 키 사용
           value: '${summary.testCount}',
           // 👈 데이터 연결
@@ -163,7 +164,7 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
 
         _buildActivityItem(
           icon: Icons.edit_note_rounded,
-          label: 'profile.posts'.tr(),
+          label: S.of(context).profile_header_post_count,
           value: '${summary.postCount}',
           theme: theme,
           colorScheme: colorScheme,
@@ -171,7 +172,7 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
         _buildActivityItem(
           icon: Icons.favorite_border_rounded,
           // 북마크 대신 좋아요
-          label: 'profile.likes'.tr(),
+          label: S.of(context).profile_header_likes,
           value: '${summary.receivedLikeCount}',
           // Mock
           theme: theme,

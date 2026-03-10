@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../data/models/request/inquiry_request.dart';
 import '../providers/profile_notifier.dart';
 
@@ -18,77 +19,27 @@ class InquiryDialog extends ConsumerStatefulWidget {
 
 // 2. State 클래스는 ConsumerState<위젯이름> 을 상속받습니다.
 class _InquiryDialogState extends ConsumerState<InquiryDialog> {
+
+  int _selectedIndex = 0;
+
+  // 카테고리 인덱스 상수 정의 (가독성을 위해)
+  static const int INDEX_ERROR = 0;
+  static const int INDEX_PAYMENT = 1; // 환불/결제
+  static const int INDEX_ORDER = 2;
+
   // 상태 관리
-  String _selectedCategory = '버그 제보';
-  final List<String> _categories =['버그 제보', '환불 문의', '기타'];
+  String get _selectedCategory => S.of(context).profile_inquiry_report;
+   List<String> get _categories => [S.of(context).profile_inquiry_error, S.of(context).profile_inquiry_payment, S.of(context).profile_inquiry_order];
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
 
   bool _isLoading = false;
-  //
-  // // 디스코드 웹훅 전송 로직
-  // Future<void> _sendToDiscord() async {
-  //   if (_titleController.text.isEmpty || _contentController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('제목과 내용을 모두 입력해주세요.')),
-  //     );
-  //     return;
-  //   }
-  //
-  //   setState(() => _isLoading = true);
-  //
-  //   // TODO: 디스코드 채널 설정 -> 연동 -> 웹훅 URL 만들기에서 발급받은 URL 넣기
-  //   // 보안을 원한다면 Flutter -> Spring Boot Server -> Discord 로 넘기는 것이 가장 좋습니다.
-  //   const String webhookUrl = 'https://discord.com/api/webhooks/YOUR/WEBHOOK_URL';
-  //
-  //   try {
-  //     final dio = Dio();
-  //
-  //     // 디스코드 Embed 메세지 포맷으로 예쁘게 쏘기
-  //     await dio.post(webhookUrl, data: {
-  //       "content": "🚨 **새로운 고객 문의가 접수되었습니다!**",
-  //       "embeds":[
-  //         {
-  //           "title": _titleController.text,
-  //           "description": _contentController.text,
-  //           "color": 16711680, // 빨간색 계열
-  //           "fields":[
-  //             {
-  //               "name": "카테고리",
-  //               "value": _selectedCategory,
-  //               "inline": true
-  //             },
-  //             {
-  //               "name": "OS / App Version",
-  //               "value": "iOS / 1.0.0", // 나중에 device_info_plus 패키지로 동적 할당
-  //               "inline": true
-  //             }
-  //           ],
-  //           "timestamp": DateTime.now().toUtc().toIso8601String(),
-  //         }
-  //       ]
-  //     });
-  //
-  //     if (!mounted) return;
-  //     Navigator.pop(context); // 다이얼로그 닫기
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('문의가 성공적으로 접수되었습니다.')),
-  //     );
-  //
-  //   } catch (e) {
-  //     if (!mounted) return;
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('전송에 실패했습니다: $e')),
-  //     );
-  //   } finally {
-  //     if (mounted) setState(() => _isLoading = false);
-  //   }
-  // }
+
 
   Future<void> _submitToServer() async {
     if (_titleController.text.isEmpty || _contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('제목과 내용을 입력해주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar( SnackBar(content: Text(S.of(context).profile_inquiry_submit_error)));
       return;
     }
 
@@ -111,9 +62,17 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
         osInfo = 'Android ${androidInfo.version.release} (${androidInfo.model})'; // 예: Android 14 (SM-S918N)
       }
 
+      final categories = [
+        S.of(context).profile_inquiry_error,
+        S.of(context).profile_inquiry_payment,
+        S.of(context).profile_inquiry_order
+      ];
+
+      final selectedCategoryText = categories[_selectedIndex];
+
       // 📦 Request 객체 생성 (기존에 정의한 InquiryRequest)
       final request = InquiryRequest(
-        category: _selectedCategory,
+        category: selectedCategoryText,
         title: _titleController.text,
         content: _contentController.text,
         osInfo: osInfo,
@@ -126,13 +85,13 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
       if (!mounted) return;
       if (isSuccess) {
         Navigator.pop(context); // 다이얼로그 닫기
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('문의가 성공적으로 접수되었습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(S.of(context).profile_inquiry_sucess)));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('접수에 실패했습니다. 다시 시도해주세요.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(S.of(context).profile_inquiry_fail)));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류가 발생했습니다: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(S.of(context).profile_inquiry_error_message(e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -149,32 +108,35 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('문의하기', style: TextStyle(fontWeight: FontWeight.bold)),
+      title: Text(S.of(context).profile_inquiry_title, style: TextStyle(fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children:[
             // 카테고리 선택 드롭다운
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
+            DropdownButtonFormField<int>(
+              value: _selectedIndex,
               decoration: InputDecoration(
-                labelText: '문의 유형',
+                labelText: S.of(context).profile_inquiry_category,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              items: _categories.map((String category) {
-                return DropdownMenuItem(value: category, child: Text(category));
-              }).toList(),
-              onChanged: (value) {
+              items: List.generate(_categories.length, (index) {
+                return DropdownMenuItem<int>( // 여기서도 <int> 명시
+                  value: index,              // 여기가 int여야 합니다.
+                  child: Text(_categories[index]),
+                );
+              }),
+              onChanged: (int? value) {      // 이제 여기로 들어오는 value는 int입니다.
                 if (value != null) {
-                  setState(() => _selectedCategory = value);
+                  setState(() => _selectedIndex = value);
                 }
               },
             ),
 
             // 환불 선택 시 주의사항 표시
-            if (_selectedCategory == '환불 문의') ...[
+            if (_selectedIndex == INDEX_PAYMENT)  ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -187,9 +149,9 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
                   children:[
                     Icon(Icons.info_outline, color: Colors.red.shade400, size: 20),
                     const SizedBox(width: 8),
-                    const Expanded(
+                     Expanded(
                       child: Text(
-                        '앱스토어 정책상 인앱 결제 환불은 개발자가 직접 처리할 수 없습니다.\n기기의 스토어 결제 내역에서 환불을 요청해 주세요.',
+                        S.of(context).profile_inquiry_report_guide,
                         style: TextStyle(fontSize: 12, color: Colors.red),
                       ),
                     ),
@@ -204,7 +166,7 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
             TextField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: '제목',
+                labelText: S.of(context).profile_inquiry_title,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -215,7 +177,7 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
               controller: _contentController,
               maxLines: 5,
               decoration: InputDecoration(
-                labelText: '내용을 자세히 적어주세요.',
+                labelText: S.of(context).profile_inquiry_content,
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -226,7 +188,7 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
       actions:[
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('취소', style: TextStyle(color: Colors.grey)),
+          child:  Text(S.of(context).profile_inquiry_cancel, style: TextStyle(color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _submitToServer,
@@ -239,7 +201,7 @@ class _InquiryDialogState extends ConsumerState<InquiryDialog> {
               width: 20, height: 20,
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
           )
-              : const Text('보내기'),
+              : Text(S.of(context).profile_inquiry_send),
         ),
       ],
     );

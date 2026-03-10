@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../generated/l10n.dart';
+
 /// 프로필 메뉴 리스트 위젯
 /// 
 /// 기능:
@@ -25,22 +27,22 @@ class ProfileMenuList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // --- 내 활동 섹션 ---
-        _buildSectionTitle(context, 'profile.menu.section_activity'),
+        _buildSectionTitle(context, S.of(context).profile_menu_my_activity),
         const SizedBox(height: 12),
         _buildMenuSection([
 
           _MenuItem(
             id: 'my_records',
             icon: Icons.history_edu_rounded,
-            title: 'profile.menu.my_records'.tr(),
-            subtitle: 'profile.menu.my_records_sub'.tr(),
+            title: S.of(context).profile_menu_my_record,
+            subtitle: S.of(context).prifle_menu_my_record_sub,
             color: colorScheme.secondary,
           ),
           _MenuItem(
             id: 'ink_history',
             icon: Icons.receipt_long_rounded,
-            title: 'profile.menu.ink_history'.tr(),
-            subtitle: 'profile.menu.ink_history_sub'.tr(),
+            title: S.of(context).profile_menu_ink_history,
+            subtitle: S.of(context).profile_menu_ink_history_sub,
             color: colorScheme.tertiary,
           ),
         ], theme, colorScheme),
@@ -48,22 +50,22 @@ class ProfileMenuList extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- 설정 섹션 ---
-        _buildSectionTitle(context, 'profile.menu.section_settings'),
+        _buildSectionTitle(context, S.of(context).profile_menu_setting),
         const SizedBox(height: 12),
         _buildMenuSection([
           // 테마 설정은 일단 숨김 처리 (기획 반영)
           _MenuItem(
-            id: 'language',
+            id: '언어 설정',
             icon: Icons.language_rounded,
-            title: 'profile.menu.language'.tr(),
-            subtitle: 'profile.menu.language_sub'.tr(),
+            title: S.of(context).profile_menu_language,
+            subtitle: '한국어, English',
             color: Colors.green,
           ),
           _MenuItem(
             id: 'notifications',
             icon: Icons.notifications_rounded,
-            title: 'profile.menu.notifications'.tr(),
-            subtitle: 'profile.menu.notifications_sub'.tr(),
+            title: '알림 설정',
+            subtitle: '푸시 알림 관리',
             color: Colors.orange,
           ),
         ], theme, colorScheme),
@@ -71,22 +73,22 @@ class ProfileMenuList extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- 기타 섹션 ---
-        _buildSectionTitle(context, 'profile.menu.section_etc'),
+        _buildSectionTitle(context, S.of(context).profile_menu_language_etc),
         const SizedBox(height: 12),
         _buildMenuSection([
           _MenuItem(
             id: 'help',
             icon: Icons.help_outline_rounded,
-            title: '고객지원', // 앱스토어 필수: 고객 지원
-            subtitle: 'profile.menu.help_sub'.tr(),
+            title: S.of(context).profile_menu_support, // 앱스토어 필수: 고객 지원
+            subtitle: S.of(context).profile_menu_support_sub,
             color: Colors.blue,
           ),
           // 🚨 [추가] 애플/구글 심사 필수 요건: 계정 탈퇴
           _MenuItem(
             id: 'delete_account',
             icon: Icons.person_remove_rounded,
-            title: '계정 탈퇴', // 다국어 처리 필요
-            subtitle: '모든 데이터가 삭제되며 복구할 수 없습니다.',
+            title: S.of(context).profile_menu_delete_account, // 다국어 처리 필요
+            subtitle: S.of(context).profile_menu_delete_sub,
             color: colorScheme.error, // 빨간색 강조
           ),
         ], theme, colorScheme),
@@ -218,7 +220,7 @@ class ProfileMenuList extends StatelessWidget {
             Icon(Icons.logout_rounded, color: colorScheme.error),
             const SizedBox(width: 12),
             Text(
-              'profile.menu.logout'.tr(),
+              S.of(context).profile_menu_logout,
               style: theme.textTheme.titleSmall?.copyWith(
                 color: colorScheme.error,
                 fontWeight: FontWeight.w600,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../generated/l10n.dart';
 import '../providers/profile_notifier.dart'; // 패키지 import
 
 class ProfileEditDialog extends ConsumerStatefulWidget {
@@ -87,11 +88,11 @@ class ProfileEditDialogState extends ConsumerState<ProfileEditDialog> {
       if (success) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.success_edit'.tr())),
-        );
+          SnackBar(content: Text(S.of(context).profile_edit_sucess),
+        ));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.failure'.tr() )),
+          SnackBar(content: Text(S.of(context).profile_edit_fail )),
         );
       }
     }
@@ -100,7 +101,7 @@ class ProfileEditDialogState extends ConsumerState<ProfileEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('profile.edit_title'.tr()),
+      title: Text(S.of(context).profile_edit_title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -141,7 +142,7 @@ class ProfileEditDialogState extends ConsumerState<ProfileEditDialog> {
           TextField(
             controller: _nicknameController,
             decoration: InputDecoration(
-              labelText: 'profile.nickname'.tr(),
+              labelText: S.of(context).profile_edit_nickname,
               prefixIcon: const Icon(Icons.badge_outlined),
             ),
             maxLength: 15,
@@ -151,7 +152,7 @@ class ProfileEditDialogState extends ConsumerState<ProfileEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('profile.cancel'.tr(), style: const TextStyle(color: Colors.grey)),
+          child: Text(S.of(context).profile_edit_cancel, style: const TextStyle(color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: _isUploading ? null : _onSave,
@@ -160,7 +161,7 @@ class ProfileEditDialogState extends ConsumerState<ProfileEditDialog> {
               width: 16, height: 16,
               child: CircularProgressIndicator(strokeWidth: 2)
           )
-              : Text('profile.save'.tr()),
+              : Text(S.of(context).profile_edit_save),
         ),
       ],
     );

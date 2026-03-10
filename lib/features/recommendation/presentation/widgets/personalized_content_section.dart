@@ -351,7 +351,7 @@ class _PersonalizedContentSectionState
               elevation: 4,
             ),
             icon: const Icon(Icons.bolt, size: 18),
-            label: const Text("추천 받기 (15코인)"),
+            label: const Text("추천 받기 (30 잉크)"),
           ),
           const SizedBox(height: 8),
           const Text(

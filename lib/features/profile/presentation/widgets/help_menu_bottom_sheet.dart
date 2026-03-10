@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../generated/l10n.dart';
 import 'inquiry_dialog.dart';
 
 class HelpMenuBottomSheet extends StatelessWidget {
@@ -20,16 +21,16 @@ class HelpMenuBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children:[
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              '고객 지원',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              S.of(context).profile_help_support,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.help_center_outlined),
-            title: const Text('FAQ 및 고객지원 (Notion)'),
+            title:  Text(S.of(context).profile_help_faq),
             onTap: () {
               Navigator.pop(context);
               _launchUrl('https://your-notion-support-page.com');
@@ -37,7 +38,7 @@ class HelpMenuBottomSheet extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.bug_report_outlined),
-            title: const Text('버그 제보 및 환불 문의'),
+            title: Text(S.of(context).profile_help_report),
             onTap: () {
               Navigator.pop(context);
               showDialog(
@@ -48,7 +49,7 @@ class HelpMenuBottomSheet extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.policy_outlined),
-            title: const Text('이용약관 및 개인정보처리방침'),
+            title:  Text(S.of(context).profile_help_tac),
             onTap: () {
               Navigator.pop(context);
               _launchUrl('https://your-notion-terms-page.com');
@@ -56,7 +57,7 @@ class HelpMenuBottomSheet extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('오픈소스 라이선스'),
+            title: Text(S.of(context).profile_help_license),
             onTap: () {
               Navigator.pop(context);
               showLicensePage(

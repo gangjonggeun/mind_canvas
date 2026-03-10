@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../generated/l10n.dart';
+
 class InkBalanceCard extends StatelessWidget {
   final int inkBalance;
   final VoidCallback? onRecharge;
@@ -78,7 +80,7 @@ class InkBalanceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'profile.ink_balance'.tr(),
+                      S.of(context).profile_ink_balance,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
@@ -96,7 +98,7 @@ class InkBalanceCard extends StatelessWidget {
                 ),
               ),
               // 충전 버튼 (디자인 유지)
-              _buildRechargeButton(theme, colorScheme, primaryColor),
+              _buildRechargeButton(context, theme, colorScheme, primaryColor),
             ],
           ),
           const SizedBox(height: 20),
@@ -145,8 +147,8 @@ class InkBalanceCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     isMaxAds
-                        ? '오늘의 광고 완료'
-                        : '${'profile.watch_ad'.tr()} ($dailyAdCount/3)',
+                        ? S.of(context).profile_ink_limit
+                        : '${'profile.watch_ad'.tr()} ($dailyAdCount/5)',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: isMaxAds ? colorScheme.onSurfaceVariant : colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -161,7 +163,7 @@ class InkBalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRechargeButton(
+  Widget _buildRechargeButton(BuildContext context,
       ThemeData theme, ColorScheme colorScheme, Color primaryColor) {
     return GestureDetector(
       onTap: () {
@@ -182,7 +184,7 @@ class InkBalanceCard extends StatelessWidget {
           ],
         ),
         child: Text(
-          'profile.recharge'.tr(),
+          S.of(context).profile_ink_recharge,
           style: theme.textTheme.labelLarge?.copyWith(
             color: colorScheme.onPrimary,
             fontWeight: FontWeight.w600,

@@ -143,7 +143,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         const Center(child: CircularProgressIndicator()),
 
                     // 에러 발생 시 UI에 에러 메시지 표시
-                    error: (err, stack) => Center(child: Text(S.of(context).profile_error)),
+                    error: (err, stack) => Center(child: Text(S.of(context).profile_error(err))),
 
                     data: (historyList) {
                       if (historyList.isEmpty) {

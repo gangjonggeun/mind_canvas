@@ -36,12 +36,16 @@ class PsyHeader extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: isDarkMode
               ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-              : [const Color(0xFF3182CE), const Color(0xFF2B6CB0)], // 라이트모드는 블루톤
+              : [
+                  const Color(0xFF3182CE),
+                  const Color(0xFF2B6CB0)
+                ], // 라이트모드는 블루톤
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (isDarkMode ? Colors.black : const Color(0xFF3182CE)).withOpacity(0.3),
+            color: (isDarkMode ? Colors.black : const Color(0xFF3182CE))
+                .withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -67,14 +71,18 @@ class PsyHeader extends StatelessWidget {
             children: [
               // 작은 뱃지 느낌의 장식
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Mind Canvas',
-                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 16),
@@ -125,10 +133,15 @@ class PsyProgressBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E293B).withOpacity(0.8) : Colors.white.withOpacity(0.9),
+        color: isDarkMode
+            ? const Color(0xFF1E293B).withOpacity(0.8)
+            : Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -136,8 +149,16 @@ class PsyProgressBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(S.of(context).psy_dashboard_progress, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDarkMode ? Colors.white : Colors.black87)),
-              Text('$current / $total', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF38A169))),
+              Text(S.of(context).psy_dashboard_progress,
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDarkMode ? Colors.white : Colors.black87)),
+              Text('$current / $total',
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF38A169))),
             ],
           ),
           const SizedBox(height: 16),
@@ -181,10 +202,10 @@ class PsyTaskCard extends StatelessWidget {
     required this.onStart,
     required this.onUpload,
     required this.onPreview,
-    this.showUpload = true,                  // 기본은 보이게
-    this.actionText ,                 // 기본 텍스트
-    this.completedActionText ,         // 기본 완료 텍스트
-    this.actionIcon = Icons.brush,           // 기본 아이콘
+    this.showUpload = true, // 기본은 보이게
+    this.actionText, // 기본 텍스트
+    this.completedActionText, // 기본 완료 텍스트
+    this.actionIcon = Icons.brush, // 기본 아이콘
     super.key,
   });
 
@@ -192,16 +213,21 @@ class PsyTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String actText = actionText ?? S.of(context).psy_dashboard_action;
-    final String compText = completedActionText ?? S.of(context).psy_dashboard_completed_action;
+    final String compText =
+        completedActionText ?? S.of(context).psy_dashboard_completed_action;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E293B).withOpacity(0.8) : Colors.white.withOpacity(0.9),
+        color: isDarkMode
+            ? const Color(0xFF1E293B).withOpacity(0.8)
+            : Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: status == PsyTaskStatus.completed ? const Color(0xFF38A169) : Colors.transparent,
+          color: status == PsyTaskStatus.completed
+              ? const Color(0xFF38A169)
+              : Colors.transparent,
           width: 2,
         ),
       ),
@@ -210,7 +236,9 @@ class PsyTaskCard extends StatelessWidget {
           // 아이콘 및 텍스트 영역 (기존과 동일)
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16)),
             child: Icon(icon, color: color, size: 30),
           ),
           const SizedBox(width: 16),
@@ -218,10 +246,20 @@ class PsyTaskCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.black87)),
+                Text(title,
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87)),
                 Text(
-                  status == PsyTaskStatus.completed ? "완료됨" : "미완료",
-                  style: TextStyle(fontSize: 12, color: status == PsyTaskStatus.completed ? const Color(0xFF38A169) : Colors.grey),
+                  status == PsyTaskStatus.completed
+                      ? S.of(context).complete
+                      : S.of(context).not_complete,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: status == PsyTaskStatus.completed
+                          ? const Color(0xFF38A169)
+                          : Colors.grey),
                 ),
               ],
             ),
@@ -242,13 +280,15 @@ class PsyTaskCard extends StatelessWidget {
 
               // 2. 업로드 버튼 (showUpload가 true일 때만 렌더링)
               if (showUpload) ...[
-                _buildBtn(S.of(context).psy_dashboard_upload, Icons.upload_file, Colors.grey, onUpload, false),
+                _buildBtn(S.of(context).psy_dashboard_upload, Icons.upload_file,
+                    Colors.grey, onUpload, false),
                 const SizedBox(height: 6),
               ],
 
               // 3. 미리보기 버튼 (완료 상태일 때만)
               if (status == PsyTaskStatus.completed) ...[
-                _buildBtn(S.of(context).psy_dashboard_confirm, Icons.visibility, Colors.blueGrey, onPreview, false),
+                _buildBtn(S.of(context).psy_dashboard_confirm, Icons.visibility,
+                    Colors.blueGrey, onPreview, false),
               ],
             ],
           )
@@ -257,9 +297,11 @@ class PsyTaskCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBtn(String txt, IconData icn, Color col, VoidCallback onTap, bool primary) {
+  Widget _buildBtn(
+      String txt, IconData icn, Color col, VoidCallback onTap, bool primary) {
     return SizedBox(
-      width: 90, height: 32,
+      width: 90,
+      height: 32,
       child: ElevatedButton.icon(
         onPressed: onTap,
         icon: Icon(icn, size: 14),
@@ -294,28 +336,42 @@ class PsySubmitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity, height: 56,
+      width: double.infinity,
+      height: 56,
       child: ElevatedButton(
         onPressed: (isEnabled && !isSubmitting) ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isEnabled ? const Color(0xFF38A169) : Colors.grey[400],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor:
+              isEnabled ? const Color(0xFF38A169) : Colors.grey[400],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         child: isSubmitting
-            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : Text(text,
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
       ),
     );
   }
 }
-
 
 class PsyInfoRow extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
 
-  const PsyInfoRow({required this.label, required this.value, required this.icon, super.key});
+  const PsyInfoRow(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -325,9 +381,43 @@ class PsyInfoRow extends StatelessWidget {
         const SizedBox(width: 8),
         Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(value,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
       ],
     );
+  }
+}
+
+enum MetaDataType {
+  timeTaken, // 소요 시간
+  strokeCount, // 획수
+  correctionCount // 수정(지우기) 횟수
+}
+
+extension MetaDataTypeExtension on MetaDataType {
+  // 다국어 라벨 반환
+  String getLocalizedLabel(BuildContext context) {
+    final s = S.of(context);
+    switch (this) {
+      case MetaDataType.timeTaken:
+        return s.drawing_info_time; // 미리 정의한 다국어 키
+      case MetaDataType.strokeCount:
+        return s.drawing_info_num;
+      case MetaDataType.correctionCount:
+        return s.drawing_info_edit;
+    }
+  }
+
+  // 아이콘 반환
+  IconData get icon {
+    switch (this) {
+      case MetaDataType.timeTaken:
+        return Icons.timer_outlined;
+      case MetaDataType.strokeCount:
+        return Icons.gesture_rounded;
+      case MetaDataType.correctionCount:
+        return Icons.edit_rounded;
+    }
   }
 }
 
@@ -336,7 +426,7 @@ class PsyPreviewDialog extends StatelessWidget {
   final String title;
   final IconData icon;
   final File imageFile;
-  final Map<String, String> metaData; // 소요시간, 획수 등
+  final Map<MetaDataType, String> metaData; // 소요시간, 획수 등
   final VoidCallback onEdit;
   final VoidCallback onConfirm;
 
@@ -362,15 +452,20 @@ class PsyPreviewDialog extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Row(
               children: [
                 Icon(icon, color: Theme.of(context).primaryColor, size: 24),
                 const SizedBox(width: 12),
-                Text(S.of(context).psy_dashboard_preview(title), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(S.of(context).psy_dashboard_preview(title),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w700)),
                 const Spacer(),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close)),
               ],
             ),
           ),
@@ -390,14 +485,16 @@ class PsyPreviewDialog extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
-              children: metaData.entries.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: PsyInfoRow(
-                  label: e.key,
-                  value: e.value,
-                  icon: _getIconForLabel(e.key),
-                ),
-              )).toList(),
+              children: metaData.entries
+                  .map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: PsyInfoRow(
+                          label: e.key.getLocalizedLabel(context),
+                          value: e.value,
+                          icon: e.key.icon,
+                        ),
+                      ))
+                  .toList(),
             ),
           ),
           const SizedBox(height: 20),
@@ -410,8 +507,9 @@ class PsyPreviewDialog extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onEdit,
                     icon: const Icon(Icons.edit_rounded),
-                    label:  Text(S.of(context).psy_dashboard_retouch),
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                    label: Text(S.of(context).psy_dashboard_retouch),
+                    style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -434,13 +532,8 @@ class PsyPreviewDialog extends StatelessWidget {
     );
   }
 
-  IconData _getIconForLabel(String label) { //TODO: 여기 다국어 처리 로직 다시 생각해봐야함
-    if (label.contains('시간')) return Icons.timer_outlined;
-    if (label.contains('수정')) return Icons.edit_rounded;
-    return Icons.gesture_rounded;
-  }
-}
 
+}
 
 /// PDI 질문 데이터 모델
 class PdiQuestion {
@@ -538,14 +631,16 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
               // 1. 헤더 (고정)
               Container(
                 padding: const EdgeInsets.all(20),
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                color:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                 child: Row(
                   children: [
                     const Icon(Icons.forum_rounded, color: Color(0xFF38A169)),
                     const SizedBox(width: 12),
                     Text(
                       '${widget.title} (PDI)',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
                     IconButton(
@@ -561,7 +656,8 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
                 child: Form(
                   key: _formKey,
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 100), // 하단 여백 충분히 줌
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+                    // 하단 여백 충분히 줌
                     itemCount: widget.questions.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 24),
                     itemBuilder: (context, index) {
@@ -571,18 +667,26 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
                         children: [
                           Text(
                             'Q${index + 1}. ${q.questionText}',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _controllers[q.id],
                             maxLines: q.isMultiline ? 3 : 1,
-                            validator: (v) => (v == null || v.trim().isEmpty) ? S.of(context).psy_dashboard_enter_content : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? S.of(context).psy_dashboard_enter_content
+                                : null,
                             decoration: InputDecoration(
-                              hintText: q.hintText ??  S.of(context).psy_dashboard_enter_content,
+                              hintText: q.hintText ??
+                                  S.of(context).psy_dashboard_enter_content,
                               filled: true,
-                              fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              fillColor: isDark
+                                  ? const Color(0xFF0F172A)
+                                  : const Color(0xFFF8FAFC),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none),
                               contentPadding: const EdgeInsets.all(16),
                             ),
                           ),
@@ -600,7 +704,9 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              border: Border(top: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+              border: Border(
+                  top: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12)),
             ),
             child: SizedBox(
               width: double.infinity,
@@ -609,12 +715,16 @@ class _PsyPdiDialogState extends State<PsyPdiDialog> {
                 onPressed: _handleSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF38A169),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
                 child: Text(
                   S.of(context).psy_dashboard_save_content,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
             ),
