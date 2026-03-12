@@ -3,6 +3,8 @@
 // =============================================================================
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../generated/l10n.dart';
 class CategoryPopupMenu extends StatelessWidget {
   final String? currentCategory;
   final Function(String?) onCategoryChanged;
@@ -13,12 +15,12 @@ class CategoryPopupMenu extends StatelessWidget {
     required this.onCategoryChanged,
   });
 
-  String _getLabel(String? code) {
+  String _getLabel(BuildContext context, String? code) {
     switch (code) {
-      case 'CHAT': return '잡담';
-      case 'QUESTION': return '질문';
-      case 'REVIEW': return '후기';
-      default: return '전체';
+      case 'CHAT': return S.of(context).post_category_chat;
+      case 'QUESTION': return S.of(context).post_category_q;
+      case 'REVIEW': return S.of(context).post_category_review;
+      default: return S.of(context).category_all;
     }
   }
 
@@ -30,55 +32,53 @@ class CategoryPopupMenu extends StatelessWidget {
       default: return Icons.grid_view;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String?>(
       onSelected: onCategoryChanged,
       elevation: 3,
-      // 메뉴 창도 버튼 스타일에 맞춰 조금 더 각지게 (16 -> 12)
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
       surfaceTintColor: Colors.white,
 
-      // ✅ 1. 버튼 모양 수정 (작고 네모나게)
+      // ✅ 1. 버튼 모양 수정 (Container로 감싸기)
       child: Container(
-        // 패딩을 줄여서 전체 높이를 낮춤
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
-          // 둥글기(Radius)를 줄여서 '네모' 느낌 추가 (20 -> 8)
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey.shade300),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 아이콘 크기 축소 (16 -> 14)
-            Icon(_getIcon(currentCategory), size: 14, color: Colors.indigo),
-            const SizedBox(width: 4),
-            // 텍스트 크기 축소 (13 -> 12)
-            Text(
-              _getLabel(currentCategory),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.black87,
+        // ⭐ 여기에 child: 를 명시해야 합니다!
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          primary: false,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_getIcon(currentCategory), size: 14, color: Colors.indigo),
+              const SizedBox(width: 4),
+              Text(
+                _getLabel(context, currentCategory),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(width: 2),
-            // 화살표 크기 축소
-            const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
-          ],
+              const SizedBox(width: 2),
+              const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
+            ],
+          ),
         ),
-      ),
+      ), // Container 닫기
 
-      // 2. 펼쳐질 메뉴 아이템들 (기존 유지)
+      // 2. 펼쳐질 메뉴 아이템들
       itemBuilder: (context) => [
-        _buildPopupItem(null, "전체", Icons.grid_view),
-        _buildPopupItem("CHAT", "잡담", Icons.chat_bubble_outline),
-        _buildPopupItem("QUESTION", "질문", Icons.help_outline),
-        _buildPopupItem("REVIEW", "후기", Icons.rate_review_outlined),
+        _buildPopupItem(null, S.of(context).post_category_all, Icons.grid_view),
+        _buildPopupItem("CHAT", S.of(context).post_category_chat, Icons.chat_bubble_outline),
+        _buildPopupItem("QUESTION", S.of(context).post_category_q, Icons.help_outline),
+        _buildPopupItem("REVIEW", S.of(context).post_category_review, Icons.rate_review_outlined),
       ],
     );
   }

@@ -4,6 +4,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../generated/l10n.dart';
+
 class ExpandablePostText extends StatefulWidget {
   final String text;
   final int maxLines;
@@ -67,7 +69,7 @@ class _ExpandablePostTextState extends State<ExpandablePostText> {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
-                    "더보기",
+                    S.of(context).post_text_more,
                     style: TextStyle(
                       color: Colors.grey.shade500,
                       fontWeight: FontWeight.bold,

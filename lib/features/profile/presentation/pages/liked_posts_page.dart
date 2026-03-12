@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 
 import '../../../recommendation/presentation/widgets/post_card.dart';
 import '../providers/liked_posts_notifier.dart';
@@ -14,7 +13,7 @@ class LikedPostsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('profile.menu.likes'.tr()),
+        title: Text('좋아요한 게시글'),
         centerTitle: true,
       ),
       body: likedPostsAsync.when(

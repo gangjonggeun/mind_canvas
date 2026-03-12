@@ -51,35 +51,49 @@ class PostNotifier extends _$PostNotifier {
   }
 
 
-  Future<bool> report(int id, String type) async {
-    final useCase = ref.read(communityUseCaseProvider); // 또는 reportUseCaseProvider
-    final result = await useCase.reportContent(targetId: id, targetType: type);
+  Future<bool> report(int targetId, String targetType, String reason) async {
+    // 1. ⚡ [낙관적 업데이트] 신고한 게시글을 UI에서 즉시 숨김 (게시글 신고일 경우만)
+    final oldPosts = state.posts;
+    if (targetType == 'POST') {
+      final newPosts = oldPosts.where((post) => post.id != targetId).toList();
+      state = state.copyWith(posts: newPosts);
+    }
 
-    return result.isSuccess; // UI에서 "신고되었습니다" 토스트 띄우기용
+    // 2. 서버 요청
+    final useCase = ref.read(communityUseCaseProvider);
+    final result = await useCase.reportContent(
+      targetId: targetId,
+      targetType: targetType,
+      reason: reason,
+    );
+
+    // 3. 결과 처리
+    if (result.isSuccess) {
+      return true;
+    } else {
+      // 4. 🚨 실패 시 롤백 (신고 실패했으므로 다시 보이게 함)
+      state = state.copyWith(posts: oldPosts);
+      return false;
+    }
   }
 
-  // 사용자 차단
   Future<bool> blockUser(int targetUserId) async {
-    // 1. ⚡ [낙관적 업데이트] 해당 유저가 작성한 모든 글을 즉시 UI에서 숨김
     final oldPosts = state.posts;
     final newPosts = oldPosts.where((post) => post.userId != targetUserId).toList();
 
     state = state.copyWith(posts: newPosts);
 
-    // 2. 서버 요청
     final useCase = ref.read(communityUseCaseProvider);
     final result = await useCase.blockUser(targetUserId);
 
-    // 3. 결과 처리
     if (result.isSuccess) {
-      return true; // UI는 이미 반영됨
+      return true;
     } else {
-      // 4. 🚨 실패 시 롤백 (차단 실패했으므로 다시 보이게 함)
-      // Todo: 여기서 "차단에 실패했습니다" 라는 SnackBar를 띄우도록 UI 쪽에 false 반환
       state = state.copyWith(posts: oldPosts);
       return false;
     }
   }
+
   Future<bool> deletePost(int postId) async {
     final useCase = ref.read(communityUseCaseProvider);
     final result = await useCase.deletePost(postId);

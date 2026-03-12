@@ -8,6 +8,7 @@ import 'package:mind_canvas/features/info/presentation/notifiers/test_detail_not
 
 import '../htp/htp_dashboard_screen.dart';
 import '../htp/presentation/enum/single_test_type.dart';
+import '../profile/presentation/screens/profile_screen.dart';
 import '../psytest/psy_test_screen.dart';
 import '../taro/presentation/pages/taro_consultation_setup_page.dart';
 import 'data/models/response/test_detail_response.dart';
@@ -24,12 +25,14 @@ import 'data/models/response/test_detail_response.dart';
 /// - 위젯 재사용 최대화
 /// - 이미지 로딩 최적화
 class InfoScreen extends ConsumerStatefulWidget {
-  final int testId;
+  final int? testId;
   final TestDetailResponse? testDetail;
+  final String? tag;
 
   const InfoScreen({
     Key? key,
-    required this.testId,
+    this.testId,
+    this.tag,
     this.testDetail
   }) : super(key: key);
 
@@ -67,12 +70,32 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     }
 
     // ✅ 최신 방식: .notifier 사용
-    await ref.read(testDetailNotifierProvider.notifier).loadTestDetail(widget.testId);
+    await ref.read(testDetailNotifierProvider.notifier).loadTestDetail(
+      testId: widget.testId != 0 ? widget.testId : null, // ID가 0이면 null로 처리
+      tag: widget.tag,
+    );
   }
 
 
   @override
   Widget build(BuildContext context) {
+
+    // 💡 이제 여기서 상태를 감시(watch)하여 로딩/데이터/에러를 UI로 뿌려줍니다.
+    final state = ref.watch(testDetailNotifierProvider);
+
+    if (state.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (state.errorMessage != null) {
+      return Scaffold(body: Center(child: Text(state.errorMessage!)));
+    }
+
+    // 데이터가 있으면 상세 화면 렌더링
+    final detail = state.testDetail ?? widget.testDetail;
+
+    if (detail == null) return const Scaffold(body: Center(child: Text("정보가 없습니다.")));
+
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       body: Consumer(
@@ -666,6 +689,29 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
     return tag == 'PITR' || tag == 'pitr';
   }
 
+
+  SingleTestType? _resolveTestType(String? tag) {
+    if (tag == null) return null;
+    final normalized = tag.toUpperCase().trim();
+
+    // 기존 테스트 매핑
+    switch (normalized) {
+      case 'STARRY_SEA': case 'STARRY': return SingleTestType.starrySea;
+      case 'PITR': return SingleTestType.pitr;
+      case 'FISHBOWL': case 'FBT': return SingleTestType.fishbowl;
+    // 신규 추가된 테스트 매핑
+      case 'ROAD': return SingleTestType.road;
+      case 'BRIDGE': return SingleTestType.bridge;
+      case 'MAGIC_SHOP': return SingleTestType.magicShop;
+      case 'SINKING_SHIP': return SingleTestType.sinkingShip;
+      case 'SCRIBBLE': return SingleTestType.scribble;
+      case 'WEATHER': return SingleTestType.weather;
+      case 'MANDALA': return SingleTestType.mandala;
+      case 'DEW_ON_LEAF': return SingleTestType.dewOnLeaf;
+      default: return null;
+    }
+  }
+
   // ✅ 2. _startTest 함수 수정
   void _startTest(BuildContext context, TestDetailResponse testDetail) {
 
@@ -676,7 +722,6 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
       return; // ⛔ 여기서 함수 종료 (페이지 이동 안 함)
     }
 
-    // --- 👇 여기서부터는 기존 로직 그대로 유지 👇 ---
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -689,71 +734,33 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
         duration: const Duration(seconds: 1),
       ),
     );
-    // 1️⃣ HTP 테스트인 경우
-    if (_isHtpTest(testDetail)) {
+    // 2. 특수 케이스 처리 (HTP, 타로 등)
+    final tag = testDetail.psychologyTag?.toUpperCase().trim() ?? '';
+
+    if (tag == 'HTP') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => HtpDashboardScreen()));
+      return;
+    } else if (tag == 'HTP_PREMIUM') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => HtpDashboardPremiumScreen()));
+      return;
+    } else if (tag == 'TAROT') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TaroConsultationSetupPage()));
+      return;
+    }
+
+    // 3. 단일 테스트 타입 처리 (Enum 매핑 사용)
+    final testType = _resolveTestType(tag);
+    if (testType != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HtpDashboardScreen(),
+          builder: (context) => SingleTestDashboardScreen(testType: testType),
         ),
       );
       return;
     }
 
-    if (
-    _isPremumHtpTest(testDetail)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HtpDashboardPremiumScreen(),
-        ),
-      );
-      return;
-    }
-
-    if (_isFbtTest(testDetail)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.fishbowl),
-        ),
-      );
-      return;
-    }
-
-    if (_isPitrTest(testDetail)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.pitr),
-        ),
-      );
-      return;
-    }
-
-    if (_isStarryTest(testDetail)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SingleTestDashboardScreen(testType: SingleTestType.starrySea),
-        ),
-      );
-      return;
-    }
-
-
-    // 2️⃣ 타로 테스트인 경우
-    if (_isTaroTest(testDetail)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const TaroConsultationSetupPage(),
-        ),
-      );
-      return;
-    }
-
-    // 3️⃣ 그 외 일반 객관식 심리 테스트
+    // 4. 일반 객관식 테스트 (기본)
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -791,10 +798,10 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context); // 팝업 닫기
-              // TODO: 충전 페이지나 광고 보기 페이지로 이동 구현
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('충전 페이지 준비 중입니다!')),
-              );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                );
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,

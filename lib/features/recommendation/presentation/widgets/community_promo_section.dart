@@ -4,6 +4,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../generated/l10n.dart';
 import '../pages/community_page.dart';
 
 class CommunityPromoSection extends StatelessWidget {
@@ -14,25 +15,25 @@ class CommunityPromoSection extends StatelessWidget {
     // 💡 실제로는 서버나 로직에서 추천 데이터를 받아와야 합니다.
     final promos = [
       _PromoData(
-        title: "ESFP 모여라! 🎉",
-        subtitle: "세상에서 제일 시끌벅적한\n우리들의 파티룸으로 초대합니다.",
-        tag: "#텐션폭발 #인싸집합",
+        title: S.of(context).promo_data1_title,
+        subtitle: S.of(context).promo_data1_subtitle,
+        tag: S.of(context).promo_data1_tag,
         colorStart: const Color(0xFFFF9A9E),
         colorEnd: const Color(0xFFFECFEF),
         icon: Icons.celebration,
       ),
       _PromoData(
-        title: "에니어그램 조력가들 🤝",
-        subtitle: "남 돕느라 지친 당신,\n여기서만큼은 위로받으세요.",
-        tag: "#2번유형 #따뜻한말한마디",
+        title: S.of(context).promo_data2_title,
+        subtitle: S.of(context).promo_data2_subtitle,
+        tag: S.of(context).promo_data2_tag,
         colorStart: const Color(0xFFA18CD1),
         colorEnd: const Color(0xFFFBC2EB),
         icon: Icons.favorite,
       ),
       _PromoData(
-        title: "논리술사 INTP 🧠",
-        subtitle: "새벽 3시까지 토론 가능?\n쓸데없지만 흥미로운 잡담방",
-        tag: "#분석중독 #마이웨이",
+        title: S.of(context).promo_data3_title,
+        subtitle: S.of(context).promo_data3_subtitle,
+        tag: S.of(context).promo_data3_tag,
         colorStart: const Color(0xFF84FAB0),
         colorEnd: const Color(0xFF8FD3F4),
         icon: Icons.psychology,
@@ -55,19 +56,19 @@ class CommunityPromoSection extends StatelessWidget {
                 child: const Icon(Icons.star_rounded, color: Color(0xFF9F7AEA), size: 24),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '⭐️ 추천 커뮤니티',
+                      S.of(context).promo_rec_commu,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '나와 비슷한 성향의 사람들과 소통해보세요',
+                      S.of(context).promo_rec_commu_info,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,

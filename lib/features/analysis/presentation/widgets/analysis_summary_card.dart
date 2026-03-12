@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -48,39 +48,61 @@ class AnalysisSummaryCard extends ConsumerWidget {
         ),
       );
     }
-
-    // 3. 데이터 없음 (분석 시작 버튼)
     if (state.report == null) {
       return _buildContainer(
         color: const Color(0xFFF0F4FF), // 연한 파란색 배경
-        child: Column(
-          children: [
-            const Icon(Icons.auto_awesome, size: 40, color: Color(0xFF667EEA)),
-            const SizedBox(height: 12),
-            Text(
-              S.of(context).analysis_summary_nodata_title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              S.of(context).analysis_summary_nodata_content,
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // 분석 요청 시작!
-                _showPurchaseDialog(context, ref, isRefresh: false);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667EEA),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+
+        // ✅ 1. Stack으로 감싸기
+        child: Stack(
+          children:[
+
+            // ✅ 2. 기존 중앙 컨텐츠 (Column)
+            SizedBox(
+              width: double.infinity, // 가운데 정렬을 위해 전체 폭 사용
+              child: Column(
+                children:[
+                  // 아이콘이 우측 상단에 들어갈 공간을 위해 약간의 여백 추가
+                  const SizedBox(height: 12),
+                  const Icon(Icons.auto_awesome, size: 40, color: Color(0xFF667EEA)),
+                  const SizedBox(height: 12),
+                  Text(
+                    S.of(context).analysis_summary_nodata_title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    S.of(context).analysis_summary_nodata_content,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      _showPurchaseDialog(context, ref, isRefresh: false);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF667EEA),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: Text(S.of(context).analysis_summary_start_btn),
+                  ),
+                ],
               ),
-              child:  Text(S.of(context).analysis_summary_start_btn),
             ),
+
+            // ✅ 3. 우측 상단 물음표 아이콘 (Positioned)
+            Positioned(
+              top: -8, // 컨테이너 패딩에 맞춰 위치 미세 조정 (숫자를 바꿔보세요)
+              right: -8,
+              child: IconButton(
+                icon: const Icon(Icons.help_outline, color: Colors.black45, size: 20),
+                onPressed: () => _showHelpDialog(context), // 위에서 만든 함수 호출
+                tooltip: '도움말', // 길게 누르면 나오는 텍스트
+              ),
+            ),
+
           ],
         ),
       );
@@ -91,6 +113,35 @@ class AnalysisSummaryCard extends ConsumerWidget {
     }
 
     return const SizedBox(); // Fallback
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children:[
+              const Icon(Icons.help_outline, color: Color(0xFF667EEA)),
+              const SizedBox(width: 8),
+              Text(S.of(context).analysis_summary_help, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content:  Text(
+            S.of(context).analysis_summary_content,
+            style: TextStyle(height: 1.5, color: Colors.black87),
+          ),
+          actions:[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child:  Text(S.of(context).analysis_summary_ok, style: TextStyle(color: Colors.black54)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildResultCard(BuildContext context, WidgetRef ref, ComprehensiveAnalysisResponse data) {

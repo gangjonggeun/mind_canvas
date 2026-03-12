@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../core/utils/cover_image_helper.dart';
+import '../../../../generated/l10n.dart';
 import '../../domain/entity/recommendation_result.dart';
 import '../../domain/enums/rec_category.dart';
 
@@ -49,11 +50,11 @@ class _ContentDetailSheet extends StatelessWidget {
         title: Row(
           children: [
             const SizedBox(width: 10),
-            const Text("구글 검색", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(S.of(context).content_detail_google_search, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Text(
-          "'${item.title}'\n구글 검색 결과로 이동하시겠습니까?",
+          S.of(context).content_detail_google_next,
           style: TextStyle(
             color: isDark ? Colors.grey[300] : Colors.black87,
             height: 1.5,
@@ -64,7 +65,7 @@ class _ContentDetailSheet extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              "취소",
+              S.of(context).content_detail_cancel,
               style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
             ),
           ),
@@ -79,7 +80,7 @@ class _ContentDetailSheet extends StatelessWidget {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text("이동"),
+            child:  Text(S.of(context).content_detail_next),
           ),
         ],
       ),
@@ -270,7 +271,7 @@ class _ContentDetailSheet extends StatelessWidget {
                                       ),
                                     ),
                                     child: Text(
-                                      '${item.matchPercent}% 일치',
+                                      S.of(context).content_detail_match(item.matchPercent), //'${item.matchPercent}% 일치'
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -319,7 +320,7 @@ class _ContentDetailSheet extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "AI 분석 코멘트",
+                                S.of(context).content_detail_comment,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -353,7 +354,7 @@ class _ContentDetailSheet extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            "줄거리 / 정보",
+                            S.of(context).content_detail_info,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

@@ -1,10 +1,12 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:intl/intl.dart';
 
 import 'package:mind_canvas/features/profile/presentation/pages/liked_posts_page.dart';
 import 'package:mind_canvas/features/profile/presentation/pages/my_activity_page.dart';
@@ -318,29 +320,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     });
   }
 
-  // ==============================================================
-  // 🌐 언어 설정 로직 (UI + Riverpod )
-  // ==============================================================
   void _showLanguageDialog() {
+    print("언어 다이얼로그 들어옴");
+    // 다이얼로그가 안 열리는 문제를 잡기 위해 context.mounted 확인
+    if (!context.mounted) return;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
+      builder: (bottomSheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-             Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+          children:[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                S.of(context).profile_lan_setting,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                S.of(context).profile_lan_setting, // 💡 S 클래스 정상 사용
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-            _buildLanguageTile('한국어', 'ko'),
-            _buildLanguageTile('English', 'en'),
-            // _buildLanguageTile('日本語', 'ja'),
+            _buildLanguageTile(bottomSheetContext, '한국어', 'ko'),
+            _buildLanguageTile(bottomSheetContext, 'English', 'en'),
             const SizedBox(height: 10),
           ],
         ),
@@ -348,10 +350,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _buildLanguageTile(String title, String code) {
-    // 현재 선택된 언어 확인
+  Widget _buildLanguageTile(BuildContext bottomSheetContext, String title, String langCode) {
     final currentLang = ref.watch(appLanguageProvider);
-    final isSelected = currentLang == code;
+    final isSelected = currentLang == langCode;
     final theme = Theme.of(context);
 
     return ListTile(
@@ -359,28 +360,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurface,
+          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
         ),
       ),
       trailing: isSelected
           ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
           : null,
       onTap: () async {
-        Navigator.pop(context); // 바텀시트 닫기
+        Navigator.pop(bottomSheetContext);
 
-        // ✅ 1. 가장 먼저 Provider 상태를 업데이트 (UI 상태와 Hive 저장소 업데이트)
-        // 이 코드가 없어서 현재 UI가 갱신되지 않았던 것입니다.
-        await ref.read(appLanguageProvider.notifier).setLanguage(code);
+        // ✅ 핵심: Provider 상태만 업데이트!
+        // context.setLocale(...)은 완전히 삭제하세요.
+        await ref.read(appLanguageProvider.notifier).setLanguage(langCode);
 
-        // 2. EasyLocalization 로컬 언어 즉시 변경 (UI 텍스트 변경)
-        await context.setLocale(Locale(code));
-
-        // 3. 서버 통신 (필요 시)
-        // 만약 ProfileNotifier 내부에서 다시 appLanguageProvider를 참조하고 있다면
-        // 굳이 순서가 꼬이지 않도록 주의해야 합니다.
-        await ref.read(profileNotifierProvider.notifier).changeLanguage(code);
+        // ✅ 서버 통신
+        await ref.read(profileNotifierProvider.notifier).changeLanguage(langCode);
       },
     );
   }
@@ -751,7 +745,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         builder: (_) => const Center(child: CircularProgressIndicator()));
 
     // 2. 보상형 광고 로드 (실제 출시는 애드몹에서 발급받은 ID 사용, 아래는 구글 테스트 ID)
-    final adUnitId = 'ca-app-pub-3940256099942544/5224354917';
+    final adUnitId =  Platform.isAndroid
+        ? dotenv.env['ADMOB_BANNER_ID_ANDROID']!
+        : dotenv.env['ADMOB_BANNER_ID_IOS']!;
 
     RewardedAd.load(
       adUnitId: adUnitId,

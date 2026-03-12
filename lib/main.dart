@@ -1,4 +1,5 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mind_canvas/features/auth/presentation/screens/splash_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-
+import 'package:flutter/foundation.dart';
 // ✅ 추가: GoRouter 관련 import
 import 'app/main_screen.dart';
 import 'core/auth/token_manager.dart';
@@ -35,25 +36,34 @@ void main() async {
   // await EasyLocalization.ensureInitialized(); // 추가
   await MobileAds.instance.initialize();
 
-  // 로그인 정보가 없으므로 API 키만 넣고 초기화
-  await Purchases.setLogLevel(LogLevel.debug); // 개발 중에만 디버그 로그 켜기
-  await Purchases.configure(
-      PurchasesConfiguration("YOUR_REVENUECAT_PUBLIC_KEY"));
-
-  // 🔔 권한 요청 (iOS/Android 13+)
-  await FirebaseMessaging.instance.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
   try {
-    String? token = await FirebaseMessaging.instance.getToken();
-    print("🔥 [디버깅] 현재 기기 FCM Token: $token");
+    await dotenv.load(fileName: ".env");
+    if (kDebugMode) print("✅ .env 파일 로드 성공");
   } catch (e) {
-    print("❌ [디버깅] 토큰 가져오기 실패: $e");
-    // iOS의 경우 APNs 설정이 안 되어있으면 여기서 에러가 나거나 영원히 대기합니다.
+    if (kDebugMode) print("❌ .env 파일 로드 실패: $e");
   }
 
+  // 로그인 정보가 없으므로 API 키만 넣고 초기화
+  await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.error);
+  final revenueCatKey = Platform.isIOS
+      ? dotenv.env['REVENUECAT_APPLE_KEY']!
+      : dotenv.env['REVENUECAT_GOOGLE_KEY']!;
+  await Purchases.configure(PurchasesConfiguration(revenueCatKey));
+
+  // // 🔔 권한 요청 (iOS/Android 13+)
+  // await FirebaseMessaging.instance.requestPermission(
+  //   alert: true,
+  //   badge: true,
+  //   sound: true,
+  // );
+  if (kDebugMode) {
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      print("🔥[디버깅] 현재 기기 FCM Token: $token");
+    } catch (e) {
+      print("❌ [디버깅] 토큰 가져오기 실패: $e");
+    }
+  }
   // Hive 초기화
   await Hive.initFlutter();
   await Hive.openBox<String>('recommendation_cache');
@@ -68,12 +78,6 @@ void main() async {
   await Hive.openBox<String>('session_box_pitr');
   await Hive.openBox<String>('session_box_fishbowl');
 
-  try {
-    await dotenv.load(fileName: ".env");
-    print("✅ .env 파일 로드 성공");
-  } catch (e) {
-    print("❌ .env 파일 로드 실패: $e");
-  }
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   // (선택사항) 화면 방향을 세로로 고정하고 싶다면

@@ -60,8 +60,8 @@ class AuthNotifier extends _$AuthNotifier {
           // 🔴 서버가 꺼져있거나(500 Network Error) 토큰이 만료(401)된 경우
           print("❌ [Build] 서버 검증 실패(서버 다운 또는 토큰 만료): $error");
 
-          // 보안: 로컬 캐시에 찌꺼기가 남지 않게 로그아웃 처리(또는 토큰 클리어)를 강제하는 것이 좋습니다.
-          // ref.read(tokenManagerProvider).clearTokens();
+          // 🚨 주석 해제 및 수정! 메모리와 스토리지 모두 비워줍니다.
+          ref.read(tokenManagerProvider).clearTokens();
 
           return null; // 무조건 null을 반환하여 강제로 로그인 화면으로 유도
         },
@@ -307,7 +307,7 @@ class AuthNotifier extends _$AuthNotifier {
           ref.read(userNotifierProvider.notifier).logout();
 
           // 4. 보안 저장소 캐시 완벽 삭제
-          await AuthStorage.clearAll();
+          await ref.read(tokenManagerProvider).clearTokens();
 
           // 5. AuthNotifier 상태 비우기 (UI를 로그인 없는 상태로 그림)
           state = const AsyncData(null);
@@ -353,7 +353,7 @@ class AuthNotifier extends _$AuthNotifier {
       }
 
       print("🔑[AUTH_NOTIFIER] D. 로컬 캐시 및 UserNotifier 삭제");
-      await AuthStorage.clearAll();
+      await ref.read(tokenManagerProvider).clearTokens();
       ref.read(userNotifierProvider.notifier).logout();
 
       print(

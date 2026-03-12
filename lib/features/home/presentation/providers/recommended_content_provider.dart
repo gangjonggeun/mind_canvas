@@ -88,29 +88,26 @@ class RecommendedContentNotifier extends StateNotifier<RecommendedContentState> 
       partnerMbti: state.partnerMbti,
     );
 
-    // TODO:  이부분 다시 제작
-    // result.when(
-    //   success: (contents) {
-    //     // logger.state('추천 컨텐츠 로딩 성공: ${contents.length}개');
-    //
-    //     state = state.copyWith(
-    //       contents: contents,
-    //       isLoading: false,
-    //       errorMessage: null,
-    //     );
-    //   },
-    //   failure: (message, code) {
-    //     // logger.e('추천 컨텐츠 로딩 실패: $message', null, null, AppLogger.tagState);
-    //
-    //     state = state.copyWith(
-    //       isLoading: false,
-    //       errorMessage: message,
-    //     );
-    //   },
-    //   loading: () {
-    //     // 이미 로딩 상태 설정됨
-    //   },
-    // );
+    result.fold(
+      onSuccess: (contents) {
+        // logger.state('추천 컨텐츠 로딩 성공: ${contents.length}개');
+
+        state = state.copyWith(
+          contents: contents,
+          isLoading: false,
+          errorMessage: null,
+        );
+      },
+      onFailure: (message, code) {
+        // logger.e('추천 컨텐츠 로딩 실패: $message', null, null, AppLogger.tagState);
+
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: message,
+        );
+      },
+
+    );
   }
 
   /// 🔄 새로고침

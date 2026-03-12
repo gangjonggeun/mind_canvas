@@ -19,6 +19,40 @@ class _TestApiDataSource implements TestApiDataSource {
   String? baseUrl;
 
   @override
+  Future<ApiResponse<TestDetailResponse>> getTestDetailByTag(
+    String tag,
+    String token,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<ApiResponse<TestDetailResponse>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/tests/tag/${tag}/detail',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = ApiResponse<TestDetailResponse>.fromJson(
+      _result.data!,
+      (json) => TestDetailResponse.fromJson(json as Map<String, dynamic>),
+    );
+    return value;
+  }
+
+  @override
   Future<ApiResponse<TestResultResponse>> getTestResult(
     int resultId,
     String token,

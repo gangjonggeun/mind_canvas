@@ -1,5 +1,4 @@
 import 'dart:io'; // File 사용을 위해 필요
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

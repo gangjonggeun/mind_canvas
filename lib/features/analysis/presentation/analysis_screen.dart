@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mind_canvas/features/analysis/presentation/widgets/analysis_summary_card.dart';
 import '../../../core/widgets/common_sliver_app_bar.dart';
 import '../../../generated/l10n.dart';
+import '../../info/info_screen.dart';
 import '../data/dto/psychological_profile_response.dart';
 import '../domain/entities/analysis_data.dart';
 import 'notifier/user_analysis_notifier.dart';
@@ -132,7 +133,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
           slivers: [
             CommonSliverAppBar(
               title: S.of(context).analysis_mydata,
-              subtitle: '심리테스트를 할수록 정확해지는 분석',
+              subtitle: S.of(context).analysis_mydata_subtitle,
               icon: Icons.pie_chart_rounded,
             ),
 
@@ -183,7 +184,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
         buttonText: S.of(context).analysis_mbti_btn,
         colors: [const Color(0xFF667EEA), Color(0xFF764BA2)],
         onTap: () {
-          print("16인지 분석 이동");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'MBTI', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          );
         },
       );
     }
@@ -205,8 +213,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
         buttonText: S.of(context).analysis_big5_btn,
         colors: [const Color(0xFFFF7043), Color(0xFFE64A19)],
         onTap: () {
-          // TODO: Big5 검사 페이지로 이동
-          print("Big5 검사 이동");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'Big5', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          );
         },
       );
     }
@@ -225,8 +239,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
         buttonText: S.of(context).analysis_eneagram_btn,
         colors: [const Color(0xFF4CAF50), Color(0xFF388E3C)],
         onTap: () {
-          // TODO: 에니어그램 검사 페이지로 이동
-          print("에니어그램 검사 이동");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'ENNEAGRAM', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          );
         },
       );
     }
@@ -316,225 +336,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen>
     );
   }
 
-  // =================================================================
-  // ➕ 추가된 부분: 데이터가 없을 때 보여줄 Empty State UI
-  // =================================================================
-  Widget _buildEmptyView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF667EEA).withOpacity(0.2),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.person_search_rounded,
-                size: 64,
-                color: Color(0xFF667EEA),
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              '아직 분석 데이터가 없어요',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              '심리 검사를 진행하고 나만의\n정밀한 분석 리포트를 받아보세요.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Color(0xFF64748B),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 40),
 
-            // 검사 하러 가기 버튼
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: 검사 화면으로 이동하는 네비게이션 로직 추가
-                  print('검사 화면으로 이동');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF667EEA),
-                  foregroundColor: Colors.white,
-                  elevation: 8,
-                  shadowColor: const Color(0xFF667EEA).withOpacity(0.4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  '지금 검사하러 가기',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  //
-  // /// 개선된 성격 카드
-  // Widget _buildTrendyPersonalityCard() {
-  //
-  //
-  //   return Container(
-  //     padding: const EdgeInsets.all(24),
-  //     decoration: BoxDecoration(
-  //       gradient: const LinearGradient(
-  //         begin: Alignment.topLeft,
-  //         end: Alignment.bottomRight,
-  //         colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-  //       ),
-  //       borderRadius: BorderRadius.circular(20),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: const Color(0xFF667EEA).withOpacity(0.25),
-  //           blurRadius: 20,
-  //           offset: const Offset(0, 8),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         // 상단 헤더
-  //         Row(
-  //           children: [
-  //             Container(
-  //               width: 52,
-  //               height: 52,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white.withOpacity(0.2),
-  //                 borderRadius: BorderRadius.circular(14),
-  //               ),
-  //               child: Center(
-  //                 child: Text(
-  //                   // strongestDimension.icon,
-  //                   style: const TextStyle(fontSize: 24),
-  //                 ),
-  //               ),
-  //             ),
-  //             const SizedBox(width: 16),
-  //             const Expanded(
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Text(
-  //                     '당신의 특징',
-  //                     style: TextStyle(
-  //                       fontSize: 13,
-  //                       color: Colors.white70,
-  //                       fontWeight: FontWeight.w500,
-  //                     ),
-  //                   ),
-  //                   SizedBox(height: 4),
-  //                   Text(
-  //                     '독창적이지만 고집스러운 예술가',
-  //                     style: TextStyle(
-  //                       fontSize: 17,
-  //                       fontWeight: FontWeight.w700,
-  //                       color: Colors.white,
-  //                       height: 1.2,
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //
-  //         const SizedBox(height: 18),
-  //
-  //         // 평가 텍스트
-  //         Container(
-  //           padding: const EdgeInsets.all(18),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white.withOpacity(0.15),
-  //             borderRadius: BorderRadius.circular(14),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               const Text(
-  //                 '남들과 다른 독특한 시각으로 세상을 바라보며, 자신만의 신념과 가치관이 뚜렷한 사람이에요.',
-  //                 style: TextStyle(
-  //                   fontSize: 14,
-  //                   color: Colors.white,
-  //                   height: 1.4,
-  //                   fontWeight: FontWeight.w500,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 6),
-  //               Text(
-  //                 '때로는 고집스러워 보일 수 있지만, 그것이 당신만의 매력이자 창작의 원동력입니다.',
-  //                 style: TextStyle(
-  //                   fontSize: 13,
-  //                   color: Colors.white.withOpacity(0.9),
-  //                   height: 1.4,
-  //                   fontWeight: FontWeight.w400,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // /// 더 작은 태그들
-  // Widget _buildCompactTags() {
-  //   final topTags = _analysisData.personalityTags.take(5).toList();
-  //
-  //   return Wrap(
-  //     spacing: 6,
-  //     runSpacing: 6,
-  //     children: topTags.map((tag) {
-  //       return Container(
-  //         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-  //         decoration: BoxDecoration(
-  //           color: Color(int.parse(tag.color, radix: 16)).withOpacity(0.12),
-  //           borderRadius: BorderRadius.circular(20),
-  //           border: Border.all(
-  //             color: Color(int.parse(tag.color, radix: 16)).withOpacity(0.3),
-  //           ),
-  //         ),
-  //         child: Text(
-  //           '#${tag.name}',
-  //           style: TextStyle(
-  //             fontSize: 12,
-  //             fontWeight: FontWeight.w600,
-  //             color: Color(int.parse(tag.color, radix: 16)),
-  //           ),
-  //         ),
-  //       );
-  //     }).toList(),
-  //   );
-  // }
 
   /// MBTI 슬라이더 섹션 (이미지와 같은 디자인)
   Widget _buildMbtiSliderSection(MbtiStats mbti) {

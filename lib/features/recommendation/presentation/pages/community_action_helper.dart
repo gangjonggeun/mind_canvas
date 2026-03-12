@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../data/dto/post_response.dart';
 import '../../domain/usecase/community_use_case.dart';
 import '../provider/post_notifier.dart';
 
 // 🛑 신고 사유 리스트
-const Map<String, String> reportReasons = {
-  'SPAM': '스팸 및 도배',
-  'INAPPROPRIATE_CONTENT': '음란물 또는 부적절한 콘텐츠',
-  'HATE_SPEECH': '혐오 발언 및 모욕',
-  'HARASSMENT': '괴롭힘 및 폭력성',
-  'OTHER': '기타 사유',
-};
-
+Map<String, String> getReportReasons(BuildContext context) {
+  return {
+    'SPAM': S.of(context).community_help_spam,
+    'INAPPROPRIATE_CONTENT': S.of(context).community_help_inap,
+    'HATE_SPEECH': S.of(context).community_help_hate,
+    'HARASSMENT': S.of(context).community_help_spam_harassment,
+    'OTHER': S.of(context).community_help_other,
+  };
+}
 class CommunityActionHelper {
   /// 📌 1. 우측 상단 `...` 클릭 시 열리는 BottomSheet
   static void showPostOptions(
@@ -48,7 +50,7 @@ class CommunityActionHelper {
                 // 내 글일 때 -> 삭제하기
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: const Text('이 게시글 삭제하기', style: TextStyle(color: Colors.red)),
+                  title: Text(S.of(context).community_help_delete, style: TextStyle(color: Colors.red)),
                   onTap: () {
                     Navigator.pop(context);
                     _showDeleteConfirmDialog(context, ref, post.id);
@@ -58,7 +60,7 @@ class CommunityActionHelper {
 
               ListTile(
                 leading: const Icon(Icons.report_problem_outlined, color: Colors.red),
-                title: const Text('이 게시글 신고하기', style: TextStyle(color: Colors.red)),
+                title:Text(S.of(context).community_help_report, style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);
                   showReportDialog(context, ref, post.id, 'POST');
@@ -67,7 +69,7 @@ class CommunityActionHelper {
               ),
               ListTile(
                 leading: const Icon(Icons.block, color: Colors.black87),
-                title: const Text('이 사용자 차단하기'),
+                title:  Text(S.of(context).community_help_ban),
                 onTap: () {
                   Navigator.pop(context);
                   _showBlockDialog(context, ref, post.userId);
@@ -85,8 +87,8 @@ class CommunityActionHelper {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("게시글 삭제"),
-        content: const Text("정말로 이 게시글을 삭제하시겠습니까?"),
+        title:  Text(S.of(context).community_help_delete_confirm),
+        content: Text(S.of(context).community_help_delete_confirm_content),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("취소")),
           TextButton(
@@ -99,14 +101,14 @@ class CommunityActionHelper {
               if (success) {
                 // 성공 토스트
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("게시글이 삭제되었습니다.")),
+                   SnackBar(content: Text(S.of(context).community_help_delete_succes)),
                 );
                 final postState = ref.read(postNotifierProvider);
 
 
               }
             },
-            child: const Text("삭제", style: TextStyle(color: Colors.red)),
+            child: Text(S.of(context).community_help_delete, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -125,10 +127,10 @@ class CommunityActionHelper {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              title: const Text('신고 사유 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              title:  Text(S.of(context).community_help_report_category, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: reportReasons.entries.map((entry) {
+                children: getReportReasons(context).entries.map((entry) {
                   return RadioListTile<String>(
                     title: Text(entry.value, style: const TextStyle(fontSize: 14)),
                     value: entry.key,
@@ -144,21 +146,33 @@ class CommunityActionHelper {
               actions:[
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                  child:  Text(S.of(context).community_help_report_cancel, style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                   onPressed: () async {
-                    // TODO: 로딩 표시기 추가 (Double Submit 방지)
-                    Navigator.pop(context);
-                    await ref.read(communityUseCaseProvider).reportContent(
-                      targetId: targetId, targetType: targetType, reason: selectedReason,
+                    Navigator.pop(context); // 다이얼로그 먼저 닫기
+
+                    // ✅ 올바른 방식: Notifier의 report 함수 호출
+                    final isSuccess = await ref.read(postNotifierProvider.notifier).report(
+                        targetId, targetType, selectedReason
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.')),
-                    );
+
+                    // 화면이 살아있는지 체크 후 스낵바 띄우기 (Flutter 권장 사항)
+                    if (!context.mounted) return;
+
+                    if (isSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text(S.of(context).post_report_succes)),
+                      );
+                    } else {
+                      // ⚠️ 기존 코드에는 성공/실패 여부 상관없이 무조건 fail 스낵바를 띄우고 있었습니다. 수정!
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(S.of(context).community_help_report_fail)),
+                      );
+                    }
                   },
-                  child: const Text('신고하기'),
+                  child: Text(S.of(context).community_help_report_ok),
                 ),
               ],
             );
@@ -167,37 +181,45 @@ class CommunityActionHelper {
       },
     );
   }
-
-  /// 📌 3. 차단하기 다이얼로그
   static void _showBlockDialog(BuildContext context, WidgetRef ref, int userId) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const Text('사용자 차단', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text(
-            '차단하시겠습니까?\n차단된 사용자의 게시글과 댓글은 더 이상 보이지 않으며, 차단 해제는 설정에서 가능합니다.',
+          title:  Text(S.of(context).post_ban_title, style: TextStyle(fontWeight: FontWeight.bold)),
+          content:  Text(
+            S.of(context).post_ban_content,
             style: TextStyle(height: 1.5),
           ),
           actions:[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('취소', style: TextStyle(color: Colors.grey)),
+              child:  Text(S.of(context).post_ban_cancel, style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
               onPressed: () async {
-                Navigator.pop(context);
-                await ref.read(communityUseCaseProvider).blockUser(userId);
-                // TODO: 게시글 목록 새로고침 호출 (차단한 유저 글 숨기기)
-                ref.read(postNotifierProvider.notifier).fetchPosts(forceRefresh: true);
+                Navigator.pop(context); // 다이얼로그 닫기
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('해당 사용자가 차단되었습니다.')),
-                );
+                // ✅ 올바른 방식: Notifier의 blockUser 호출 (알아서 로컬 업데이트됨)
+                final isSuccess = await ref.read(postNotifierProvider.notifier).blockUser(userId);
+
+                // ❌ fetchPosts(forceRefresh: true) 제거! 낙관적 업데이트를 했으니 서버에서 다시 부를 필요가 없습니다.
+
+                if (!context.mounted) return;
+
+                if (isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(content: Text(S.of(context).post_ban_succes)),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(content: Text(S.of(context).post_ban_title_fail)),
+                  );
+                }
               },
-              child: const Text('차단하기'),
+              child:  Text(S.of(context).post_ban_ok),
             ),
           ],
         );

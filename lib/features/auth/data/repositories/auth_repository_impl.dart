@@ -359,7 +359,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<bool> isTokenExpired() async {
-    return _tokenManager.isTokenExpired;
+    // 💡 isTokenExpired 대신 isAccessTokenExpired 로 이름 변경
+    return _tokenManager.isAccessTokenExpired;
   }
 
   @override

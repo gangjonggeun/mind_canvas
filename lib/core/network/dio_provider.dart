@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -17,7 +18,7 @@ Dio dio(DioRef ref) {
   // 🔧 기본 설정
   // =============================================================
 
-  dio.options.baseUrl = "http://192.168.219.103:8080/api/v1";
+  dio.options.baseUrl = dotenv.env['API_BASE_URL'] ?? "http://192.168.219.103:8080/api/v1";
 
   // ✅ 기본 헤더 설정 (핵심!)
   dio.options.headers = {

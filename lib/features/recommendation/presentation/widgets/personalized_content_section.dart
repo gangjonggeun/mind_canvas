@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mind_canvas/features/recommendation/presentation/widgets/content_detail_sheet.dart';
 import 'dart:math'; // 그라디언트 랜덤 생성용
 
 import '../../../../app/presentation/notifier/user_notifier.dart';
 import '../../../../core/utils/cover_image_helper.dart';
+import '../../../../generated/l10n.dart';
 import '../../domain/enums/rec_category.dart';
 import '../../domain/entity/recommendation_result.dart';
 import '../provider/recommendation_notifier.dart';
@@ -88,7 +90,7 @@ class _PersonalizedContentSectionState
                     Row(
                       children:[
                         Text(
-                          '당신을 위한 AI 추천',
+                          S.of(context).recommendation_card_title,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -109,7 +111,7 @@ class _PersonalizedContentSectionState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_selectedCategory.label} 큐레이션',
+                      S.of(context).recommendation_card_qur(_selectedCategory.label), //'${_selectedCategory.label} 큐레이션'
                       style: TextStyle(fontSize: 14, color: subTextColor),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -122,7 +124,7 @@ class _PersonalizedContentSectionState
                 IconButton(
                   onPressed: _requestRecommendation,
                   icon: Icon(Icons.refresh, color: subTextColor),
-                  tooltip: '다시 추천 받기 (15코인)',
+                  tooltip: S.of(context).recommendation_card_retry,
                 )
               else if (recState.isLoading)
                 SizedBox(
@@ -174,7 +176,7 @@ class _PersonalizedContentSectionState
               const Icon(Icons.leaderboard_sharp, color: Color(0xFF6B73FF)),
               const SizedBox(width: 8),
               Text(
-                '테스트 추천 방식',
+                S.of(context).recommendation_card_test_help,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -184,9 +186,7 @@ class _PersonalizedContentSectionState
             ],
           ),
           content: Text(
-                '18인지, Big5, 9가지 성격, 가치관, 직업흥미 등 \n다양한 성격 테스트를 통한 컨텐츠를 추천해드립니다.\n\n'
-                '테스트를 많이 진행할수록 더욱 정교하고\n'
-                '내 취향에 딱 맞는 컨텐츠가 추천됩니다!',
+                S.of(context).recommendation_card_help_content,
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
@@ -196,7 +196,7 @@ class _PersonalizedContentSectionState
           actions:[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('확인', style: TextStyle(color: Color(0xFF6B73FF))),
+              child:  Text(S.of(context).recommendation_card_ok, style: TextStyle(color: Color(0xFF6B73FF))),
             ),
           ],
         );
@@ -244,7 +244,7 @@ class _PersonalizedContentSectionState
   // 데이터 상태에 따른 본문
   Widget _buildBody(RecommendationState state, bool isDark) {
     if (state.errorMessage != null) {
-      return _buildErrorState(state.errorMessage!);
+      return _buildErrorState(state);
     }
 
     // 1️⃣ 데이터 없음 (초기 상태) -> "추천 받기 버튼" 표시
@@ -254,7 +254,7 @@ class _PersonalizedContentSectionState
 
     // 2️⃣ 로딩 중
     if (state.isLoading) {
-      return const SizedBox(
+      return  SizedBox(
         height: 180,
         child: Center(
           child: Column(
@@ -263,7 +263,7 @@ class _PersonalizedContentSectionState
               CircularProgressIndicator(),
               SizedBox(height: 12),
               Text(
-                "AI가 취향을 분석하고 있습니다...",
+                S.of(context).recommendation_card_loading,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -281,9 +281,9 @@ class _PersonalizedContentSectionState
     );
 
     if (group.items.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 180,
-        child: Center(child: Text("이 카테고리의 추천 결과가 없습니다.")),
+        child: Center(child: Text(S.of(context).recommendation_card_empty)),
       );
     }
 
@@ -324,7 +324,7 @@ class _PersonalizedContentSectionState
           ),
           const SizedBox(height: 12),
           Text(
-            "아직 추천받은 내역이 없습니다",
+            S.of(context).recommendation_card_no_data,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white70 : Colors.black87,
@@ -332,7 +332,7 @@ class _PersonalizedContentSectionState
           ),
           const SizedBox(height: 4),
           Text(
-            "성격 데이터를 기반으로 딱 맞는 컨텐츠를 찾아드려요!",
+            S.of(context).recommendation_card_nodata_content,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -351,69 +351,73 @@ class _PersonalizedContentSectionState
               elevation: 4,
             ),
             icon: const Icon(Icons.bolt, size: 18),
-            label: const Text("추천 받기 (30 잉크)"),
+            label:  Text(S.of(context).recommendation_card_btn),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "* 심리 테스트 결과가 많을수록 정확도가 올라갑니다",
+           Text(
+            S.of(context).recommendation_card_info,
             style: TextStyle(fontSize: 10, color: Colors.grey),
           ),
         ],
       ),
     );
   }
+  Widget _buildErrorState(RecommendationState state) {
+    // 1. 데이터 부족 에러일 경우 (성격 테스트를 안 한 유저)
+    if (state.errorCode == 'INSUFFICIENT_DATA' || state.errorCode == 'NO_DATA') {
+      return Container(
+        height: 180,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children:[
+            const Icon(Icons.assignment_late_outlined, color: Colors.orangeAccent, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              // 다국어 처리: "정확한 추천을 위해 먼저 심리 테스트를 진행해주세요!"
+              S.of(context).rec_error_no_data,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                  context.go('/home'); 
+              },
+              child: Text(S.of(context).recommendation_go_to_test_btn), //  recommendation_go_to_test_btn
+            ),
+          ],
+        ),
+      );
+    }
 
-  /// ⚠️ 에러 상태 위젯
-  Widget _buildErrorState(String message) {
+    // 2. 그 외 일반적인 에러 (네트워크 오류, 서버 에러 등)
     return Container(
       height: 180,
       alignment: Alignment.center,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children:[
           const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
           const SizedBox(height: 8),
           Text(
-            message,
+            // 만약 백엔드 메시지를 그대로 쓰고 싶지 않다면 errorCode로 분기하여 S.of(context) 사용
+            state.errorMessage ?? "error",
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12),
           ),
           TextButton(
             onPressed: _requestRecommendation,
-            child: const Text("다시 시도"),
+            child: Text(S.of(context).recommendation_card_retry), // "다시 시도"
           ),
         ],
       ),
     );
   }
-
-  // // 🚀 요청 메서드
-  // void _requestRecommendation() {
-  //   // 1. 코인 확인 (UserNotifier 상태 확인)
-  //   final user = ref.read(userNotifierProvider);
-  //   final coins = user?.coins ?? 0;
-  //
-  //   if (coins < 15) {
-  //     // 코인 부족 팝업
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text('코인이 부족합니다! (필요: 15코인)')));
-  //     return;
-  //   }
-  //
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text('AI 추천을 요청합니다... 잠시만 기다려주세요.')),
-  //   );
-  //
-  //   ref
-  //       .read(recommendationNotifierProvider.notifier)
-  //       .fetchRecommendations(
-  //         categories: RecCategory.values,
-  //         userMood: "",
-  //         forceRefresh: true,
-  //       );
-  // }
-
   void _requestRecommendation() {
     _showRefreshConfirmDialog();
   }
@@ -432,7 +436,7 @@ class _PersonalizedContentSectionState
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            '새로운 추천 받기',
+            S.of(context).recommendation_card_new_rec,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
@@ -444,7 +448,7 @@ class _PersonalizedContentSectionState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '현재 추천받은 컨텐츠 목록은 사라지고,\n새로운 분석 결과로 덮어씌워집니다.',
+                S.of(context).recommendation_card_new_rec_info,
                 style: TextStyle(
                   color: isDark ? Colors.grey[300] : Colors.black87,
                   fontSize: 14,
@@ -465,8 +469,8 @@ class _PersonalizedContentSectionState
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    '15코인이 차감됩니다.',
+                  Text(
+                    S.of(context).recommendation_card_ink,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.amber, // 혹은 포인트 컬러
@@ -481,7 +485,7 @@ class _PersonalizedContentSectionState
             TextButton(
               onPressed: () => Navigator.of(context).pop(false), // 취소
               child: Text(
-                '취소',
+                S.of(context).recommendation_card_cancel,
                 style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
                 ),
@@ -496,7 +500,7 @@ class _PersonalizedContentSectionState
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('새로 받기'),
+              child:  Text(S.of(context).recommendation_card_new_data),
             ),
           ],
         );
@@ -518,7 +522,7 @@ class _PersonalizedContentSectionState
     if (coins < 15) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('코인이 부족합니다! (필요: 15코인)'),
+          content:  Text(S.of(context).recommendation_card_ink_fail),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -532,7 +536,7 @@ class _PersonalizedContentSectionState
     // 2. 안내 메시지
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('AI가 새로운 취향을 분석 중입니다...'),
+        content:  Text(S.of(context).recommendation_card_loading),
         backgroundColor: const Color(0xFF2D3748),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,

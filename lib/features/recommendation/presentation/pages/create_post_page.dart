@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../generated/l10n.dart';
 import '../provider/channel_notifier.dart';
 import '../provider/post_notifier.dart';
 
@@ -34,8 +35,8 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          "새 게시글",
+        title: Text(
+          S.of(context).post_add_new_post,
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -47,8 +48,8 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    "게시",
+                :  Text(
+                    S.of(context).post_add_post_btn,
                     style: TextStyle(
                       color: Colors.blueAccent,
                       fontWeight: FontWeight.bold,
@@ -74,12 +75,12 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                   child: DropdownButton<String>(
                     // value가 null이면 '힌트'가 보임
                     value: _selectedChannel,
-                    hint: const Text("게시판을 선택하세요"),
+                    hint:  Text(S.of(context).post_add_select_post),
                     isExpanded: true,
                     items: myChannels.map((channel) {
                       String displayName = channel.name;
                       if (channel.channel == 'FREE') {
-                        displayName = "자유 광장(ALL) 채널"; // 'Free 채널' 대신 이걸로 표시
+                        displayName = S.of(context).post_add_all_chanel; // 'Free 채널' 대신 이걸로 표시
                       }
                       return DropdownMenuItem(
                         value: channel.channel,
@@ -102,18 +103,18 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
             const SizedBox(height: 16),
 
             // 카테고리 선택 (Chip)
-            const Text(
-              "카테고리",
+             Text(
+              S.of(context).post_add_category,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildCategoryChip("💬 잡담", "CHAT"),
+                _buildCategoryChip(S.of(context).post_add_chat, "CHAT"),
                 const SizedBox(width: 8),
-                _buildCategoryChip("❓ 질문", "QUESTION"),
+                _buildCategoryChip(S.of(context).post_add_q, "QUESTION"),
                 const SizedBox(width: 8),
-                _buildCategoryChip("📝 리뷰", "REVIEW"),
+                _buildCategoryChip(S.of(context).post_add_review, "REVIEW"),
               ],
             ),
             const SizedBox(height: 24),
@@ -121,8 +122,8 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
             // 제목 입력
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: "제목을 입력하세요",
+              decoration:  InputDecoration(
+                hintText: S.of(context).post_add_enter_title,
                 border: InputBorder.none,
                 hintStyle: TextStyle(
                   fontSize: 20,
@@ -139,8 +140,8 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
               controller: _contentController,
               maxLines: null,
               minLines: 8,
-              decoration: const InputDecoration(
-                hintText: "나누고 싶은 이야기를 적어보세요...",
+              decoration:  InputDecoration(
+                hintText: S.of(context).post_add_enter_content,
                 border: InputBorder.none,
               ),
             ),
@@ -173,32 +174,42 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       label: Text(
         label,
         style: TextStyle(
-          // 선택되면 하얀색, 아니면 약간 진한 색
           color: isSelected ? Colors.white : Colors.black54,
           fontWeight: FontWeight.bold,
           fontSize: 14,
         ),
       ),
       selected: isSelected,
-      onSelected: (selected) {
-        if (selected) setState(() => _selectedCategory = value);
-      },
-
-      // ✅ 선택되었을 때 배경색 (진한 파스텔)
       selectedColor: baseColor,
-
-      // ✅ 선택 안 되었을 때 배경색 (아주 연한 파스텔 or 회색)
       backgroundColor: Colors.grey.shade100,
-
-      // ✅ 체크 아이콘 색상 (하얀색)
       checkmarkColor: Colors.white,
-
-      // 테두리 없애기 (깔끔하게)
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
 
-      // 터치 시 물결 효과 색상
-      // splashColor: baseColor.withOpacity(0.3),
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _selectedCategory = value;
+
+            // 💡 다국어(S.of) 처리를 위해 상수를 빼지 않고 내부에 선언
+            // 필요에 따라 '제목', '장르' 부분을 S.of(context).xxx 로 치환하시면 됩니다.
+            final String reviewTemplate = S.of(context).post_add_review_templete;
+
+            // 1. 리뷰 카테고리를 눌렀고, 현재 내용이 비어있다면 템플릿 삽입
+            if (value == 'REVIEW') {
+              if (_contentController.text.trim().isEmpty) {
+                _contentController.text = reviewTemplate;
+              }
+            }
+            // 2. 다른 카테고리로 바꿨는데, 내용이 '템플릿 그대로'라면 지워줌 (UX 디테일)
+            else {
+              if (_contentController.text == reviewTemplate) {
+                _contentController.text = '';
+              }
+            }
+          });
+        }
+      },
     );
   }
 
@@ -209,14 +220,14 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     if (_selectedChannel == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("게시글을 작성할 채널을 선택해주세요.")));
+      ).showSnackBar( SnackBar(content: Text(S.of(context).post_add_select_chanal_info)));
       return;
     }
 
     if (title.isEmpty || content.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("제목과 내용을 모두 입력해주세요.")));
+      ).showSnackBar( SnackBar(content: Text(S.of(context).post_add_enter_content_info)));
       return;
     }
 

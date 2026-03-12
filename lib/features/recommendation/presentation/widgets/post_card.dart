@@ -5,6 +5,7 @@ import 'package:mind_canvas/features/recommendation/presentation/pages/expandabl
 import 'package:mind_canvas/features/recommendation/presentation/pages/user_profile_avatar.dart';
 
 import '../../../../app/presentation/notifier/user_notifier.dart';
+import '../../../../generated/l10n.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/dto/embedded_content.dart';
 import '../../data/dto/post_response.dart';
@@ -25,7 +26,7 @@ class PostCard extends ConsumerWidget {
       super.key});
 
   String _getChannelDisplayName(String channelCode) {
-    if (channelCode == 'FREE') return '자유 광장';
+    if (channelCode == 'FREE') return 'ALL';
     return channelCode; // 나머지는 그대로 (INTP 등)
   }
 
@@ -63,16 +64,16 @@ class PostCard extends ConsumerWidget {
     if (count < 1000) return '$count';
     if (count < 10000) {
       // 1.2천
-      return '${(count / 1000).toStringAsFixed(1)}천';
+      return '${(count / 1000).toStringAsFixed(1)}k';
     }
     // 3.5만
-    return '${(count / 10000).toStringAsFixed(1)}만';
+    return '${(count / 10000).toStringAsFixed(1)}0k';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final timeAgo = _getTimeAgo(post.createdAt);
-    final channelName = post.channel == 'FREE' ? '자유 광장(ALL)' : post.channel;
+    final timeAgo = _getTimeAgo(context, post.createdAt);
+    final channelName = post.channel == 'FREE' ? 'ALL' : post.channel;
     final channelColor = _getChannelColor(post.channel);
     final categoryName = _getCategoryName(post.category);
     final userState = ref.watch(userNotifierProvider);
@@ -117,7 +118,7 @@ class PostCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children:[
                         Text(
-                          post.authorNickname ?? '익명',
+                          post.authorNickname ?? S.of(context).post_card_anonymity,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         const SizedBox(height: 2),
@@ -230,12 +231,12 @@ class PostCard extends ConsumerWidget {
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
+  String _getTimeAgo(BuildContext context, DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
-    if (diff.inMinutes < 1) return '방금 전';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
-    if (diff.inHours < 24) return '${diff.inHours}시간 전';
-    return '${diff.inDays}일 전';
+    if (diff.inMinutes < 1) return S.of(context).post_card_now;
+    if (diff.inMinutes < 60) return S.of(context).post_card_few_m(diff.inMinutes); //${diff.inMinutes}분 전
+    if (diff.inHours < 24) return S.of(context).post_card_few_h(diff.inHours);
+    return S.of(context).post_card_few_d(diff.inDays);
   }
 }
 
@@ -289,7 +290,7 @@ class _EmbeddedContentCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    content.type == "MOVIE" ? "🎬 영화 추천" : "📚 도서 추천",
+                    content.type == "MOVIE" ? S.of(context).post_card_movie : S.of(context).post_card_book,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.blueAccent.shade700,

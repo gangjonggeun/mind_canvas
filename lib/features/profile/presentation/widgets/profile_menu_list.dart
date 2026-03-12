@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -55,19 +55,19 @@ class ProfileMenuList extends StatelessWidget {
         _buildMenuSection([
           // 테마 설정은 일단 숨김 처리 (기획 반영)
           _MenuItem(
-            id: '언어 설정',
+            id: 'language',
             icon: Icons.language_rounded,
             title: S.of(context).profile_menu_language,
             subtitle: '한국어, English',
             color: Colors.green,
           ),
-          _MenuItem(
-            id: 'notifications',
-            icon: Icons.notifications_rounded,
-            title: '알림 설정',
-            subtitle: '푸시 알림 관리',
-            color: Colors.orange,
-          ),
+          // _MenuItem(
+          //   id: 'notifications',
+          //   icon: Icons.notifications_rounded,
+          //   title: '알림 설정',
+          //   subtitle: '푸시 알림 관리',
+          //   color: Colors.orange,
+          // ),
         ], theme, colorScheme),
 
         const SizedBox(height: 24),
@@ -103,7 +103,7 @@ class ProfileMenuList extends StatelessWidget {
 
   Widget _buildSectionTitle(BuildContext context, String key) {
     return Text(
-      key.tr(),
+      key,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.w700,
       ),

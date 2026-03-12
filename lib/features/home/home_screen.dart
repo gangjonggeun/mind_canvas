@@ -6,6 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mind_canvas/features/home/presentation/notifiers/insight_notifier.dart';
+import 'package:mind_canvas/features/home/presentation/notifiers/test_recommendation_notifier.dart';
 import 'package:mind_canvas/features/home/presentation/screen/popular_test_ranking_screen.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/HomeInsightSection.dart';
 import 'package:mind_canvas/features/home/presentation/widgets/home_recommendation_section.dart';
@@ -53,7 +55,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(testListNotifierProvider.notifier).loadPopularTests();
     });
 
-
     // 🔔 앱이 켜져 있을 때 알림 수신 안내 메세지
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('📩 포그라운드 알림 도착: ${message.notification?.title}');
@@ -62,19 +63,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 간단하게 스낵바로 표시
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${message.notification!.title}\n${message.notification!.body}'),
+            content: Text(
+                '${message.notification!.title}\n${message.notification!.body}'),
             backgroundColor: Colors.blueAccent,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     });
+  }
 
+  Future<void> _onRefresh() async {
+    // 1. 인기 테스트 강제 다시 불러오기
+    // (만약 loadPopularTests()가 Future를 반환한다면 await를 붙여주세요)
+    await ref.read(testListNotifierProvider.notifier).loadPopularTests();
+
+    // 2. 만약 다른 섹션(추천, 최근 테스트, 인사이트 등)도 프로바이더가 있다면 여기서 같이 호출해주세요.
+    await ref
+        .read(testRecommendationNotifierProvider.notifier)
+        .fetchRecommendations();
+    await ref.read(insightNotifierProvider.notifier).fetchInsights();
+    /*
+      💡 Riverpod 전문가 팁:
+      만약 FutureProvider나 AsyncNotifier를 쓰고 계시다면, 함수를 따로 부를 필요 없이
+      아래처럼 캐시를 무효화(invalidate) 시켜버리면 알아서 다시 통신하고 화면을 그립니다.
+      ref.invalidate(testListNotifierProvider);
+    */
+
+    // 약간의 딜레이를 주어 스피너가 자연스럽게 보이게 할 수도 있습니다. (선택사항)
+    // await Future.delayed(const Duration(milliseconds: 500));
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
@@ -85,6 +106,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             // ===== 📋 메인 컨텐츠 영역 (반응형 패딩) =====
             Expanded(
+                child: RefreshIndicator(
+              onRefresh: _onRefresh, // 2️⃣ 위에서 만든 새로고침 함수 연결
+              color: Colors.blueAccent, // 로딩 스피너 색상 (앱 테마에 맞게 변경하세요)
+
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(AppDimensions.getMainPadding(context)),
                 // 반응형 패딩
@@ -105,15 +130,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
-            ),
+            )),
           ],
         ),
       ),
     );
   }
-
-
-
 
   /// 🏆 인기 테스트 랭킹 섹션 (반응형) - Consumer 버전
   Widget _buildTestRanking() {
@@ -165,12 +187,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 });
                 return _buildRankingLoading();
               },
-
               loading: () {
                 print('⏳ HomeScreen: Loading popular tests...');
                 return _buildRankingLoading();
               },
-
               loaded: (items, hasMore, currentPage, isLoadingMore, loadType) {
                 print(
                   '✅ HomeScreen: Loaded ${items.length} items, loadType: $loadType',
@@ -194,7 +214,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 }
               },
-
               error: (message) {
                 print('❌ HomeScreen: Error loading popular tests: $message');
                 return _buildRankingError(message);
@@ -250,7 +269,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
 
   // 실제 랭킹 리스트 UI
   Widget _buildRankingList(List<TestRankingItem> items) {
@@ -526,6 +544,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
+
   //
   // Widget _buildTestCategories() {
   //   return Column(
@@ -755,15 +774,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   //   );
   // }
 
-
-
   Widget _buildRecentTests() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children:[
+      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children:[
+          children: [
             Text(
               S.of(context).home_recent_insp,
               style: TextStyle(
@@ -773,7 +790,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             Row(
-              children:[
+              children: [
                 // 🔄 [추가] 새로고침 아이콘 버튼
                 IconButton(
                   onPressed: () {
@@ -790,7 +807,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   icon: const Icon(Icons.refresh, color: AppColors.primaryBlue),
                   tooltip: S.of(context).home_refresh,
-                  padding: EdgeInsets.zero, // 버튼 주변 기본 여백 제거
+                  padding: EdgeInsets.zero,
+                  // 버튼 주변 기본 여백 제거
                   constraints: const BoxConstraints(), // 버튼 크기를 아이콘에 딱 맞춤
                 ),
                 const SizedBox(width: 4), // 아이콘과 버튼 사이 간격
@@ -811,7 +829,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 TextButton(
                   onPressed: () {
                     context.pushNamed('my_activity');
-
                   },
                   child: Text(
                     S.of(context).home_all_see,
@@ -845,15 +862,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return Column(
           children: [
             const SizedBox(height: 16),
-            ...results.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TestResultItem(result: item, onDelete: () async {
-                // 1. 삭제 호출 (이미 만들어둔 useCase 사용)
-                await ref.read(testUseCaseProvider).deleteTestResult(item.id);
-                // 2. 홈 화면 데이터 새로고침
-                ref.invalidate(recentTestResultsProvider);
-              },), // 👈 아까 만든 공용 위젯 재사용!
-            )).toList(),
+            ...results
+                .map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TestResultItem(
+                        result: item,
+                        onDelete: () async {
+                          // 1. 삭제 호출 (이미 만들어둔 useCase 사용)
+                          await ref
+                              .read(testUseCaseProvider)
+                              .deleteTestResult(item.id);
+                          // 2. 홈 화면 데이터 새로고침
+                          ref.invalidate(recentTestResultsProvider);
+                        },
+                      ), // 👈 아까 만든 공용 위젯 재사용!
+                    ))
+                .toList(),
           ],
         );
       },
@@ -882,16 +906,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Icon(Icons.psychology_outlined, size: 40, color: Colors.grey[300]),
           const SizedBox(height: 12),
-          Text(S.of(context).home_no_analy, style: TextStyle(color: Colors.grey)),
+          Text(S.of(context).home_no_analy,
+              style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => {/* 테스트 탭으로 이동 */},
+            onPressed: () => {
+              /* 테스트 탭으로 이동 */
+            },
             child: Text(S.of(context).home_start_test),
           ),
         ],
       ),
     );
   }
+
   /// 화면 크기에 따른 반응형 랭킹 카드
   Widget _buildRankingCard({
     required int rank,
@@ -1011,8 +1039,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
 
                   // 참여자 수만 표시
-                  Text(//'${_formatParticipantCount(participantCount)}명 참여'
-                    S.of(context).home_count(_formatParticipantCount(participantCount)),
+                  Text(
+                    //'${_formatParticipantCount(participantCount)}명 참여'
+                    S
+                        .of(context)
+                        .home_count(_formatParticipantCount(participantCount)),
                     style: TextStyle(
                       fontSize: AppDimensions.getRankingCardParticipantFontSize(
                         context,
@@ -1046,9 +1077,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 참여자 수 포맷팅
   String _formatParticipantCount(int count) {
     if (count >= 10000) {
-      return S.of(context).home_count_people_tenthousand((count / 10000).toStringAsFixed(1)); //'${(count / 10000).toStringAsFixed(1)}만'
+      return S.of(context).home_count_people_tenthousand((count / 10000)
+          .toStringAsFixed(1)); //'${(count / 10000).toStringAsFixed(1)}만'
     } else if (count >= 1000) {
-      return S.of(context).home_count_people_thousand((count / 1000).toStringAsFixed(1)); //'${(count / 1000).toStringAsFixed(1)}천'
+      return S.of(context).home_count_people_thousand((count / 1000)
+          .toStringAsFixed(1)); //'${(count / 1000).toStringAsFixed(1)}천'
     } else {
       return count.toString();
     }
@@ -1246,8 +1279,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           style: TextStyle(
                             fontSize:
                                 AppDimensions.getRankingCardParticipantFontSize(
-                                  context,
-                                ),
+                              context,
+                            ),
                             fontWeight: FontWeight.w600,
                             color: gradientColors.first,
                           ),

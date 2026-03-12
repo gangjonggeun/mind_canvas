@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mind_canvas/features/recommendation/presentation/pages/expandable_post_text.dart';
 import 'package:mind_canvas/features/recommendation/presentation/pages/user_profile_avatar.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../data/dto/embedded_content.dart';
 import '../../data/dto/post_response.dart';
 import '../../domain/usecase/community_use_case.dart';
@@ -64,8 +65,8 @@ class _CommunityPageState extends ConsumerState<CommunityPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          '게시판', // 로고나 앱 이름
+        title: Text(
+          S.of(context).community_title, // 로고나 앱 이름
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -134,10 +135,10 @@ class _CommunityPageState extends ConsumerState<CommunityPage> {
                 child: Center(child: Text(postState.errorMessage!)),
               )
             else if (postState.posts.isEmpty)
-              const SliverFillRemaining(
+               SliverFillRemaining(
                 child: Center(
                   child: Text(
-                    "아직 게시글이 없습니다.\n첫 글을 작성해보세요!",
+                    S.of(context).community_empty,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -238,7 +239,7 @@ class _ChannelBarSection extends ConsumerWidget {
           // 2. 채널 아이템 (FREE 포함)
           final item = myChannels[index];
 
-          final displayName = (item.channel == 'FREE') ? "자유 광장" : item.name;
+          final displayName = (item.channel == 'FREE') ? 'ALL' : item.name;
           final isSelected = currentChannel == item.channel;
           final color = _getChannelColor(item.channel);
 
@@ -259,20 +260,20 @@ class _ChannelBarSection extends ConsumerWidget {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: Colors.white,
-                  title: Text('$displayName 채널 삭제'),
-                  content: const Text('이 커뮤니티 목록에서 삭제하시겠습니까?'),
+                  title: Text(S.of(context).community_delete(displayName)), //'$displayName 채널 삭제'
+                  content:  Text(S.of(context).community_delete_content),
                   actions:[
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                      child: Text(S.of(context).community_delete_cnacel, style: TextStyle(color: Colors.grey)),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(ctx);
                         ref.read(channelNotifierProvider.notifier).leaveChannel(item.channel);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('채널이 삭제되었습니다.')));
+                        ScaffoldMessenger.of(context).showSnackBar( SnackBar(content: Text(S.of(context).community_delete_succes)));
                       },
-                      child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                      child:  Text(S.of(context).community_delete_btn, style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -350,7 +351,7 @@ class _ChannelBarSection extends ConsumerWidget {
             child: const Icon(Icons.add, color: Colors.black54),
           ),
           const SizedBox(height: 4),
-          const Text("더보기", style: TextStyle(fontSize: 12, color: Colors.grey)),
+           Text(S.of(context).community_more, style: TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),
     );
@@ -392,10 +393,10 @@ class _ChannelBarSection extends ConsumerWidget {
                       ),
                     ),
                     // ✅ [수정] 타이틀 변경
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(bottom: 16.0),
                       child: Text(
-                        "현재 참여할 수 있는 커뮤니티",
+                        S.of(context).community_can_join,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -411,7 +412,7 @@ class _ChannelBarSection extends ConsumerWidget {
                     else
                       Expanded(
                         child: recommended.isEmpty
-                            ? const Center(child: Text("참여 가능한 채널이 없습니다."))
+                            ?  Center(child: Text(S.of(context).community_join_empty))
                             : ListView.builder(
                                 controller: scrollController,
                                 itemCount: recommended.length,
@@ -437,8 +438,8 @@ class _ChannelBarSection extends ConsumerWidget {
                                     trailing: channel.isJoined
                                         ? TextButton(
                                             onPressed: null,
-                                            child: const Text(
-                                              "참여중",
+                                            child: Text(
+                                              S.of(context).community_joined,
                                               style: TextStyle(
                                                 color: Colors.grey,
                                               ),
@@ -460,7 +461,7 @@ class _ChannelBarSection extends ConsumerWidget {
                                                   )
                                                   .joinChannel(channel.channel);
                                             },
-                                            child: const Text("참여"),
+                                            child: Text(S.of(context).community_join_btn),
                                           ),
                                   );
                                 },
@@ -487,13 +488,12 @@ class _FilterBar extends StatelessWidget {
   final Function(String) onSortChanged;
 
   const _FilterBar({required this.currentSort, required this.onSortChanged});
-
-  @override
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
         final currentCategory = ref.watch(postNotifierProvider).currentCategory;
+        final currentSort = ref.watch(postNotifierProvider).currentSort; // currentSort도 watch 권장
 
         void changeCategory(String? category) {
           final postState = ref.read(postNotifierProvider);
@@ -508,32 +508,38 @@ class _FilterBar extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ 좌우 끝으로 정렬
             children: [
-              // 1. [좌측] 정렬 칩 (최신 / 인기 / 급상승)
-              Row(
-                children: [
-                  _buildSortChip(
-                    label: '최신 ✨', // ✅ 이모티콘 추가
-                    isSelected: currentSort == null || currentSort == 'createdAt,desc',
-                    onTap: () => onSortChanged('createdAt,desc'),
+              // 1. [좌측] 정렬 칩 영역 - 가로 스크롤 가능하게 Wrap
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildSortChip(
+                        label: S.of(context).community_orderby_latest,
+                        isSelected: currentSort == null || currentSort == 'createdAt,desc',
+                        onTap: () => onSortChanged('createdAt,desc'),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSortChip(
+                        label: S.of(context).community_orderby_popular,
+                        isSelected: currentSort == 'likeCount,desc',
+                        onTap: () => onSortChanged('likeCount,desc'),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSortChip(
+                        label: S.of(context).community_orderby_hot,
+                        isSelected: currentSort == 'TRENDING',
+                        onTap: () => onSortChanged('TRENDING'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _buildSortChip(
-                    label: '인기 🔥',
-                    isSelected: currentSort == 'likeCount,desc',
-                    onTap: () => onSortChanged('likeCount,desc'),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildSortChip(
-                    label: '급상승 🚀',
-                    isSelected: currentSort == 'TRENDING',
-                    onTap: () => onSortChanged('TRENDING'),
-                  ),
-                ],
+                ),
               ),
 
-              // 2. [우측] 카테고리 선택 (드롭다운 메뉴)
+              const SizedBox(width: 12), // 칩과 팝업 사이 간격
+
+              // 2. [우측] 카테고리 선택 (고정 위치)
               CategoryPopupMenu(
                 currentCategory: currentCategory,
                 onCategoryChanged: changeCategory,
@@ -659,173 +665,175 @@ class _FilterBar extends StatelessWidget {
 // 🃏 [Widget] 게시글 카드 (Post Card)
 // =============================================================================
 
-class _ActionIcon extends StatelessWidget {
-  final IconData icon;
-  final String? label;
-  final VoidCallback onTap;
-
-  const _ActionIcon({required this.icon, this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 26, color: Colors.black87),
-          if (label != null) ...[
-            const SizedBox(width: 6),
-            Text(label!, style: const TextStyle(fontWeight: FontWeight.w500)),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-
-// 🛑 신고 사유 리스트
-const Map<String, String> reportReasons = {
-  'SPAM': '스팸 및 도배',
-  'INAPPROPRIATE_CONTENT': '음란물 또는 부적절한 콘텐츠',
-  'HATE_SPEECH': '혐오 발언 및 모욕',
-  'HARASSMENT': '괴롭힘 및 폭력성',
-  'OTHER': '기타 사유',
-};
-
-class CommunityActionHelper {
-  /// 📌 1. 우측 상단 `...` 클릭 시 열리는 BottomSheet
-  static void showPostOptions(BuildContext context, WidgetRef ref, int targetId, int userId) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children:[
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.report_problem_outlined, color: Colors.red),
-                title: const Text('이 게시글 신고하기', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showReportDialog(context, ref, targetId, 'POST');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.block, color: Colors.black87),
-                title: const Text('이 사용자 차단하기'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showBlockDialog(context, ref, userId);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// 📌 2. 신고하기 다이얼로그
-  static void _showReportDialog(BuildContext context, WidgetRef ref, int targetId, String targetType) {
-    String selectedReason = 'SPAM'; // 기본값
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              title: const Text('신고 사유 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: reportReasons.entries.map((entry) {
-                  return RadioListTile<String>(
-                    title: Text(entry.value, style: const TextStyle(fontSize: 14)),
-                    value: entry.key,
-                    groupValue: selectedReason,
-                    activeColor: Colors.black,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (value) {
-                      setState(() => selectedReason = value!);
-                    },
-                  );
-                }).toList(),
-              ),
-              actions:[
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('취소', style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                  onPressed: () async {
-                    // TODO: 로딩 표시기 추가 (Double Submit 방지)
-                    Navigator.pop(context);
-                    await ref.read(communityUseCaseProvider).reportContent(
-                      targetId: targetId, targetType: targetType, reason: selectedReason,
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.')),
-                    );
-                  },
-                  child: const Text('신고하기'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// 📌 3. 차단하기 다이얼로그
-  static void _showBlockDialog(BuildContext context, WidgetRef ref, int userId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text('사용자 차단', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text(
-            '차단하시겠습니까?\n차단된 사용자의 게시글과 댓글은 더 이상 보이지 않으며, 차단 해제는 설정에서 가능합니다.',
-            style: TextStyle(height: 1.5),
-          ),
-          actions:[
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
-              onPressed: () async {
-                Navigator.pop(context);
-                await ref.read(communityUseCaseProvider).blockUser(userId);
-                // TODO: 게시글 목록 새로고침 호출 (차단한 유저 글 숨기기)
-                ref.read(postNotifierProvider.notifier).fetchPosts(forceRefresh: true);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('해당 사용자가 차단되었습니다.')),
-                );
-              },
-              child: const Text('차단하기'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+// class _ActionIcon extends StatelessWidget {
+//   final IconData icon;
+//   final String? label;
+//   final VoidCallback onTap;
+//
+//   const _ActionIcon({required this.icon, this.label, required this.onTap});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Row(
+//         children: [
+//           Icon(icon, size: 26, color: Colors.black87),
+//           if (label != null) ...[
+//             const SizedBox(width: 6),
+//             Text(label!, style: const TextStyle(fontWeight: FontWeight.w500)),
+//           ],
+//         ],
+//       ),
+//     );
+//   }
+// }
+//
+//
+// // 🛑 신고 사유 리스트
+// Map<String, String> getReportReasons(BuildContext context) {
+//   return {
+//     'SPAM': S.of(context).community_help_spam,
+//     'INAPPROPRIATE_CONTENT': S.of(context).community_help_inap,
+//     'HATE_SPEECH': S.of(context).community_help_hate,
+//     'HARASSMENT': S.of(context).community_help_spam_harassment,
+//     'OTHER': S.of(context).community_help_other,
+//   };
+// }
+//
+// class CommunityActionHelper {
+//   /// 📌 1. 우측 상단 `...` 클릭 시 열리는 BottomSheet
+//   static void showPostOptions(BuildContext context, WidgetRef ref, int targetId, int userId) {
+//     showModalBottomSheet(
+//       context: context,
+//       backgroundColor: Colors.white,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+//       ),
+//       builder: (context) {
+//         return SafeArea(
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children:[
+//               Container(
+//                 margin: const EdgeInsets.symmetric(vertical: 12),
+//                 width: 40, height: 4,
+//                 decoration: BoxDecoration(
+//                   color: Colors.grey.shade300,
+//                   borderRadius: BorderRadius.circular(2),
+//                 ),
+//               ),
+//               ListTile(
+//                 leading: const Icon(Icons.report_problem_outlined, color: Colors.red),
+//                 title: const Text('이 게시글 신고하기', style: TextStyle(color: Colors.red)),
+//                 onTap: () {
+//                   Navigator.pop(context);
+//                   _showReportDialog(context, ref, targetId, 'POST');
+//                 },
+//               ),
+//               ListTile(
+//                 leading: const Icon(Icons.block, color: Colors.black87),
+//                 title: const Text('이 사용자 차단하기'),
+//                 onTap: () {
+//                   Navigator.pop(context);
+//                   _showBlockDialog(context, ref, userId);
+//                 },
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+//
+//   /// 📌 2. 신고하기 다이얼로그
+//   static void _showReportDialog(BuildContext context, WidgetRef ref, int targetId, String targetType) {
+//     String selectedReason = 'SPAM'; // 기본값
+//
+//     showDialog(
+//       context: context,
+//       builder: (context) {
+//         return StatefulBuilder(
+//           builder: (context, setState) {
+//             return AlertDialog(
+//               backgroundColor: Colors.white,
+//               title: const Text('신고 사유 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+//               content: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: reportReasons.entries.map((entry) {
+//                   return RadioListTile<String>(
+//                     title: Text(entry.value, style: const TextStyle(fontSize: 14)),
+//                     value: entry.key,
+//                     groupValue: selectedReason,
+//                     activeColor: Colors.black,
+//                     contentPadding: EdgeInsets.zero,
+//                     onChanged: (value) {
+//                       setState(() => selectedReason = value!);
+//                     },
+//                   );
+//                 }).toList(),
+//               ),
+//               actions:[
+//                 TextButton(
+//                   onPressed: () => Navigator.pop(context),
+//                   child: const Text('취소', style: TextStyle(color: Colors.grey)),
+//                 ),
+//                 ElevatedButton(
+//                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+//                   onPressed: () async {
+//                     // TODO: 로딩 표시기 추가 (Double Submit 방지)
+//                     Navigator.pop(context);
+//                     await ref.read(communityUseCaseProvider).reportContent(
+//                       targetId: targetId, targetType: targetType, reason: selectedReason,
+//                     );
+//                     ScaffoldMessenger.of(context).showSnackBar(
+//                       const SnackBar(content: Text('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.')),
+//                     );
+//                   },
+//                   child: const Text('신고하기'),
+//                 ),
+//               ],
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+//
+//   /// 📌 3. 차단하기 다이얼로그
+//   static void _showBlockDialog(BuildContext context, WidgetRef ref, int userId) {
+//     showDialog(
+//       context: context,
+//       builder: (context) {
+//         return AlertDialog(
+//           backgroundColor: Colors.white,
+//           title: const Text('사용자 차단', style: TextStyle(fontWeight: FontWeight.bold)),
+//           content: const Text(
+//             '차단하시겠습니까?\n차단된 사용자의 게시글과 댓글은 더 이상 보이지 않으며, 차단 해제는 설정에서 가능합니다.',
+//             style: TextStyle(height: 1.5),
+//           ),
+//           actions:[
+//             TextButton(
+//               onPressed: () => Navigator.pop(context),
+//               child: const Text('취소', style: TextStyle(color: Colors.grey)),
+//             ),
+//             ElevatedButton(
+//               style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+//               onPressed: () async {
+//                 Navigator.pop(context);
+//                 await ref.read(communityUseCaseProvider).blockUser(userId);
+//                 // TODO: 게시글 목록 새로고침 호출 (차단한 유저 글 숨기기)
+//                 ref.read(postNotifierProvider.notifier).fetchPosts(forceRefresh: true);
+//
+//                 ScaffoldMessenger.of(context).showSnackBar(
+//                   const SnackBar(content: Text('해당 사용자가 차단되었습니다.')),
+//                 );
+//               },
+//               child: const Text('차단하기'),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+// }

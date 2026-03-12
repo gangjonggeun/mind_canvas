@@ -12,6 +12,7 @@ import '../features/home/home_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/recommendation/presentation/recommendation_screen.dart';
 import '../app/presentation/notifier/user_notifier.dart';
+import '../generated/l10n.dart';
 
 /// Mind Canvas 메인 화면
 ///
@@ -40,7 +41,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       HomeScreen(onGoToAnalysis: goToAnalysis), // 콜백 전달
       const AnalysisScreen(), // 트렌디한 분석 화면
       const RecommendationScreen(),
-      const ConsultingScreen(), // 🔄 기록 → 상담으로 변경
+      const ConsultingScreen(),
       const ProfileScreen(),
     ];
 
@@ -126,11 +127,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildNavItem(Icons.home_outlined, '홈', 0),
-            _buildNavItem(Icons.bar_chart_outlined, '분석', 1),
-            _buildNavItem(Icons.star_border, '추천', 2),
-            _buildNavItem(Icons.psychology_outlined, '상담', 3),
-            _buildNavItem(Icons.person_outline, '프로필', 4),
+            _buildNavItem(Icons.home_outlined, S.of(context).home, 0),
+            _buildNavItem(Icons.bar_chart_outlined, S.of(context).analyze, 1),
+            _buildNavItem(Icons.star_border, S.of(context).recommend, 2),
+            _buildNavItem(Icons.eco_rounded, S.of(context).therapy, 3),
+            _buildNavItem(Icons.person_outline, S.of(context).profile, 4),
           ],
         ),
       ),

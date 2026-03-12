@@ -31,6 +31,25 @@ class TestRepositoryImpl implements TestRepository {
 
 
   @override
+  Future<Result<TestDetailResponse>> getTestDetailByTag(String tag) async {
+    try {
+      final token = await _tokenManager.getValidAccessToken();
+      if (token == null) return Result.failure('로그인이 필요합니다.');
+
+      final response = await _testApiDataSource.getTestDetailByTag(tag, token);
+
+      if (response.success && response.data != null) {
+        return Result.success(response.data!);
+      } else {
+        return Result.failure(response.message ?? '상세 정보 조회 실패');
+      }
+    } catch (e) {
+      return Result.failure('네트워크 오류: $e');
+    }
+  }
+
+
+  @override
   Future<Result<void>> deleteTestResult(int resultId) async {
     try {
       // 1. 토큰 확인

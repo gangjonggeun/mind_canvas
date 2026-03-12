@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/presentation/notifier/user_notifier.dart';
+import '../../../../generated/l10n.dart';
 import '../../data/dto/comment_response.dart';
 import '../../data/dto/post_response.dart';
 import '../../domain/usecase/community_use_case.dart';
@@ -87,7 +88,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
       FocusScope.of(context).unfocus(); // 키보드 내리기
     } else {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('댓글 작성 실패')));
+          .showSnackBar( SnackBar(content: Text(S.of(context).post_detail_add_fail)));
     }
 
     setState(() => _isSubmitting = false);
@@ -131,7 +132,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
                       children: [
                         // 1. 조회수 (아이콘 + 숫자)
                         Text(
-                          '조회수 ${_formatCount(widget.post.viewCount)}',
+                          S.of(context).post_detail_view_count(_formatCount(widget.post.viewCount)),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -149,7 +150,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
 
                         // 3. 댓글 수
                         Text(
-                          '댓글 ${widget.post.commentCount}',
+                          S.of(context).post_detail_content(widget.post.commentCount), //
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -202,8 +203,8 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
                       const SliverFillRemaining(
                           child: Center(child: CircularProgressIndicator()))
                     else if (commentState.comments.isEmpty)
-                      const SliverFillRemaining(
-                          child: Center(child: Text("첫 댓글을 남겨보세요!")))
+                       SliverFillRemaining(
+                          child: Center(child: Text(S.of(context).post_detail_empty)))
                     else
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
@@ -244,7 +245,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
                           controller: _commentController,
                           maxLength: 300, // 시큐어 코딩: 길이 제한
                           decoration: InputDecoration(
-                            hintText: '댓글을 입력하세요...',
+                            hintText: S.of(context).post_detail_comment_hint,
                             counterText: '',
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
@@ -279,7 +280,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
   String _formatCount(int count) {
     if (count < 1000) return '$count';
     if (count < 10000) return '${(count / 1000).toStringAsFixed(1)}k'; // 1.2k
-    return '${(count / 10000).toStringAsFixed(1)}만'; // 1.5만
+    return '${(count / 10000).toStringAsFixed(1)}0k'; // 1.5만
   }
 
   // 개별 댓글 위젯
@@ -332,7 +333,7 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
                   if (comment.isMyComment)
                     ListTile(
                       leading: const Icon(Icons.delete, color: Colors.red),
-                      title: const Text('삭제하기', style: TextStyle(color: Colors.red)),
+                      title:  Text(S.of(context).post_detail_delete, style: TextStyle(color: Colors.red)),
                       onTap: () async {
                         Navigator.pop(ctx); // 다이얼로그 먼저 닫기 (이러면 컨텍스트 꼬일 일 없음)
 
@@ -345,14 +346,14 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
                         if (!context.mounted) return;
 
                         if (success) {
-                          messenger.showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
+                          messenger.showSnackBar( SnackBar(content: Text(S.of(context).post_detail_delte_fail)));
                         }
                       },
                     )
                   else
                     ListTile(
                       leading: const Icon(Icons.report),
-                      title: const Text('신고하기'),
+                      title:  Text(S.of(context).post_detail_report),
                       onTap: () {
                         Navigator.pop(ctx);
                         // 신고 로직 호출
@@ -371,12 +372,12 @@ class _PostDetailBottomSheetState extends ConsumerState<PostDetailBottomSheet> {
     try {
       final dateTime = DateTime.parse(dateTimeStr);
       final diff = DateTime.now().difference(dateTime);
-      if (diff.inMinutes < 1) return '방금 전';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
-      if (diff.inHours < 24) return '${diff.inHours}시간 전';
-      return '${diff.inDays}일 전';
+      if (diff.inMinutes < 1) return S.of(context).post_card_now;
+      if (diff.inMinutes < 60) return S.of(context).post_card_few_m(diff.inMinutes);
+      if (diff.inHours < 24) return S.of(context).post_card_few_m(diff.inHours);
+      return S.of(context).post_card_few_d(diff.inDays);
     } catch (e) {
-      return '방금 전'; // 파싱 실패 시 기본값
+      return S.of(context).post_card_now; // 파싱 실패 시 기본값
     }
   }
 }

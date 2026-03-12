@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../recommendation/presentation/widgets/post_card.dart';
 import '../providers/liked_posts_notifier.dart';
 import '../providers/my_posts_notifier.dart';
@@ -17,7 +16,7 @@ class MyActivityPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: Text('profile.menu.my_records'.tr()),
+          title: Text('내 활동 기록'),
           centerTitle: true,
           elevation: 0,
           bottom: TabBar(
@@ -26,9 +25,9 @@ class MyActivityPage extends ConsumerWidget {
             indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorSize: TabBarIndicatorSize.label,
             tabs: [
-              Tab(text: '분석 결과'.tr()),
-              Tab(text: '작성한 글'.tr()),
-              Tab(text: '좋아요'.tr()),
+              Tab(text: '분석 결과'),
+              Tab(text: '작성한 글'),
+              Tab(text: '좋아요'),
             ],
           ),
         ),

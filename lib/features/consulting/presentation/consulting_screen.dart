@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:mind_canvas/features/consulting/presentation/pages/anger_vent_page.dart';
 import '../../../core/widgets/common_sliver_app_bar.dart';
 import '../../../generated/l10n.dart';
+import '../../info/info_screen.dart';
 import 'pages/emotion_diary_page.dart';
 import 'pages/ai_chat_page.dart';
 // import 'pages/mindfulness_sound_page.dart'; // TODO: 구현 필요
@@ -68,59 +69,6 @@ class ConsultingScreen extends StatelessWidget {
     );
   }
 
-  /// 🎨 헤더 섹션 - 다크모드 지원
-  Widget _buildHeader(bool isDark) {
-    final textColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF2D3748);
-    final subTextColor = isDark ? const Color(0xFFA0AEC0) : const Color(0xFF64748B);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B73FF).withOpacity(isDark ? 0.2 : 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                Icons.psychology,
-                color: Color(0xFF6B73FF),
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '🌱 마음 상담',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'AI와 함께하는 종합 감정 케어',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: subTextColor,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildConsultingOptions(BuildContext context, bool isDark) {
     return Column(
@@ -173,6 +121,76 @@ class ConsultingScreen extends StatelessWidget {
           onTap: () => _navigateToAngerVent(context), // 새로운 네비게이션 함수
           badge: S.of(context).consulting_new,
           badgeColor: const Color(0xFFFF5F6D),
+        ),
+        const SizedBox(height: 16),
+
+        _buildConsultingCard(
+          context: context,
+          isDark: isDark,
+          icon: Icons.gesture,
+          iconColor: const Color(0xFF6C63FF),
+          title: '낙서(난화) 그리기',
+          subtitle: '마음대로 그린 낙서의 엉킨 선 속에 숨은 감정',
+          gradientColors: [
+            // 붉은색 계열 그라데이션
+            const Color(0xFF6C63FF).withOpacity(isDark ? 0.2 : 0.1),
+            const Color(0xFF32AFA9).withOpacity(isDark ? 0.2 : 0.1),
+          ],
+          onTap: () =>  Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'SCRIBBLE', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          ) // 새로운 네비게이션 함수
+        ),
+        const SizedBox(height: 16),
+
+        _buildConsultingCard(
+          context: context,
+          isDark: isDark,
+          icon: Icons.filter_drama,
+          iconColor: const Color(0xFFF9D423),
+          title: '오늘의 기분 그리기',
+          subtitle: '오늘의 기분을 날씨로 그려 마주하는 내 감정',
+          gradientColors: [
+            // 붉은색 계열 그라데이션
+            const Color(0xFFFF4E50).withOpacity(isDark ? 0.2 : 0.1),
+            const Color(0xFFF9D423).withOpacity(isDark ? 0.2 : 0.1),
+          ],
+          onTap: () =>  Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'WEATHER', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          ) // 새로운 네비게이션 함수
+        ),
+        const SizedBox(height: 16),
+
+        _buildConsultingCard(
+          context: context,
+          isDark: isDark,
+          icon: Icons.center_focus_strong, // 화풀이 아이콘
+          iconColor: const Color(0xFF00B09B), // 붉은색 계열
+          title: '만다라 그리기',
+          subtitle: '중심을 통해 알아가는 나의 심리적 중심',
+          gradientColors: [
+            // 붉은색 계열 그라데이션
+            const Color(0xFF00B09B).withOpacity(isDark ? 0.2 : 0.1),
+            const Color(0xFF96C93D).withOpacity(isDark ? 0.2 : 0.1),
+          ],
+          onTap: () =>  Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InfoScreen(
+                tag: 'MANDALA', // 여기서 태그를 넘깁니다!
+              ),
+            ),
+          ), // 새로운 네비게이션 함수
+
         ),
         const SizedBox(height: 16),
         //

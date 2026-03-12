@@ -81,16 +81,19 @@ class TokenManager {
   bool get isAccessTokenExpired {
     final expiresAt = accessTokenExpiresAt;
     if (expiresAt == null) return true;
-    return DateTime.now().isAfter(expiresAt);
+
+    // 🚀[핵심 보안/안정성 추가]
+    // 서버 시간과 폰 시간의 오차를 대비해 60초 일찍 만료된 것으로 간주합니다.
+    // 이렇게 하면 API 쏘기 1초 전에 토큰이 만료되어 401이 뜨는 참사를 막을 수 있습니다.
+    return DateTime.now().add(const Duration(seconds: 60)).isAfter(expiresAt);
   }
-  bool get isTokenExpired => isAccessTokenExpired;
 
-
-  /// 리프레시 토큰이 만료되었는지 확인
   bool get isRefreshTokenExpired {
     final expiresAt = refreshTokenExpiresAt;
     if (expiresAt == null) return true;
-    return DateTime.now().isAfter(expiresAt);
+
+    // 리프레시 토큰도 혹시 모르니 60초 여유를 둡니다.
+    return DateTime.now().add(const Duration(seconds: 60)).isAfter(expiresAt);
   }
 
   /// 액세스 토큰이 곧 만료되는지 확인 (5분 이내)

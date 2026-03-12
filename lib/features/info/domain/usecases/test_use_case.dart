@@ -28,6 +28,14 @@ class TestUseCase {
 
   TestUseCase(this._repository);
 
+
+  Future<Result<TestDetailResponse>> getTestDetailByTag(String tag) async {
+    try {
+      return await _repository.getTestDetailByTag(tag);
+    } catch (e) {
+      return Result.failure('상세 정보 조회 실패', 'NETWORK_ERROR');
+    }
+  }
   // =============================================================
   // 🌟 최신순 테스트 목록 (기존 유지)
   // =============================================================

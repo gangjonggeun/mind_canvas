@@ -1,98 +1,58 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../auth/auth_storage.dart';
-// 기타 경로 임포트...
+import '../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../auth/token_manager_provider.dart';
 
 class AuthInterceptor extends Interceptor {
-  final Ref ref;
+  final ProviderRef ref;
   final Dio dio;
 
   AuthInterceptor({required this.ref, required this.dio});
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final path = options.path;
-    if (path.contains('/auth/google') ||
-        path.contains('/auth/apple') ||
-        path.contains('/auth/guest') ||
-        path.contains('/auth/refresh')) {
+    // 1. 인증이 필요 없는 API는 그냥 통과 (로그인 등)
+    if (options.path.contains('/auth/login') || options.path.contains('/auth/refresh')) {
       return handler.next(options);
     }
-    // 1. 헤더에 Access Token 주입
-    final accessToken = await AuthStorage.loadAccessToken();
-    if (accessToken != null) {
-      options.headers['Authorization'] = 'Bearer $accessToken';
+
+    final tokenManager = ref.read(tokenManagerProvider);
+
+    // 2. 🚀[핵심] TokenManager의 getValidAccessToken() 호출!
+    // 이 함수 하나가 알아서 만료 검사, 동시 갱신 방지(Queue), 갱신 실패 처리를 다 해줍니다.
+    final authHeader = await tokenManager.getValidAccessToken();
+
+    if (authHeader != null) {
+      // TokenManager의 authorizationHeader는 이미 "Bearer xxxx" 형태를 띕니다.
+      options.headers['Authorization'] = authHeader;
     }
+
     return handler.next(options);
   }
-
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      final path = err.requestOptions.path;
+    // 401 에러가 발생했고, 그 요청이 리프레시나 로그인 관련이 아니라면
+    if (err.response?.statusCode == 401 && !err.requestOptions.path.contains('/auth/')) {
+      print('🚨 [AuthInterceptor] 401 발생! 토큰이 만료되었거나 서버에서 거부함.');
 
-      // 1. 로그인/리프레시 API는 제외
-      if (path.contains('/auth/google') ||
-          path.contains('/auth/apple') ||
-          path.contains('/auth/guest') ||
-          path.contains('/auth/refresh')) {
-        return handler.next(err);
-      }
+      // 1. 토큰 즉시 삭제 (메모리+스토리지)
+      await ref.read(tokenManagerProvider).clearTokens();
 
-      // ✨[무한루프 방지 핵심 코드] 이미 한 번 재시도했는데 또 401이 났다면? 즉시 차단!
-      if (err.requestOptions.extra['isRetry'] == true) {
-        print('🛑 무한 루프 감지: 재시도한 요청이 또 401입니다. 강제 로그아웃 처리합니다.');
-        await _forceLogout();
-        return handler.next(err);
-      }
+      // 2. AuthNotifier를 통해 로그아웃 처리 (UI 리다이렉트 유도)
+      // 이 호출이 되면 GoRouter가 감지하여 로그인 화면으로 보냅니다.
+      ref.read(authNotifierProvider.notifier).logout();
 
-      print('⚠️ Access Token 만료 감지. Refresh 시도... (경로: $path)');
+      return handler.reject(err);
+    }
 
-      final refreshToken = await AuthStorage.loadRefreshToken();
-      if (refreshToken == null) {
-        await _forceLogout();
-        return handler.next(err);
-      }
-
-      try {
-        final tokenDio = Dio(BaseOptions(baseUrl: dio.options.baseUrl));
-        final refreshResponse = await tokenDio.post(
-          '/auth/refresh',
-          data: {'refreshToken': refreshToken},
-        );
-
-        final responseData = refreshResponse.data['data'] ?? refreshResponse.data;
-        final newAccessToken = responseData['accessToken'] ?? responseData['access_token'];
-        final newRefreshToken = responseData['refreshToken'] ?? responseData['refresh_token'];
-
-        await AuthStorage.saveAccessToken(newAccessToken);
-        if (newRefreshToken != null) await AuthStorage.saveRefreshToken(newRefreshToken);
-
-        // 2. 헤더 교체
-        err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-
-        // ✨ [무한루프 방지 마커 추가] 이 요청은 "재시도된 요청"임을 표시!
-        err.requestOptions.extra['isRetry'] = true;
-
-        // 3. 재시도
-        final retryResponse = await dio.fetch(err.requestOptions);
-        return handler.resolve(retryResponse);
-
-      } catch (e) {
-        print('❌ Refresh Token 갱신 실패. 재로그인 필요.');
-        await _forceLogout();
-        return handler.next(err);
-      }
+    // 리프레시 자체에서 401이 떴다면? (재시도 절대 금지)
+    if (err.requestOptions.path.contains('/auth/refresh') && err.response?.statusCode == 401) {
+      print('🚨 [AuthInterceptor] 리프레시 토큰마저 만료됨! 하드 로그아웃 실행.');
+      await ref.read(tokenManagerProvider).clearTokens();
+      ref.read(authNotifierProvider.notifier).logout();
     }
 
     return handler.next(err);
-  }
-
-  /// 강제 로그아웃 처리 로직
-  Future<void> _forceLogout() async {
-    await AuthStorage.clearAll();
-
-
   }
 }

@@ -17,7 +17,8 @@ class RecommendationState with _$RecommendationState {
   const factory RecommendationState({
     @Default(false) bool isLoading,              // 로딩 중 여부
     RecommendationResult? result,                // 추천 결과 (Entity)
-    String? errorMessage,                        // 에러 메시지
+    String? errorMessage,
+    String? errorCode// 에러 메시지
   }) = _RecommendationState;
 
   factory RecommendationState.initial() => const RecommendationState();
@@ -103,6 +104,7 @@ class RecommendationNotifier extends _$RecommendationNotifier {
             isLoading: false,
             result: entity,
             errorMessage: null,
+            errorCode: null,
           );
         },
         onFailure: (message, code) {
@@ -110,6 +112,7 @@ class RecommendationNotifier extends _$RecommendationNotifier {
             isLoading: false,
             errorMessage: message, // 실패 시 에러 메시지 표시
             // result: null, // (선택) 실패 시 기존 데이터도 날릴지, 남겨둘지 결정
+            errorCode: code,
           );
         },
       );
@@ -117,7 +120,7 @@ class RecommendationNotifier extends _$RecommendationNotifier {
       print('🔥 Notifier 에러: $e');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: '알 수 없는 오류가 발생했습니다.',
+        errorMessage: 'unknow error',
       );
     }
   }

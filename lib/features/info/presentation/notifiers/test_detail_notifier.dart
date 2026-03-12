@@ -34,9 +34,11 @@ class TestDetailNotifier extends _$TestDetailNotifier {
   }
 
   /// 테스트 상세 정보 로드
-  Future<void> loadTestDetail(int testId) async {
+  Future<void> loadTestDetail({int? testId, String? tag}) async {
     print('🔍 loadTestDetail 시작: $testId');
     print('🔍 현재 상태: isLoading=${state.isLoading}, hasDetail=${state.testDetail != null}');
+
+    if (state.isLoading) return;
 
     state = state.copyWith(
       isLoading: true,
@@ -47,43 +49,42 @@ class TestDetailNotifier extends _$TestDetailNotifier {
     print('📱 로딩 상태 설정 후: isLoading=${state.isLoading}');
 
     try {
-      print('🌐 UseCase 호출 시작');
       final testUseCase = ref.read(testUseCaseProvider);
-      final result = await testUseCase.getTestDetail(testId);
-      print('📦 UseCase 응답 받음: ${result.isSuccess}');
+
+      // 💡 ID 또는 Tag에 따라 분기 처리
+      Result<TestDetailResponse> result;
+      if (tag != null) {
+        result = await testUseCase.getTestDetailByTag(tag);
+      } else if (testId != null) {
+        result = await testUseCase.getTestDetail(testId);
+      } else {
+        state = state.copyWith(isLoading: false, errorMessage: '요청 정보가 없습니다.');
+        return;
+      }
 
       result.fold(
         onSuccess: (testDetail) {
-          print('✅ 성공 - 상태 업데이트 전: isLoading=${state.isLoading}');
           state = state.copyWith(
             isLoading: false,
             testDetail: testDetail,
-            errorMessage: null,
-            errorCode: null,
           );
-          print('✅ 성공 - 상태 업데이트 후: isLoading=${state.isLoading}, hasDetail=${state.testDetail != null}');
         },
         onFailure: (message, errorCode) {
-          print('❌ 실패 처리: $message');
           state = state.copyWith(
             isLoading: false,
             testDetail: null,
             errorMessage: message,
             errorCode: errorCode,
           );
-          print('❌ 실패 - 상태 업데이트 완료');
         },
       );
     } catch (e) {
-      print('💥 예외 발생: $e');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: '테스트 상세 정보를 불러오는 중 오류가 발생했습니다',
+        errorMessage: '오류가 발생했습니다: $e',
         errorCode: 'UNKNOWN_ERROR',
       );
     }
-
-    print('🏁 최종 상태: isLoading=${state.isLoading}, hasDetail=${state.testDetail != null}');
   }
 
   void reset() {

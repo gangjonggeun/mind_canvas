@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -147,8 +147,8 @@ class InkBalanceCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     isMaxAds
-                        ? S.of(context).profile_ink_limit
-                        : '${'profile.watch_ad'.tr()} ($dailyAdCount/5)',
+                        ? S.of(context).profile_ink_limit //
+                        : S.of(context).profile_ink_dailyad(dailyAdCount),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: isMaxAds ? colorScheme.onSurfaceVariant : colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -203,7 +203,7 @@ class InkBalanceCard extends StatelessWidget {
         Expanded(
           child: _buildQuickActionButton(
             icon: Icons.history_rounded,
-            label: 'profile.usage_history'.tr(),
+            label: '',
             onTap: () => Navigator.pushNamed(context, '/ink-history'),
             theme: theme,
             colorScheme: colorScheme,
@@ -213,7 +213,7 @@ class InkBalanceCard extends StatelessWidget {
         Expanded(
           child: _buildQuickActionButton(
             icon: isMaxAds ? Icons.check_circle_rounded : Icons.ads_click_rounded,
-            label: isMaxAds ? '오늘 완료' : '${'profile.watch_ad'.tr()} ($dailyAdCount/5)',
+            label: isMaxAds ? "":"",
             onTap: () {
               HapticFeedback.selectionClick();
               // ✅ 여기서 다이얼로그 호출용 콜백을 실행합니다.
