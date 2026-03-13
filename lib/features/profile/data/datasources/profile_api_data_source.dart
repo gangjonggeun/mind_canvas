@@ -16,6 +16,12 @@ abstract class ProfileApiDataSource {
   factory ProfileApiDataSource(Dio dio, {String baseUrl}) =
       _ProfileApiDataSource;
 
+  @POST('/attendance/claim')
+  Future<ApiResponse<int>> claimAttendance(
+      @Header('Authorization') String token,
+      @Query('seconds') double seconds, // 💡 쿼리 파라미터 추가
+      );
+
   @POST('/payments/sync') // 서버의 결제 동기화 엔드포인트와 맞추세요
   Future<ApiResponse<dynamic>> syncRevenueCat(
       @Header('Authorization') String token,

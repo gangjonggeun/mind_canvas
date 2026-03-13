@@ -132,7 +132,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
       }
       // 결과가 새로 들어왔으면 타이핑 시작
       if (previous?.analysisResult == null && next.analysisResult != null) {
-        _startTypingAnimation(next.analysisResult!.analysis.aiFeedback);
+        _startTypingAnimation(next.analysisResult!.content);
       }
     });
 
@@ -916,7 +916,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                               DateFormat('dd').format(date),
                               style: const TextStyle(
                                 fontFamily: 'Serif',
-                                fontSize: 18,
+                                fontSize: 15,
                                 color: Colors.black54,
                               ),
                             ),
@@ -924,7 +924,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                               DateFormat('MMM').format(date).toUpperCase(),
                               style: const TextStyle(
                                 fontFamily: 'Serif',
-                                fontSize: 18,
+                                fontSize: 15,
                                 color: Colors.black54,
                               ),
                             ),
@@ -932,7 +932,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                               DateFormat('yyyy').format(date),
                               style: const TextStyle(
                                 fontFamily: 'Serif',
-                                fontSize: 18,
+                                fontSize: 15,
                                 color: Colors.black54,
                               ),
                             ),
@@ -946,7 +946,7 @@ class _EmotionDiaryPageState extends ConsumerState<EmotionDiaryPage>
                             child: AnimatedBuilder(
                               animation: _typingAnimation,
                               builder: (context, child) {
-                                String text = analysis.aiFeedback;
+                                String text = result.content;
                                 int count = _typingAnimation.value;
                                 // 안전하게 자르기
                                 if (count > text.length) count = text.length;

@@ -13,7 +13,9 @@ class ProfileSummaryResponse with _$ProfileSummaryResponse {
     required int testCount,
     required int receivedLikeCount,
     required String language,
-    required int dailyAdCount
+    required int dailyAdCount,
+    required int consecutiveDays,
+    required bool isTodayCheckedIn
   }) = _ProfileSummaryResponse;
 
   factory ProfileSummaryResponse.fromJson(Map<String, dynamic> json) =>

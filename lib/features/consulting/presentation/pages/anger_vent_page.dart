@@ -542,8 +542,7 @@ class _AngerVentPageState extends ConsumerState<AngerVentPage>
               title:  Text(S.of(context).consulting_punchingbag_reset),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Notifier에 clear 메서드 만들어서 호출
-                // ref.read(angerVentNotifierProvider.notifier).resetChat();
+                ref.read(angerVentNotifierProvider.notifier).clearChat();
                 Navigator.pop(context); // 페이지 나가기
               },
             ),

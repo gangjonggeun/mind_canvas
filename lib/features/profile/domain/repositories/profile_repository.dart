@@ -10,6 +10,7 @@ import '../../data/models/response/setup_profile_response.dart';
 
 /// 🏠 프로필 Repository 인터페이스
 abstract class ProfileRepository {
+  Future<Result<int>> claimAttendance(double seconds);
   /// 📝 프로필 설정 (닉네임 + 이미지)
   ///
   /// [nickname] 설정할 닉네임 (필수)

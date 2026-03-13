@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/ai_analysis_helper.dart';
+import '../../../../generated/l10n.dart';
 import '../../domain/models/taro_spread_type.dart';
 import '../providers/taro_analysis_notifier.dart';
 import '../providers/taro_consultation_provider.dart';
@@ -236,7 +237,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      '타로 심리 상담',
+                      S.of(context).taro_title,
                       style: TextStyle(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
@@ -265,7 +266,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
                     ),
                     Gap(4.w),
                     Text(
-                      '자신의 운명을 점쳐보세요',
+                      S.of(context).taro_content,
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w300,
@@ -314,7 +315,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
               ),
               Gap(8.w),
               Text(
-                '점치고 싶은 주제',
+                S.of(context).taro_subject_title,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
@@ -335,7 +336,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
               height: 1.4,
             ),
             decoration: InputDecoration(
-              hintText: '예: 새로운 직장에서의 성공 가능성\n연인과의 관계 발전 방향\n중요한 결정에 대한 조언',
+              hintText: S.of(context).taro_subject_content,
               hintStyle: TextStyle(
                 color: TaroColors.textMuted,
                 fontSize: 14.sp,
@@ -394,7 +395,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
               ),
               Gap(8.w),
               Text(
-                '스프레드 선택',
+                S.of(context).taro_spread_select_title,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
@@ -405,7 +406,7 @@ class _TaroConsultationSetupPageState extends ConsumerState<TaroConsultationSetu
           ),
           Gap(16.h),
           Text(
-            '원하는 카드 배치 방법을 선택해주세요',
+            S.of(context).taro_spread_select_content,
             style: TextStyle(
               fontSize: 14.sp,
               color: TaroColors.textSecondary,

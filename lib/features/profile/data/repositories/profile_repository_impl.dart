@@ -38,27 +38,43 @@ class ProfileRepositoryImpl implements ProfileRepository {
     return token;
   }
 
+  Result<T> _handleDioException<T>(DioException e) {
+    final code = e.response?.statusCode?.toString() ?? 'NETWORK_ERROR';
+    final msg = e.response?.data['message'] ?? 'Network Connection Error';
+    return Result.failure('서버 통신 실패: $msg', 'NETWORK_ERROR ($code)');
+  }
+
+  @override
+  Future<Result<int>> claimAttendance(double seconds) async {
+    try {
+      final token = await _getBearerToken();
+      final response = await _apiDataSource.claimAttendance(token, seconds); // 💡 인자 전달
+      if (response.success) {
+        return Result.success(response.data ?? 0);
+      }
+      return Result.failure(response.message ?? '출석 실패', response.error?.code ?? 'FAIL');
+    } catch (e) {
+      return Result.failure('오류: $e', 'UNKNOWN');
+    }
+  }
   @override
   Future<Result<void>> syncRevenueCat() async {
     try {
-      final token = await _tokenManager.getValidAccessToken();
-      if (token == null) {
-        return Result.failure('로그인이 필요합니다.', 'UNAUTHORIZED');
-      }
-
+      final token = await _getBearerToken();
       final response = await _apiDataSource.syncRevenueCat(token);
 
-      if (response.isSuccess) {
+      if (response.success) {
         return Result.success(null);
       } else {
-        return Result.failure(response.errorMessage ?? '결제 서버 동기화에 실패했습니다.');
+        return Result.failure(response.message ?? '동기화 실패', response.error?.code ?? 'SYNC_FAIL');
       }
     } on DioException catch (e) {
-      return Result.failure('서버와의 통신에 실패했습니다.', 'NETWORK_ERROR');
+      return _handleDioException(e);
     } catch (e) {
-      return Result.failure('알 수 없는 오류가 발생했습니다: $e');
+      return Result.failure('알 수 없는 오류: $e', 'UNKNOWN_ERROR');
     }
   }
+
 
   /// 💬 고객 문의 서버 전송 API 호출
   Future<Result<void>> submitInquiry(InquiryRequest request) async {
@@ -73,7 +89,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       }
     } on DioException catch (e) {
       // Dio 에러 처리 (네트워크 오류 등)
-      return Result.failure('서버와의 통신에 실패했습니다', 'NETWORK_ERROR');
+      return _handleDioException(e);
     } catch (e) {
       return Result.failure('알 수 없는 오류가 발생했습니다: $e', 'UNKNOWN_ERROR');
     }

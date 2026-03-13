@@ -31,7 +31,7 @@ class _DraggableTaroCardState extends State<DraggableTaroCard> {
     return Draggable<TaroCard>(
       // data: 이 카드가 어떤 카드인지 알려주는 정보
       data: widget.card,
-
+      dragAnchorStrategy: pointerDragAnchorStrategy,
       // 드래그 시작/종료 상태 관리
       onDragStarted: () {
         setState(() {
@@ -52,14 +52,16 @@ class _DraggableTaroCardState extends State<DraggableTaroCard> {
       // feedback: 드래그하는 동안 손가락을 따라다니는 위젯
       feedback: Material(
         color: Colors.transparent,
-        elevation: 8, // 그림자 효과 추가
-        borderRadius: BorderRadius.circular(12.r),
-        child: Transform.scale(
-          scale: 1.1, // 살짝 크게 보여줌
-          child: SizedBox(
-            width: cardWidth,
-            height: cardHeight,
-            child: const CardBack(),
+        // feedback 위젯 자체에 Offset을 주어 손가락보다 살짝 위로 띄울 수 있습니다.
+        child: Transform.translate(
+          offset: Offset(0, -20.h), // 손가락에 가리지 않게 살짝 위로 이동 (취향껏 조절)
+          child: Transform.scale(
+            scale: 1.1,
+            child: SizedBox(
+              width: cardWidth,
+              height: cardHeight,
+              child: const CardBack(),
+            ),
           ),
         ),
       ),

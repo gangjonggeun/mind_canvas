@@ -8,6 +8,7 @@ import 'package:mind_canvas/features/taro/presentation/pages/taro_result_page.da
 import 'package:mind_canvas/features/taro/presentation/pages/taro_consultation_setup_page.dart';
 import '../../../../core/theme/app_colors.dart'; // AppColors 경로
 import '../../../../core/utils/ai_analysis_helper.dart';
+import '../../../../generated/l10n.dart';
 import '../../data/dto/request/submit_taro_request.dart';
 import '../../domain/models/taro_card.dart';
 import '../providers/taro_analysis_notifier.dart';
@@ -257,7 +258,7 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Text(
-              '주제: ${state.theme}',
+              S.of(context).taro_subject(state.theme), //'주제: ${state.theme}'
               style: TextStyle(color: TaroColors.textSecondary),
             ),
           ),
@@ -324,11 +325,11 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
                 // TODO: 셔플 로직 구현 (Notifier에 clearCards 같은거 만들어서 호출)
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('카드를 다시 섞었습니다.')));
+                ).showSnackBar(SnackBar(content: Text(S.of(context).taro_shuffle_succes)));
               },
               icon: Icon(Icons.shuffle, color: TaroColors.textMystic),
               label: Text(
-                '카드 다시 섞기',
+                S.of(context).taro_shuffle,
                 style: TextStyle(color: TaroColors.textMystic),
               ),
               style: OutlinedButton.styleFrom(
@@ -358,7 +359,7 @@ class _TaroCardSelectionPageState extends ConsumerState<TaroCardSelectionPage> {
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
-                      canRequestResult ? '타로 결과 보기' : '모든 카드를 선택해주세요',
+                      canRequestResult ? S.of(context).taro_go_result : S.of(context).taro_select_card,
                       style: TextStyle(
                         fontSize: 18.sp,
                         color: TaroColors.backgroundDark,

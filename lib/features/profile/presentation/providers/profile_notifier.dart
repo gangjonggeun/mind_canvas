@@ -31,6 +31,18 @@ class ProfileNotifier extends _$ProfileNotifier {
     return ProfileState.initial();
   }
 
+  void setAttendanceComplete(int earnedCoins) {
+    if (state.summary == null) return;
+
+    final newSummary = state.summary!.copyWith(
+      inkBalance: state.summary!.inkBalance + earnedCoins,
+      isTodayCheckedIn: true, // ✅ 이 부분이 배너를 닫게 함
+      consecutiveDays: state.summary!.consecutiveDays + 1, // 일수 증가
+    );
+
+    state = state.copyWith(summary: newSummary);
+  }
+
   Future<bool> submitInquiry(InquiryRequest request) async {
     // 로딩 상태로 변경 (기존 화면에 영향을 주지 않으려면 다이얼로그의 _isLoading으로만 처리해도 무방합니다)
     // state = state.copyWith(isLoading: true, errorMessage: null);
@@ -67,6 +79,16 @@ class ProfileNotifier extends _$ProfileNotifier {
     );
   }
 
+  void addCoins(int amount) {
+    if (state.summary == null) return;
+
+    // 현재 보유 잉크에 더해서 상태 업데이트
+    final newSummary = state.summary!.copyWith(
+      inkBalance: state.summary!.inkBalance + amount,
+    );
+
+    state = state.copyWith(summary: newSummary);
+  }
   /// 📝 프로필 수정 (닉네임, 이미지) - 추가됨!
   /// 반환값을 bool로 주어 UI에서 토스트 메시지 등을 띄울 수 있게 함
   Future<bool> updateProfile({

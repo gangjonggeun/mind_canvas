@@ -305,7 +305,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {
-      return Result.failure('서버 연결 시간이 초과되었습니다.', 'TIMEOUT');
+      return Result.failure('서버 연결 시간이 초과되었습니다. (Server connection timed out)', 'TIMEOUT');
     }
 
     if (e.type == DioExceptionType.badResponse) {
@@ -326,30 +326,30 @@ class CommunityRepositoryImpl implements CommunityRepository {
       if (serverMessage != null && serverMessage.contains('성격 유형에 맞는')) {
         // 내부용 에러 코드를 'CHANNEL_MISMATCH'로 강제 할당
         // UI 쪽에서 Result.code == 'CHANNEL_MISMATCH' 이면 다국어 번역팩(tr('error.channel_mismatch')) 출력
-        return Result.failure('현재 성격 유형에 맞는 채널에만 글을 작성할 수 있습니다.', 'CHANNEL_MISMATCH');
+        return Result.failure('성격 유형에 맞는 채널에만 글을 작성할 수 있습니다. (You can only post in channels that match your personality type)', 'CHANNEL_MISMATCH');
       }
 
       // ✅ 3. 기본 상태 코드별 분기
       switch (statusCode) {
         case 401:
-          return Result.failure(serverMessage ?? '인증이 만료되었습니다.', serverCode ?? 'AUTHENTICATION_EXPIRED');
+          return Result.failure(serverMessage ?? '인증이 만료되었습니다. (Authentication expired)', serverCode ?? 'AUTHENTICATION_EXPIRED');
         case 403:
-          return Result.failure(serverMessage ?? '접근 권한이 없습니다.', serverCode ?? 'FORBIDDEN');
+          return Result.failure(serverMessage ?? '접근 권한이 없습니다. (Access denied)', serverCode ?? 'FORBIDDEN');
         case 404:
-          return Result.failure(serverMessage ?? '요청한 데이터를 찾을 수 없습니다.', serverCode ?? 'NOT_FOUND');
+          return Result.failure(serverMessage ?? '요청한 데이터를 찾을 수 없습니다. (Resource not found)', serverCode ?? 'NOT_FOUND');
         case 500:
         // 💡 500 에러여도 서버가 준 메시지가 있다면 그걸 보여줍니다! (예: "서버 내부 오류...")
-          return Result.failure(serverMessage ?? '서버 오류가 발생했습니다.', serverCode ?? 'SERVER_ERROR');
+          return Result.failure(serverMessage ?? '서버 오류가 발생했습니다. (Internal server error)', serverCode ?? 'SERVER_ERROR');
         default:
-          return Result.failure(serverMessage ?? '통신 오류 ($statusCode)', serverCode ?? 'HTTP_ERROR');
+          return Result.failure(serverMessage ?? '통신 오류 Communication error: ($statusCode)', serverCode ?? 'HTTP_ERROR');
       }
     }
 
     if (e.error.toString().contains('SocketException')) {
-      return Result.failure('인터넷 연결을 확인해주세요.', 'NETWORK_DISCONNECTED');
+      return Result.failure('인터넷 연결을 확인해주세요. (Please check your internet connection)', 'NETWORK_DISCONNECTED');
     }
 
-    return Result.failure('네트워크 오류가 발생했습니다.', 'NETWORK_ERROR');
+    return Result.failure('네트워크 오류가 발생했습니다. (A network error occurred)', 'NETWORK_ERROR');
   }
 
 

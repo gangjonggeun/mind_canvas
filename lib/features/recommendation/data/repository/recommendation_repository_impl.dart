@@ -113,7 +113,7 @@ class RecommendationRepositoryImpl implements RecommendationRepository {
     } catch (e, stack) {
       print('💀 [Repo] 알 수 없는 에러: $e');
       print(stack); // 스택 트레이스 출력
-      return Result.failure('알 수 없는 오류가 발생했습니다.', 'UNKNOWN_ERROR');
+      return Result.failure('알 수 없는 오류가 발생했습니다. (UNKNOWN_ERROR)', 'UNKNOWN_ERROR');
     }
   }
 
@@ -122,7 +122,7 @@ class RecommendationRepositoryImpl implements RecommendationRepository {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {
-      return Result.failure('서버 연결 시간이 초과되었습니다. 네트워크를 확인해주세요.', 'TIMEOUT');
+      return Result.failure('서버 연결 시간이 초과되었습니다. 네트워크를 확인해주세요. (TIMEOUT)', 'TIMEOUT');
     }
 
     if (e.type == DioExceptionType.badResponse) {
@@ -133,24 +133,24 @@ class RecommendationRepositoryImpl implements RecommendationRepository {
       // 여기서는 일반적인 HTTP 상태 코드 처리
       switch (statusCode) {
         case 401:
-          return Result.failure('인증이 만료되었습니다. 다시 로그인해주세요.', 'AUTHENTICATION_EXPIRED');
+          return Result.failure('인증이 만료되었습니다. 다시 로그인해주세요.(AUTHENTICATION_EXPIRED)', 'AUTHENTICATION_EXPIRED');
         case 402: // Payment Required (코인 부족 시 주로 사용)
-          return Result.failure('코인이 부족합니다.', 'NOT_ENOUGH_COINS');
+          return Result.failure('코인이 부족합니다.(NOT_ENOUGH_COINS)', 'NOT_ENOUGH_COINS');
         case 403:
-          return Result.failure('접근 권한이 없습니다.', 'FORBIDDEN');
+          return Result.failure('접근 권한이 없습니다. (FORBIDDEN permission)', 'FORBIDDEN');
         case 404:
-          return Result.failure('요청한 서비스를 찾을 수 없습니다.', 'NOT_FOUND');
+          return Result.failure('요청한 서비스를 찾을 수 없습니다. (NOT_FOUND SERVICE)', 'NOT_FOUND');
         case 500:
-          return Result.failure('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'SERVER_ERROR');
+          return Result.failure('최소 하나 이상의 조건에 맞는 성격 데이터가 필요합니다. (We need character data that meets one or more of the specified criteria.)', 'SERVER_ERROR');
         default:
-          return Result.failure('서버 통신 중 오류가 발생했습니다. ($statusCode)', 'HTTP_ERROR');
+          return Result.failure('서버 통신 중 오류가 발생했습니다. HTTP_ERROR: ($statusCode)', 'HTTP_ERROR');
       }
     }
 
     if (e.error.toString().contains('SocketException')) {
-      return Result.failure('인터넷 연결을 확인해주세요.', 'NETWORK_DISCONNECTED');
+      return Result.failure('인터넷 연결을 확인해주세요. (NETWORK_DISCONNECTE)', 'NETWORK_DISCONNECTED');
     }
 
-    return Result.failure('네트워크 오류가 발생했습니다.', 'NETWORK_ERROR');
+    return Result.failure('네트워크 오류가 발생했습니다. (NETWORK_ERROR)', 'NETWORK_ERROR');
   }
 }

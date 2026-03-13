@@ -120,7 +120,7 @@ class TaroRepositoryImpl implements TaroRepository {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return Result.failure(
-          '서버 연결 시간이 초과되었습니다. 네트워크 상태를 확인해주세요',
+          '서버 연결 시간이 초과되었습니다. 네트워크 상태를 확인해주세요 (Server connection timed out. Please check your network status)',
           'TIMEOUT_ERROR',
         );
 
@@ -133,19 +133,19 @@ class TaroRepositoryImpl implements TaroRepository {
             return Result.failure(errorMsg, 'BAD_REQUEST');
           case 401:
             return Result.failure(
-              '인증이 만료되었습니다. 다시 로그인해주세요',
+              '인증이 만료되었습니다. 다시 로그인해주세요 (Authentication expired. Please log in again)',
               'AUTHENTICATION_EXPIRED',
             );
           case 403:
-            return Result.failure('접근 권한이 없습니다', 'ACCESS_DENIED');
+            return Result.failure('접근 권한이 없습니다 (Access denied)', 'ACCESS_DENIED');
           case 429:
             return Result.failure(
-              '잠시 후 다시 시도해주세요 (요청 과다)',
+              '잠시 후 다시 시도해주세요 (요청 과다)  (Internal server error. Please try again later)',
               'TOO_MANY_REQUESTS',
             );
           case 500:
             return Result.failure(
-              '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요',
+              '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요 (A server error occurred)',
               'SERVER_ERROR',
             );
           default:
@@ -153,10 +153,10 @@ class TaroRepositoryImpl implements TaroRepository {
         }
 
       case DioExceptionType.connectionError:
-        return Result.failure('인터넷 연결을 확인해주세요', 'NETWORK_DISCONNECTED');
+        return Result.failure('인터넷 연결을 확인해주세요 (Please check your internet connection)', 'NETWORK_DISCONNECTED');
 
       default:
-        return Result.failure('네트워크 오류가 발생했습니다', 'NETWORK_ERROR');
+        return Result.failure('네트워크 오류가 발생했습니다 (A network error occurred)', 'NETWORK_ERROR');
     }
   }
 }

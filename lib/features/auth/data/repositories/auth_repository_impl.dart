@@ -439,17 +439,16 @@ class AuthRepositoryImpl implements AuthRepository {
     // 기본 HTTP 상태 코드별 처리
     switch (e.response?.statusCode) {
       case 401:
-        return Results.failure('인증이 필요합니다', '401');
+        return Results.failure('인증이 필요합니다 (Authentication required)', '401');
       case 403:
-        return Results.failure('접근 권한이 없습니다', '403');
+        return Results.failure('접근 권한이 없습니다 (Access denied)', '403');
       case 404:
-        return Results.failure('요청한 리소스를 찾을 수 없습니다', '404');
+        return Results.failure('요청한 리소스를 찾을 수 없습니다 (Resource not found)', '404');
       case 500:
-        return Results.failure('서버 내부 오류가 발생했습니다', '500');
+        return Results.failure('서버 내부 오류가 발생했습니다 (Internal server error)', '500');
       default:
-        final errorMessage = e.message ?? '네트워크 오류가 발생했습니다';
         return Results.failure(
-          errorMessage,
+          '네트워크 오류가 발생했습니다 (Network error occurred)',
           e.response?.statusCode?.toString(),
         );
     }

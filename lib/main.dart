@@ -69,7 +69,7 @@ void main() async {
   await Hive.openBox<String>('recommendation_cache');
   await Hive.openBox('settings');
   await Hive.openBox('analysis_cache');
-
+  await Hive.openBox<String>('chat_cache_box');
   await Hive.openBox<String>('htp_premium_current_session');
 
   // 4. 🖼️ 단일 검사(별바다, PITR, 어항) 세션 박스 열기

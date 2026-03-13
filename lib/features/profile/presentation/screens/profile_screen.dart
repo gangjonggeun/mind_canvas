@@ -33,6 +33,7 @@ import '../widgets/profile_header.dart';
 import '../widgets/ink_balance_card.dart';
 import '../widgets/profile_menu_list.dart';
 import '../widgets/stats_section.dart';
+import '../widgets/tarot_attendance_widget.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -481,6 +482,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
               const SizedBox(height: 24),
 
+              TarotAttendanceBanner(
+                // 서버에서 가져온 연속 출석 일수를 전달합니다.
+                // (DTO에 필드가 없다면 추가해주세요!)
+                consecutiveDays: profileState.summary?.consecutiveDays ?? 1,
+                isTodayCheckedIn: profileState.summary?.isTodayCheckedIn ?? false,
+              ),
+
               // 메뉴 리스트
               ProfileMenuList(
                 onMenuTap: _onMenuTap,
@@ -493,7 +501,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   children: [
                     Text(
-                      'Mind-Color Canvas',
+                      '마음색 캔버스',
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,

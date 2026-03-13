@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../../../../generated/l10n.dart';
 import '../../domain/models/taro_card.dart';
 import '../../domain/models/taro_spread_type.dart';
 import 'card_back.dart';
@@ -69,11 +70,11 @@ class _SpreadLayoutState extends State<SpreadLayout> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCardSlot(0, '과거', width: cardWidth, height: cardHeight),
+        _buildCardSlot(0, S.of(context).taro_past, width: cardWidth, height: cardHeight),
         SizedBox(height: gap),
-        _buildCardSlot(1, '현재', width: cardWidth, height: cardHeight),
+        _buildCardSlot(1, S.of(context).taro_present, width: cardWidth, height: cardHeight),
         SizedBox(height: gap),
-        _buildCardSlot(2, '미래', width: cardWidth, height: cardHeight),
+        _buildCardSlot(2, S.of(context).taro_future, width: cardWidth, height: cardHeight),
       ],
     );
   }
@@ -91,11 +92,11 @@ class _SpreadLayoutState extends State<SpreadLayout> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Positioned(child: _buildCardSlot(0, '현재', width: cardWidth, height: cardHeight)),
-            Positioned(top: 0, child: _buildCardSlot(1, '목표', width: cardWidth, height: cardHeight)),
-            Positioned(left: 0, child: _buildCardSlot(2, '과거', width: cardWidth, height: cardHeight)),
-            Positioned(right: 0, child: _buildCardSlot(3, '미래', width: cardWidth, height: cardHeight)),
-            Positioned(bottom: 0, child: _buildCardSlot(4, '결과', width: cardWidth, height: cardHeight)),
+            Positioned(child: _buildCardSlot(0, S.of(context).taro_present, width: cardWidth, height: cardHeight)),
+            Positioned(top: 0, child: _buildCardSlot(1, S.of(context).taro_target, width: cardWidth, height: cardHeight)),
+            Positioned(left: 0, child: _buildCardSlot(2, S.of(context).taro_past, width: cardWidth, height: cardHeight)),
+            Positioned(right: 0, child: _buildCardSlot(3, S.of(context).taro_future, width: cardWidth, height: cardHeight)),
+            Positioned(bottom: 0, child: _buildCardSlot(4, S.of(context).taro_result, width: cardWidth, height: cardHeight)),
           ],
         ),
       ),
@@ -110,14 +111,14 @@ class _SpreadLayoutState extends State<SpreadLayout> {
     final gap = 12.w;
 
     // 각 자리의 의미를 이미지에 맞게 정확히 정의합니다.
-    const List<String> positionNames = [
-      '과거의 사건', // 1
-      '현재 상태',    // 2
-      '가까운 미래',  // 3
-      '문제해결 방법', // 4
-      '주변환경',     // 5
-      '장애물',       // 6
-      '결과'        // 7
+    List<String> getPositionNames(BuildContext context) => [
+      S.of(context).taro_past,    // 1
+      S.of(context).taro_present, // 2
+      S.of(context).taro_future,  // 3
+      S.of(context).taro_advice,  // 4
+      S.of(context).taro_setting, // 5
+      S.of(context).taro_hurdle,  // 6
+      S.of(context).taro_result   // 7
     ];
 
     // 전체 레이아웃을 큰 Row로 감싸서 좌, 중, 우 3개의 열로 나눕니다.
@@ -131,10 +132,10 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // 5번 카드
-              _buildCardSlot(4, positionNames[4], width: cardWidth, height: cardHeight),
+              _buildCardSlot(4, getPositionNames(context) [4], width: cardWidth, height: cardHeight),
               SizedBox(height: gap),
               // 3번 카드
-              _buildCardSlot(2, positionNames[2], width: cardWidth, height: cardHeight),
+              _buildCardSlot(2,getPositionNames(context) [2], width: cardWidth, height: cardHeight),
             ],
           ),
           SizedBox(width: gap),
@@ -144,13 +145,13 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // 1번 카드
-              _buildCardSlot(0, positionNames[0], width: cardWidth, height: cardHeight),
+              _buildCardSlot(0, getPositionNames(context) [0], width: cardWidth, height: cardHeight),
               SizedBox(height: gap),
               // 7번 카드
-              _buildCardSlot(6, positionNames[6], width: cardWidth, height: cardHeight),
+              _buildCardSlot(6, getPositionNames(context) [6], width: cardWidth, height: cardHeight),
               SizedBox(height: gap),
               // 4번 카드
-              _buildCardSlot(3, positionNames[3], width: cardWidth, height: cardHeight),
+              _buildCardSlot(3, getPositionNames(context) [3], width: cardWidth, height: cardHeight),
             ],
           ),
           SizedBox(width: gap),
@@ -160,10 +161,10 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // 6번 카드
-              _buildCardSlot(5, positionNames[5], width: cardWidth, height: cardHeight),
+              _buildCardSlot(5, getPositionNames(context) [5], width: cardWidth, height: cardHeight),
               SizedBox(height: gap),
               // 2번 카드
-              _buildCardSlot(1, positionNames[1], width: cardWidth, height: cardHeight),
+              _buildCardSlot(1, getPositionNames(context) [1], width: cardWidth, height: cardHeight),
             ],
           ),
         ],
@@ -190,14 +191,14 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             // 1. 세로 카드 (중앙)
             Positioned(
               top: cardHeight + gap,
-              child: _buildCardSlot(0, '현재', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(0, S.of(context).taro_present, width: cardWidth, height: cardHeight),
             ),
             // 2. 가로 카드 (중앙)
             Positioned(
               top: cardHeight + gap + (cardHeight / 4),
               child: Transform.rotate(
                 angle: math.pi / 2,
-                child: _buildCardSlot(1, '장애물', width: cardWidth, height: cardHeight),
+                child: _buildCardSlot(1, S.of(context).taro_hurdle, width: cardWidth, height: cardHeight),
               ),
             ),
 
@@ -205,24 +206,24 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             // 3. 맨 위 카드
             Positioned(
               top: 0,
-              child: _buildCardSlot(2, '문제의 이유', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(2, S.of(context).taro_cause, width: cardWidth, height: cardHeight),
             ),
             // 4. 맨 아래 카드
             Positioned(
               top: cardHeight * 2 + gap * 2,
-              child: _buildCardSlot(3, '과거의 사건', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(3, S.of(context).taro_past, width: cardWidth, height: cardHeight),
             ),
             // ★★★★★ 5. 왼쪽 카드 ('과거') - 간격 조정 ★★★★★
             Positioned(
               top: cardHeight + gap,
               left: 0, // 왼쪽 끝에 배치
-              child: _buildCardSlot(4, '목표', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(4, S.of(context).taro_target, width: cardWidth, height: cardHeight),
             ),
             // ★★★★★ 6. 오른쪽 카드 ('미래') - 간격 조정 ★★★★★
             Positioned(
               top: cardHeight + gap,
               right: 0, // 오른쪽 끝에 배치
-              child: _buildCardSlot(5, '가까운미래', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(5, S.of(context).taro_future, width: cardWidth, height: cardHeight),
             ),
 
             // --- 하단 2x2 카드 (이미지 기준) ---
@@ -230,22 +231,22 @@ class _SpreadLayoutState extends State<SpreadLayout> {
             Positioned(
               bottom: cardHeight + gap,
               left: (cardWidth / 2) + (gap / 2),
-              child: _buildCardSlot(6, '나의 모습', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(6, S.of(context).taro_my, width: cardWidth, height: cardHeight),
             ),
             Positioned(
               bottom: cardHeight + gap,
               right: (cardWidth / 2) + (gap / 2),
-              child: _buildCardSlot(7, '남이 보는\n나의 모습', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(7, S.of(context).taro_other, width: cardWidth, height: cardHeight),
             ),
             Positioned(
               bottom: 0,
               left: (cardWidth / 2) + (gap / 2),
-              child: _buildCardSlot(8, '희망/두려움', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(8, S.of(context).taro_hopes, width: cardWidth, height: cardHeight),
             ),
             Positioned(
               bottom: 0,
               right: (cardWidth / 2) + (gap / 2),
-              child: _buildCardSlot(9, '최종 결과', width: cardWidth, height: cardHeight),
+              child: _buildCardSlot(9, S.of(context).taro_result, width: cardWidth, height: cardHeight),
             ),
           ],
         ),

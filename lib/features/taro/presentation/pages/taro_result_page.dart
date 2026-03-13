@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import '../../../../generated/l10n.dart';
 import '../../domain/models/taro_card.dart';
 import '../../domain/models/TaroResultEntity.dart';
 import '../../domain/models/taro_spread_type.dart';
@@ -51,9 +52,9 @@ class TaroResultPage extends ConsumerWidget {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: _buildHeader(context, data)),
-        SliverToBoxAdapter(child: _buildCardSpread(data)),
-        SliverToBoxAdapter(child: _buildOverallInterpretation(data)),
-        SliverToBoxAdapter(child: _buildDetailedInterpretations(data)),
+        SliverToBoxAdapter(child: _buildCardSpread(context, data)),
+        SliverToBoxAdapter(child: _buildOverallInterpretation(context, data)),
+        SliverToBoxAdapter(child: _buildDetailedInterpretations(context, data)),
         SliverToBoxAdapter(child: _buildBottomActions(context, data)),
         SliverToBoxAdapter(child: SizedBox(height: 32.h)),
       ],
@@ -220,7 +221,7 @@ class TaroResultPage extends ConsumerWidget {
         children: [
           Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
           Gap(16.h),
-          Text('결과를 불러올 수 없습니다',
+          Text(S.of(context).taro_error,
               style: TextStyle(fontSize: 18.sp, color: Colors.white)),
           Gap(8.h),
           Padding(
@@ -232,7 +233,7 @@ class TaroResultPage extends ConsumerWidget {
           Gap(24.h),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('돌아가기'),
+            child: Text(S.of(context).taro_error_beck),
           ),
         ],
       ),
@@ -251,12 +252,12 @@ class TaroResultPage extends ConsumerWidget {
                 onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
                 icon: Icon(Icons.close, color: Colors.white, size: 28.sp),
               ),
-              Text('타로 결과',
+              Text(S.of(context).taro_result_title,
                   style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.white)),
-              IconButton(
-                onPressed: () => _shareResult(context, result),
-                icon: Icon(Icons.share, color: Colors.white, size: 24.sp),
-              ),
+              // IconButton(
+              //   onPressed: () => _shareResult(context, result),
+              //   icon: Icon(Icons.share, color: Colors.white, size: 24.sp),
+              // ),
             ],
           ),
           Gap(16.h),
@@ -270,7 +271,7 @@ class TaroResultPage extends ConsumerWidget {
             child: Column(
               children: [
                 Text(
-                  '주제: ${result.theme}',
+                  S.of(context).taro_subject(result.theme), //
                   style: TextStyle(fontSize: 14.sp, color: Colors.white.withOpacity(0.9)),
                   textAlign: TextAlign.center,
                 ),
@@ -288,14 +289,14 @@ class TaroResultPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildCardSpread(TaroResultEntity result) {
+  Widget _buildCardSpread(BuildContext context , TaroResultEntity result) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '선택된 카드 (${result.spreadName})',
+            S.of(context).taro_spreadname(result.spreadName), //선택된 카드 (${result.spreadName})
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           Gap(16.h),
@@ -309,6 +310,7 @@ class TaroResultPage extends ConsumerWidget {
               if (card == null) return const SizedBox.shrink();
 
               return _buildRevealedCard(
+                context: context,
                 card: card,
                 interpretation: interpretation, // 이미 해석된 정보(역방향, 위치이름 등) 포함
               );
@@ -320,6 +322,7 @@ class TaroResultPage extends ConsumerWidget {
   }
 
   Widget _buildRevealedCard({
+    required BuildContext context,
     required TaroCard card,
     required InterpretedCard interpretation,
   }) {
@@ -338,7 +341,7 @@ class TaroResultPage extends ConsumerWidget {
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Text(
-            interpretation.isReversed ? '${card.name} (역방향)' : card.name,
+            interpretation.isReversed ? S.of(context).taro_reverse(card.name) : card.name, //'${card.name} (역방향)'
             style: TextStyle(
               fontSize: 10.sp,
               color: Colors.white,
@@ -455,7 +458,7 @@ class TaroResultPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildOverallInterpretation(TaroResultEntity result) {
+  Widget _buildOverallInterpretation(BuildContext context, TaroResultEntity result) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -472,7 +475,7 @@ class TaroResultPage extends ConsumerWidget {
             children: [
               Icon(Icons.auto_awesome, color: Colors.amber.shade300, size: 22.sp),
               Gap(8.w),
-              Text('AI 종합 해석',
+              Text(S.of(context).taro_ai,
                   style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: Colors.white)),
             ],
           ),
@@ -486,7 +489,7 @@ class TaroResultPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailedInterpretations(TaroResultEntity result) {
+  Widget _buildDetailedInterpretations(BuildContext context, TaroResultEntity result) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
@@ -495,7 +498,7 @@ class TaroResultPage extends ConsumerWidget {
           Padding(
             padding: EdgeInsets.only(left: 4.w, bottom: 16.h),
             child: Text(
-              '카드별 상세 의미',
+              S.of(context).taro_detail,
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
@@ -503,14 +506,14 @@ class TaroResultPage extends ConsumerWidget {
             final card = TaroCards.findById(interpretation.cardId);
             if (card == null) return SizedBox.shrink();
 
-            return _buildDetailedCardInterpretation(card, interpretation);
+            return _buildDetailedCardInterpretation(context, card, interpretation);
           }).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildDetailedCardInterpretation(TaroCard card, InterpretedCard interpretation) {
+  Widget _buildDetailedCardInterpretation(BuildContext context,TaroCard card, InterpretedCard interpretation) {
     return Container(
       margin: EdgeInsets.only(bottom: 20.h),
       decoration: BoxDecoration(
@@ -559,7 +562,7 @@ class TaroResultPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${interpretation.positionName}: ${card.name}${interpretation.isReversed ? ' (역방향)' : ''}',
+                      '${interpretation.positionName}: ${card.name}${interpretation.isReversed ? S.of(context).taro_reverse_content : ''}',
                       style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
@@ -610,44 +613,34 @@ class TaroResultPage extends ConsumerWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
               ),
-              child: Text('홈으로', style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+              child: Text(S.of(context).go_home, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
             ),
           ),
           Gap(16.w),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _saveResult(context, result),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber.shade600,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-              ),
-              child: Text('결과 저장', style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600)),
-            ),
-          ),
+
         ],
       ),
     );
   }
 
-  void _shareResult(BuildContext context, TaroResultEntity result) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${result.theme} 결과가 공유되었습니다'),
-        backgroundColor: Colors.blue.shade600,
-      ),
-    );
-  }
-
-  void _saveResult(BuildContext context, TaroResultEntity result) {
-    // 실제로는 로컬 저장소나 서버에 저장
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${result.date.month}/${result.date.day} 결과가 저장되었습니다'),
-        backgroundColor: Colors.green.shade600,
-      ),
-    );
-  }
+  // void _shareResult(BuildContext context, TaroResultEntity result) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('${result.theme} 결과가 공유되었습니다'),
+  //       backgroundColor: Colors.blue.shade600,
+  //     ),
+  //   );
+  // }
+  //
+  // void _saveResult(BuildContext context, TaroResultEntity result) {
+  //   // 실제로는 로컬 저장소나 서버에 저장
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('${result.date.month}/${result.date.day} 결과가 저장되었습니다'),
+  //       backgroundColor: Colors.green.shade600,
+  //     ),
+  //   );
+  // }
 
   // 카드 아이콘 및 키워드 헬퍼 메소드들
   IconData _getCardIcon(TaroCard card) {

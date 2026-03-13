@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 import 'package:share_plus/share_plus.dart';
 
 // ✅ 사용자가 정의한 Entity import
+import '../../../../generated/l10n.dart';
 import '../../domain/entities/psy_result.dart';
 
 class PsyResultScreen2 extends ConsumerStatefulWidget {
@@ -22,7 +23,6 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     with TickerProviderStateMixin {
   late AnimationController _chartAnimController;
   late String _randomLottieFile;
-
 
   // 🎨 차트용 색상 팔레트 (파스텔톤 & 비비드 조합)
   final List<Color> _chartColors = [
@@ -88,7 +88,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
             backgroundColor: widget.result.mainColor,
             elevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, color: widget.result.textColor),
+              icon: Icon(Icons.arrow_back_ios_new,
+                  color: widget.result.textColor),
               onPressed: () => Navigator.of(context).pop(),
             ),
             // 스크롤 올렸을 때만 보이는 제목
@@ -106,14 +107,14 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
           _buildAdaptiveHeader(),
 
           // 2️⃣ 차트 영역 (데이터가 있을 때만 표시)
-          if (widget.result.hasDimensionScores)  _buildPolarChartSection(),
+          if (widget.result.hasDimensionScores) _buildPolarChartSection(),
 
           // 3️⃣ 결과 상세 카드 리스트 제목
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
               child: Text(
-                "결과 자세히 보기",
+                S.of(context).psy_result_show_detail,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -134,6 +135,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
       bottomSheet: _buildBottomActions(context),
     );
   }
+
   Widget _buildAdaptiveHeader() {
     final result = widget.result;
     final mainColor = result.mainColor;
@@ -149,14 +151,16 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
               children: [
                 // 1. 텍스트 콘텐츠 영역
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0), // 상단 패딩을 줄임 (60 -> 20)
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  // 상단 패딩을 줄임 (60 -> 20)
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ✨ [태그] 제목 바로 위
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.25),
                           borderRadius: BorderRadius.circular(12),
@@ -173,7 +177,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
 
                       // ✨ [제목] 태그와 함께 위로 올라감
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.65, // Lottie와 겹치지 않게 너비 제한
+                        width: MediaQuery.of(context).size.width *
+                            0.55, // Lottie와 겹치지 않게 너비 제한
                         child: Text(
                           result.title,
                           style: TextStyle(
@@ -204,18 +209,15 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
                 // 2. [Lottie] 우측 상단에 고정 (텍스트 위치에 영향을 주지 않음)
                 Positioned(
                   top: 0,
-                  right: 10,
+                  right: 16,
                   child: SizedBox(
-                    width: 110,
-                    height: 110,
+                    width: 100,
+                    height: 100,
                     child: Lottie.asset(
                       _randomLottieFile,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
-                          Icons.public,
-                          size: 40,
-                          color: Colors.white24
-                      ),
+                      errorBuilder: (_, __, ___) => const Icon(Icons.public,
+                          size: 40, color: Colors.white24),
                     ),
                   ),
                 ),
@@ -365,6 +367,7 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
       ),
     );
   }
+
   Widget _buildPolarChartSection() {
     final scores = widget.result.translatedScores;
     final keys = scores.keys.toList();
@@ -427,7 +430,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
                       value: 1,
                       title: '${value.toInt()}',
                       radius: radius,
-                      titlePositionPercentageOffset: 0.7, // 숫자를 살짝 안쪽으로
+                      titlePositionPercentageOffset: 0.7,
+                      // 숫자를 살짝 안쪽으로
                       titleStyle: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -445,8 +449,6 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     );
   }
 
-
-
   /// 📝 3. 상세 리스트 (카드 형태)
   Widget _buildDetailList() {
     return SliverList(
@@ -463,7 +465,6 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     // 1. 서버 이미지가 있으면 사용
     // 2. 없으면 키워드 매칭 로컬 이미지
     // 3. 그것도 없으면 텍스트만 표시
-
 
     Widget? imageWidget;
     if (section.hasImage && section.imageUrl != null) {
@@ -486,7 +487,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
                 if (loadingProgress == null) return child;
                 return const Center(child: CircularProgressIndicator());
               },
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.broken_image),
             ),
           ),
         ),
@@ -576,9 +578,12 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
       context: context,
       builder: (context) => Scaffold(
         backgroundColor: Colors.grey,
-        appBar: AppBar(backgroundColor: Colors.transparent, iconTheme: const IconThemeData(color: Colors.white)),
+        appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            iconTheme: const IconThemeData(color: Colors.white)),
         body: Center(
-          child: InteractiveViewer( // ✅ 줌인/줌아웃 가능
+          child: InteractiveViewer(
+            // ✅ 줌인/줌아웃 가능
             panEnabled: true,
             minScale: 0.5,
             maxScale: 4.0,
@@ -620,8 +625,9 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
               child: OutlinedButton(
                 onPressed: () {
                   Share.share(
-                    '[${widget.result.title}]\n\n[${widget.result.subtitle}]\n\n 나의 결과가 궁금하다면?\n\n#마음색캔버스 #htp테스트 #타로 #주관식테스트',
-                    subject: '심리테스트 결과 공유',
+                    //TODO: 다시 공유 해보고 결정
+                    '제목: [${widget.result.title}]\n\n간단한 내용: ${widget.result.subtitle}\n\n더욱 자세한 나의 결과가 궁금하다면?\n\n#마음색캔버스 #htp테스트 #타로 #주관식테스트 #그림테라피',
+                    subject: '',
                   );
                 },
                 style: OutlinedButton.styleFrom(
@@ -630,12 +636,11 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  foregroundColor: contrastColor == Colors.white
-                      ? mainColor
-                      : Colors.black,
+                  foregroundColor:
+                      contrastColor == Colors.white ? mainColor : Colors.black,
                 ),
                 child: Text(
-                  "공유하기",
+                  S.of(context).psy_result_share,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -659,8 +664,8 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  "확인",
+                child: Text(
+                  S.of(context).psy_result_ok,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
@@ -671,83 +676,294 @@ class _PsyResultScreenState extends ConsumerState<PsyResultScreen2>
     );
   }
 
-  /// 🔍 제목 키워드 기반 로컬 이미지 매칭
   String? _getLocalAssetForTitle(String title) {
-    // assets 폴더에 해당 이미지가 실제로 있어야 합니다.
-    // 없다면 null을 리턴하거나 기본 이미지를 설정하세요.
+    final lowerTitle = title.toLowerCase();
 
-    // 예시 로직 (실제 파일명에 맞춰 수정 필요)
-    if (title.contains('사랑') || title.contains('연애') || title.contains('감정')) {
-      return 'assets/images/result/love.webp';
-    }
-    if (title.contains('관계') ||
-        title.contains('친구') ||
-        title.contains('함께') ||
-        title.contains('건강') ) {
-      return 'assets/images/result/relationship.webp';
-    }
-    if (title.contains('성취') ||
-        title.contains('목표') ||
-        title.contains('즐거움') ) {
-      return 'assets/images/result/target.webp';
-    }
-    if (title.contains('직업') ||
-        title.contains('일') ||
-        title.contains('업무') ||
-        title.contains('직장') ||
-        title.contains('비즈니스')) {
-      return 'assets/images/result/work.webp';
-    }
-    if (title.contains('불안') ||
-        title.contains('스트레스') ||
-        title.contains('고민') || title.contains('그림자') || title.contains('쉐도')) {
-      return 'assets/images/result/stress.webp';
-    }
-    if (title.contains('슬픔') || title.contains('헤어') || title.contains('이별')) {
-      return 'assets/images/result/sad.webp';
-    }
-    if (title.contains('행복') ||
-        title.contains('기쁨') ||
-        title.contains('축하') ||
-        title.contains('성장')) {
-      return 'assets/images/result/delight.webp';
-    }
-    if (title.contains('가족') || title.contains('모두') || title.contains('편안')||title.contains('마무리')|| title.contains('마음') || title.contains('처방')) {
-      return 'assets/images/result/family.webp';
-    }
-    if (title.contains('주관') || title.contains('객관') || title.contains('만의')||title.contains('길')||  title.contains('관점')) {
-      return 'assets/images/result/objectivity.webp';
-    }
-    if (title.contains('수립') || title.contains('통계') || title.contains('계획')) {
-      return 'assets/images/result/reflection.webp';
+    // 카테고리별 키워드 정의 (한글/영어/유사표현 포함)
+    final Map<String, List<String>> categoryKeywords = {
+      'assets/images/result/love.webp': [
+        '사랑',
+        '연애',
+        '감정',
+        '애정',
+        '심장',
+        'love',
+        'affection',
+        'emotion',
+        'heart',
+        'romance'
+      ],
+      'assets/images/result/relationship.webp': [
+        '관계',
+        '친구',
+        '함께',
+        '건강',
+        '동료',
+        '우정',
+        'relationship',
+        'friend',
+        'together',
+        'health',
+        'buddy',
+        'social'
+      ],
+      'assets/images/result/target.webp': [
+        '성취',
+        '목표',
+        '즐거움',
+        '성공',
+        '달성',
+        'target',
+        'goal',
+        'achievement',
+        'success',
+        'joy',
+        'pleasure'
+      ],
+      'assets/images/result/work.webp': [
+        '직업',
+        '일',
+        '업무',
+        '직장',
+        '비즈니스',
+        '커리어',
+        '전문',
+        'work',
+        'job',
+        'business',
+        'career',
+        'office',
+        'professional'
+      ],
+      'assets/images/result/stress.webp': [
+        '불안',
+        '스트레스',
+        '고민',
+        '그림자',
+        '쉐도',
+        '걱정',
+        '어둠',
+        'stress',
+        'anxiety',
+        'worry',
+        'shadow',
+        'darkness',
+        'pressure'
+      ],
+      'assets/images/result/sad.webp': [
+        '슬픔',
+        '헤어',
+        '이별',
+        '눈물',
+        '우울',
+        'sad',
+        'farewell',
+        'breakup',
+        'tear',
+        'sorrow',
+        'depressed'
+      ],
+      'assets/images/result/delight.webp': [
+        '행복',
+        '기쁨',
+        '축하',
+        '성장',
+        '발전',
+        '환희',
+        'happy',
+        'delight',
+        'joy',
+        'celebrate',
+        'growth',
+        'cheer'
+      ],
+      'assets/images/result/family.webp': [
+        '가족',
+        '모두',
+        '편안',
+        '마무리',
+        '마음',
+        '처방',
+        '휴식',
+        '안정',
+        'family',
+        'home',
+        'comfort',
+        'relax',
+        'mind',
+        'heart',
+        'peace'
+      ],
+      'assets/images/result/objectivity.webp': [
+        '주관',
+        '객관',
+        '만의',
+        '길',
+        '관점',
+        '시각',
+        '시선',
+        'objectivity',
+        'view',
+        'perspective',
+        'path',
+        'eye',
+        'way'
+      ],
+      'assets/images/result/reflection.webp': [
+        '수립',
+        '통계',
+        '계획',
+        '성찰',
+        '분석',
+        '기록',
+        'reflection',
+        'plan',
+        'stats',
+        'analysis',
+        'record',
+        'strategy'
+      ],
+      'assets/images/result/stage.webp': [
+        '무대',
+        '연극',
+        '연기',
+        '예술',
+        '가면',
+        '공연',
+        '페르소나',
+        'stage',
+        'theater',
+        'act',
+        'art',
+        'mask',
+        'performance',
+        'persona'
+      ],
+      'assets/images/result/think.webp': [
+        '생각',
+        '사고',
+        '명상',
+        '철학',
+        '아이디어',
+        'think',
+        'thought',
+        'meditation',
+        'philosophy',
+        'idea',
+        'mindset'
+      ],
+      'assets/images/result/world.webp': [
+        '세계',
+        '세상',
+        '지구',
+        '우주',
+        '환경',
+        'world',
+        'earth',
+        'universe',
+        'environment',
+        'global'
+      ],
+      'assets/images/result/self.webp': [
+        '나',
+        '자신',
+        '내',
+        '하나',
+        '본인',
+        '자아',
+        'self',
+        'me',
+        'individual',
+        'ego',
+        'myself'
+      ],
+      'assets/images/result/habit.webp': [
+        '취미',
+        '문화',
+        '하고',
+        '해야',
+        '습관',
+        '일상',
+        'habit',
+        'hobby',
+        'culture',
+        'routine',
+        'daily'
+      ],
+      'assets/images/result/sensitive.webp': [
+        '섬세',
+        '예민',
+        '감성',
+        '공감',
+        '예술적',
+        '내향',
+        '디테일',
+        '여린',
+        '감수성',
+        'sensitive',
+        'empathy',
+        'delicate',
+        'aesthetic',
+        'introvert',
+        'detail',
+        'vulnerable',
+        'tender',
+        'creative'
+      ],
+      'assets/images/result/energy.webp': [
+        '열정',
+        '에너지',
+        '외향',
+        '활기',
+        '주도',
+        '리더',
+        '자신감',
+        '추진',
+        '도전',
+        'active',
+        'energy',
+        'extrovert',
+        'passionate',
+        'leader',
+        'bold',
+        'confident',
+        'vibrant',
+        'outgoing',
+        'dynamic'
+      ],
+      'assets/images/result/balance.webp': [
+        '조화',
+        '균형',
+        '평온',
+        '안정',
+        '중립',
+        '유지',
+        '절제',
+        '차분',
+        '침착',
+        'balance',
+        'harmony',
+        'stable',
+        'neutral',
+        'calm',
+        'peaceful',
+        'moderate',
+        'steady',
+        'composure',
+        'equilibrium'
+      ],
+    };
+
+    // 루프를 돌며 해당 단어가 제목에 포함되어 있는지 확인
+    for (var entry in categoryKeywords.entries) {
+      if (entry.value.any((keyword) => lowerTitle.contains(keyword))) {
+        return entry.key;
+      }
     }
 
-    if (title.contains('무대') || title.contains('연극') || title.contains('연기') || title.contains('예술')) {
-      return 'assets/images/result/stage.webp';
-    }
-    if (title.contains('생각') || title.contains('사고') || title.contains('명상')) {
-      return 'assets/images/result/think.webp';
-    }
-    if (title.contains('세계') || title.contains('세상')) {
-      return 'assets/images/result/world.webp';
-    }
-
-    if (title.contains('나') || title.contains('자신')|| title.contains('내')|| title.contains('하나')) {
-      return 'assets/images/result/self.webp';
-    }
-
-    if (title.contains('취미') || title.contains('문화')|| title.contains('하고')||  title.contains('해야')) {
-      return 'assets/images/result/habit.webp';
-    }
-
-
-
-    // 매칭되는 게 없으면 null (이미지 영역 숨김)
-    return null;
+    return null; // 매칭되는 게 없으면 null
   }
 }
-
-
 
 class _Indicator extends StatelessWidget {
   final Color color;
