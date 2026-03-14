@@ -7,9 +7,15 @@ import '../../../recommendation/data/dto/post_response.dart';
 import '../../data/models/request/inquiry_request.dart';
 import '../../data/models/response/profile_dto.dart';
 import '../../data/models/response/setup_profile_response.dart';
+import '../../presentation/providers/inbox_notifier.dart';
+import '../entities/inbox_message.dart';
 
 /// 🏠 프로필 Repository 인터페이스
 abstract class ProfileRepository {
+  Future<Result<void>> deleteReadMessages();
+  Future<Result<void>> markAsRead(int id);
+  Future<Result<PageResponse<InboxMessage>>> getMessages(int page, int size);
+  Future<Result<bool>> claimMessageReward(int messageId);
   Future<Result<int>> claimAttendance(double seconds);
   /// 📝 프로필 설정 (닉네임 + 이미지)
   ///

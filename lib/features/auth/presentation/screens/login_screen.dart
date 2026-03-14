@@ -604,7 +604,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                           final url = Uri.parse(
                                               'https://www.notion.so/317b4bde4afa80969249c8caed899e7f?source=copy_link');
                                           if (await canLaunchUrl(
-                                              url)) await launchUrl(url);
+                                              url)) await launchUrl(url ,mode: LaunchMode.inAppWebView );
                                         },
                                     ),
                                     TextSpan(text: S

@@ -9,7 +9,9 @@ import 'package:mind_canvas/core/network/api_response_dto.dart'; // ← 이거 �
 
 import '../../../../core/network/page_response.dart';
 import '../../../recommendation/data/dto/post_response.dart';
+import '../../domain/entities/inbox_message.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../presentation/providers/inbox_notifier.dart';
 import '../datasources/profile_api_data_source.dart';
 import '../datasources/profile_api_data_source_provider.dart';
 import '../models/request/inquiry_request.dart';
@@ -30,6 +32,59 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final TokenManager _tokenManager;
 
   ProfileRepositoryImpl(this._apiDataSource, this._tokenManager);
+
+
+  @override
+  Future<Result<bool>> claimMessageReward(int messageId) async {
+    try {
+      final token = await _getBearerToken();
+      final response = await _apiDataSource.claimMessageReward(token, messageId);
+
+      // ApiResponse의 isSuccess가 true이면 보상 수령 성공
+      if (response.isSuccess) {
+        return Result.success(true);
+      } else {
+        return Result.failure(response.errorMessage ?? '보상 수령에 실패했습니다.');
+      }
+    } catch (e) {
+      return Result.failure('통신 실패: $e');
+    }
+  }
+
+  @override
+  Future<Result<PageResponse<InboxMessage>>> getMessages(int page, int size) async {
+    try {
+      final token = await _getBearerToken();
+      final response = await _apiDataSource.getMessages(token, page, size);
+      if (response.isSuccess && response.data != null) {
+        return Result.success(response.data!);
+      }
+      return Result.failure(response.errorMessage ?? '목록 불러오기 실패');
+    } catch (e) {
+      return Result.failure('통신 실패: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> markAsRead(int id) async {
+    try {
+      final token = await _getBearerToken();
+      await _apiDataSource.markAsRead(token, id);
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure('오류: $e', 'UNKNOWN');
+    }
+  }
+  @override
+  Future<Result<void>> deleteReadMessages() async {
+    try {
+      final token = await _getBearerToken();
+      await _apiDataSource.deleteReadMessages(token); // API 소스에 메서드 추가 필요
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure('삭제 실패: $e', 'FAIL');
+    }
+  }
 
   // 🔐 토큰을 가져오는 공통 헬퍼 메서드
   Future<String> _getBearerToken() async {

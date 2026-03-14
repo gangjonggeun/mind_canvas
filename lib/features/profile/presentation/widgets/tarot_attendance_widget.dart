@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 
 import '../providers/attendance_notifier.dart';
 
@@ -246,7 +247,7 @@ class _TarotMiniGameDialogState extends ConsumerState<TarotMiniGameDialog> with 
     } else if (error <= 0.6) {
       _cardName = 'Temperance (절제)';
       _cardImage = 'assets/illustrations/taro/14-Temperance.webp';
-      _feedback = '어디로 튈지 모르는 타이밍, 새로운 모험을 즐기세요!';
+      _feedback = '어디로 튈지 모르는 타이밍, 서두르지 않아도 괜찮아요!';
     } else {
       _cardName = 'The Tower (탑)';
       _cardImage = 'assets/illustrations/taro/16-TheTower.webp';
@@ -389,6 +390,25 @@ class _TarotMiniGameDialogState extends ConsumerState<TarotMiniGameDialog> with 
                                 );
                               } else {
                                 Navigator.pop(context);
+
+                                showDialog(
+                                  useRootNavigator: true,
+                                  context: context,
+                                  barrierColor: Colors.black45, // 배경을 살짝 어둡게 해서 애니메이션 강조
+                                  builder: (context) {
+                                    // 2초 뒤에 애니메이션 다이얼로그 자동 닫기
+                                    Future.delayed(const Duration(seconds: 2), () {
+                                      if (context.mounted) Navigator.pop(context);
+                                    });
+                                    return Center(
+                                      child: Lottie.asset(
+                                        'assets/lottie/coins.json',
+                                        repeat: false,
+                                      ),
+                                    );
+                                  },
+                                );
+
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(

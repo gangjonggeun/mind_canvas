@@ -26,9 +26,11 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/screens/login_screen.dart';
 import '../../data/models/user_profile.dart';
 import '../../domain/usecases/profile_usecase_provider.dart';
+import '../providers/inbox_notifier.dart';
 import '../providers/ink_history_provider.dart';
 import '../providers/profile_notifier.dart';
 import '../widgets/help_menu_bottom_sheet.dart';
+import '../widgets/inbox_dialog.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/ink_balance_card.dart';
 import '../widgets/profile_menu_list.dart';
@@ -50,23 +52,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // ✅ 화면이 처음 열릴 때 서버에서 프로필 정보(잉크 잔액 등) 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(profileNotifierProvider.notifier).loadProfileSummary();
+
+      ref.invalidate(inboxNotifierProvider);
     });
   }
 
   Future<void> _onRefresh() async {
     HapticFeedback.lightImpact();
 
-    // ✅ 당겨서 새로고침 시 서버에서 데이터 다시 불러오기
-    await ref.read(profileNotifierProvider.notifier).loadProfileSummary();
+    // ✅ 두 작업을 동시에 수행 (Future.wait을 쓰면 병렬로 처리되어 더 빠릅니다)
+    await Future.wait([
+      // 1. 프로필 정보 갱신 (기존 방식)
+      ref.read(profileNotifierProvider.notifier).loadProfileSummary(),
+
+      // 2. 우편함 정보 갱신 (ref.refresh를 쓰면 build()가 다시 실행됨)
+      ref.read(inboxNotifierProvider.notifier).refresh(),
+    ]);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(S.of(context).profile_updated), // 다국어 적용
+          content: Text(S.of(context).profile_updated),
           backgroundColor: Theme.of(context).colorScheme.primary,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -414,6 +423,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     // ✅ 프로필 상태 구독 (데이터 및 로딩 상태)
     final profileState = ref.watch(profileNotifierProvider);
+    final inboxState = ref.watch(inboxNotifierProvider);
+
 
     // ✅ 에러 발생 시 스낵바 띄우기 (listen 사용)
     ref.listen(profileNotifierProvider, (previous, next) {
@@ -445,12 +456,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         actions: [
           // 🚨 편집 버튼 대신 알림(종) 아이콘으로 변경
           IconButton(
-            icon: Icon(Icons.notifications_none_rounded,
-                color: colorScheme.onSurface),
             onPressed: () {
               HapticFeedback.lightImpact();
-              // Navigator.pushNamed(context, '/notifications');
+              // ✅ 클릭 시 다이얼로그 호출
+              showDialog(
+                context: context,
+                builder: (context) => const InboxDialog(),
+              );
             },
+            icon: Badge(
+              // 안 읽은 메시지가 0보다 클 때만 빨간 점 표시
+              isLabelVisible: inboxState.unreadCount > 0,
+              backgroundColor: Colors.redAccent, // 배지 색상 (빨간 점)
+              smallSize: 8, // 점의 크기 (숫자 없이 깔끔한 점 표시)
+              child: Icon(
+                // 읽지 않은 알림이 있으면 종이 울리는 모양의 아이콘으로 변경 (옵션)
+                inboxState.unreadCount > 0
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_none_rounded,
+                color: colorScheme.onSurface,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
         ],

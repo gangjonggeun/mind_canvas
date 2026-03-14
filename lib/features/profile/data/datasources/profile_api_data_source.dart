@@ -3,6 +3,8 @@ import 'package:retrofit/retrofit.dart';
 import '../../../../core/network/api_response_dto.dart';
 import '../../../../core/network/page_response.dart';
 import '../../../recommendation/data/dto/post_response.dart';
+import '../../domain/entities/inbox_message.dart';
+import '../../presentation/providers/inbox_notifier.dart';
 import '../models/request/inquiry_request.dart';
 import '../models/request/setup_profile_request.dart';
 import '../models/response/profile_dto.dart';
@@ -15,6 +17,30 @@ part 'profile_api_data_source.g.dart';
 abstract class ProfileApiDataSource {
   factory ProfileApiDataSource(Dio dio, {String baseUrl}) =
       _ProfileApiDataSource;
+
+  @POST('/messages/{id}/claim')
+  Future<ApiResponse<dynamic>> claimMessageReward(
+      @Header('Authorization') String token,
+      @Path('id') int messageId,
+      );
+
+  @DELETE('/messages/read')
+  Future<ApiResponse<dynamic>> deleteReadMessages(
+      @Header('Authorization') String token,
+      );
+
+  @GET('/messages')
+  Future<ApiResponse<PageResponse<InboxMessage>>> getMessages(
+      @Header('Authorization') String token,
+      @Query('page') int page,
+      @Query('size') int size,
+      );
+
+  // 우편 읽음 처리
+  @POST('/messages/{id}/read')
+  Future<ApiResponse<dynamic>> markAsRead(
+      @Header('Authorization') String token,
+      @Path('id') int id);
 
   @POST('/attendance/claim')
   Future<ApiResponse<int>> claimAttendance(
